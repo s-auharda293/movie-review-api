@@ -1,4 +1,6 @@
+using MovieReviewApi.Application.Services;
 using MovieReviewApi.Infrastructure.Extensions;
+using MovieReviewApi.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddScoped<IActorRepository, ActorRepository>();
+builder.Services.AddScoped<IActorService, ActorService>();
 
 var app = builder.Build();
 

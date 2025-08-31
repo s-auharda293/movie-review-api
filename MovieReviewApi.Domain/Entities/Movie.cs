@@ -15,7 +15,7 @@ public class Movie:BaseEntity
    public decimal Rating { get; set; }
     
     //one movie multiple genres
-    public ICollection<Genre> Genres { get; set; } = new List<Genre>();
+    //public ICollection<Genre> Genres { get; set; } = new List<Genre>();
 
     //one movie multiple actors
    public ICollection<Actor> Actors { get; set; } = new List<Actor>();

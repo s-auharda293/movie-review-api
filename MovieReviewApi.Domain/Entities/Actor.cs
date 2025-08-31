@@ -11,7 +11,7 @@ public class Actor: BaseEntity
     public string? Bio { get; set; }
 
     //one actor multiple movies
-    public List<Movie> Movies { get; set; } = new();
+    public ICollection<Movie>? Movies { get; set; } = new List<Movie>();
 
 
 }

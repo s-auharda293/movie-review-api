@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
+using MovieReviewApi.Domain.Common;
 using MovieReviewApi.Domain.Entities;
 
 namespace MovieReviewApi.Infrastructure.Persistence;
@@ -27,7 +28,15 @@ public class MovieReviewDbContext: DbContext
 
         modelBuilder.Entity<Movie>()
             .Property(m => m.Rating)
-            .HasPrecision(2, 1); 
+            .HasPrecision(2, 1);
+
+        modelBuilder.Entity<BaseEntity>()
+            .Property(b => b.CreatedAt)
+            .HasDefaultValueSql("GETUTCDATE()");
+
+        modelBuilder.Entity<BaseEntity>()
+          .Property(b => b.UpdatedAt)
+          .HasDefaultValueSql("GETUTCDATE()");
     }
 
 

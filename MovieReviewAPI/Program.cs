@@ -1,3 +1,4 @@
+using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Services;
 using MovieReviewApi.Infrastructure.Extensions;
 using MovieReviewApi.Infrastructure.Repositories;
@@ -15,6 +16,9 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddScoped<IActorRepository, ActorRepository>();
 builder.Services.AddScoped<IActorService, ActorService>();
+
+builder.Services.AddScoped<IMovieRepository, MovieRepository>();
+builder.Services.AddScoped<IMovieService, MovieService>();
 
 var app = builder.Build();
 

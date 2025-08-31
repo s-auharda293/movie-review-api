@@ -1,4 +1,5 @@
 ﻿using MovieReviewApi.Application.DTOs;
+using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Entities;
 using MovieReviewApi.Infrastructure.Repositories;
 
@@ -7,11 +8,15 @@ namespace MovieReviewApi.Application.Services;
 public class ActorService: IActorService
 {
     private readonly IActorRepository _repository;
-    public ActorService(IActorRepository repository) {
+    private readonly IMovieRepository _movieRepository;
+    public ActorService(IActorRepository repository, IMovieRepository movieRepository) {
         _repository = repository;
+        _movieRepository = movieRepository;
+
     }
 
-    public async Task<IEnumerable<ActorDto>> GetAllActorsAsync() { 
+    public async Task<IEnumerable<ActorDto>> GetAllActorsAsync()
+    {
         var actors = await _repository.GetAllAsync();
         return actors.Select(a => new ActorDto
         {
@@ -19,9 +24,10 @@ public class ActorService: IActorService
             Name = a.Name,
             Bio = a.Bio,
             DateOfBirth = a.DateOfBirth,
-            //MovieIds = a.Movies.Select(m => m.Id).ToList()
+            Movies = a.Movies?.Select(m=>m.Title).ToList()??new List<String>(),
         }).ToList();
     }
+
 
     public async Task<ActorDto?> GetActorByIdAsync(int id) {
         var a = await _repository.GetByIdAsync(id);
@@ -33,7 +39,7 @@ public class ActorService: IActorService
             Name = a.Name,
             Bio = a.Bio,
             DateOfBirth = a.DateOfBirth,
-            //MovieIds = a.Movies.Select(m => m.Id).ToList()
+            Movies = a.Movies?.Select(m =>m.Title).ToList() ?? new List<string>()
         };
 
     }
@@ -47,6 +53,11 @@ public class ActorService: IActorService
             DateOfBirth = dto.DateOfBirth,
         };
 
+        if (dto.MovieIds != null && dto.MovieIds.Any()) {
+            var movies = await _movieRepository.GetMoviesByIdsAsync(dto.MovieIds);
+            actor.Movies = movies.ToList();
+        }
+
         await _repository.AddAsync(actor);
         await _repository.SaveChangesAsync();
 
@@ -56,7 +67,7 @@ public class ActorService: IActorService
             Name = actor.Name,
             Bio = actor.Bio,
             DateOfBirth = actor.DateOfBirth,
-            //MovieIds = actor.Movies.Select(m => m.Id).ToList()
+            Movies = actor.Movies?.Select(m=>m.Title).ToList()??new List<string>()
         };
     }
 
@@ -69,6 +80,13 @@ public class ActorService: IActorService
         actor.Bio = dto.Bio;
         actor.DateOfBirth = dto.DateOfBirth;
 
+        if (dto.MovieIds != null && dto.MovieIds.Any())
+        {
+            var movies = await _movieRepository.GetMoviesByIdsAsync(dto.MovieIds);
+            actor.Movies = movies.ToList();
+        }
+
+        await _repository.UpdateAsync(actor);
         await _repository.SaveChangesAsync();
         return true;
     }
@@ -82,7 +100,14 @@ public class ActorService: IActorService
         if (dto.DateOfBirth.HasValue) actor.DateOfBirth = dto.DateOfBirth;
         if (!string.IsNullOrEmpty(dto.Bio)) actor.Bio = dto.Bio;
 
+        if (dto.MovieIds != null && dto.MovieIds.Any())
+        {
+            var movies = await _movieRepository.GetMoviesByIdsAsync(dto.MovieIds);
+            actor.Movies = movies.ToList();
+        }
+        await _repository.UpdateAsync(actor);
         await _repository.SaveChangesAsync();
+
         return true;
     }
 
@@ -90,6 +115,11 @@ public class ActorService: IActorService
     {
         var actor = await _repository.GetByIdAsync(id);
         if (actor == null) return false;
+
+        if (actor.Movies != null && actor.Movies.Any())
+        {
+            actor.Movies.Clear();
+        }
 
         await _repository.DeleteAsync(actor);
         await _repository.SaveChangesAsync();

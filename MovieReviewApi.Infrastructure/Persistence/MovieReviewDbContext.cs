@@ -18,17 +18,32 @@ public class MovieReviewDbContext: DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-       // modelBuilder.Entity<Actor>()
-       //.HasIndex(a => new { a.Name, a.DateOfBirth })
-       //.IsUnique(); //handle duplicate entries later on
+        // modelBuilder.Entity<Actor>()
+        //.HasIndex(a => new { a.Name, a.DateOfBirth })
+        //.IsUnique(); //handle duplicate entries later on
 
-        modelBuilder.Entity<Actor>()
-            .HasMany(a => a.Movies)   // actor has many movies
-            .WithMany(m => m.Actors); // movie has many actors
 
         //modelBuilder.Entity<Genre>()
         //    .HasMany(g => g.Movies) // genre can be in many movies
         //    .WithMany(m => m.Genres); // movie can have many genres
+
+        modelBuilder.Entity<Actor>().ToTable("Actors");
+        modelBuilder.Entity<Movie>().ToTable("Movies");
+
+        modelBuilder.Entity<Actor>()
+        .HasMany(a => a.Movies)
+        .WithMany(m => m.Actors)
+        .UsingEntity<Dictionary<string, object>>(
+            "ActorMovie",
+            j => j.HasOne<Movie>()
+                  .WithMany()
+                  .HasForeignKey("MovieId")
+                  .OnDelete(DeleteBehavior.Restrict),  
+            j => j.HasOne<Actor>()
+                  .WithMany()
+                  .HasForeignKey("ActorId")
+                  .OnDelete(DeleteBehavior.Restrict)  
+        );
 
         modelBuilder.Entity<Movie>()
             .Property(m => m.Rating)
@@ -39,8 +54,8 @@ public class MovieReviewDbContext: DbContext
             .HasDefaultValueSql("GETUTCDATE()");
 
         modelBuilder.Entity<BaseEntity>()
-          .Property(b => b.UpdatedAt)
-          .HasDefaultValueSql("GETUTCDATE()");
+            .Property(b => b.UpdatedAt)
+            .HasDefaultValueSql("GETUTCDATE()");
     }
 
 

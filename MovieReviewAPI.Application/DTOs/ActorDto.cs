@@ -33,7 +33,7 @@ namespace MovieReviewApi.Application.DTOs
         public DateTime? DateOfBirth { get; set; }
         public string? Bio { get; set; }
 
-        public List<int>? MovieIds { get; set; } = new();
+        public List<string>? Movies { get; set; } = new();
     }
 
     public class CreateActorDto: ActorBaseDto
@@ -44,10 +44,11 @@ namespace MovieReviewApi.Application.DTOs
     {
     }
 
-    public class PatchActorDto
+    public class PatchActorDto: ActorBaseDto
     {
         public string? Name { get; set; }
         public DateTime? DateOfBirth { get; set; }
         public string? Bio { get; set; }
+
     }
 }

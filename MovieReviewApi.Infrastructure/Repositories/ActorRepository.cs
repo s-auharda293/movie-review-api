@@ -12,17 +12,8 @@ public class ActorRepository : IActorRepository
     {
         _context = context;
     }
-    public async Task<IEnumerable<ActorDto>> GetAllAsync() =>
-      await _context.Actors
-          .Select(a => new ActorDto
-          {
-              Id = a.Id,
-              Name = a.Name,
-              Bio = a.Bio,
-              DateOfBirth = a.DateOfBirth,
-              //MovieIds = a.Movies.Select(m => m.Id).ToList()
-          })
-          .ToListAsync();
+    public async Task<IEnumerable<Actor>> GetAllAsync() =>
+      await _context.Actors.Include(a=>a.Movies).ToListAsync();
 
     public async Task<Actor?> GetByIdAsync(int id) =>
         await _context.Actors.Include(a => a.Movies).FirstOrDefaultAsync(a => a.Id == id);
@@ -41,4 +32,9 @@ public class ActorRepository : IActorRepository
     }
 
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+
+    public async Task<IEnumerable<Actor>> GetActorsByIdsAsync(List<int> ids)
+    {
+        return await _context.Actors.Where(a => ids.Contains(a.Id)).ToListAsync();
+    }
 }

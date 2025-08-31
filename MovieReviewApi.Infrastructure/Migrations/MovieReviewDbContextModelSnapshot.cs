@@ -24,15 +24,15 @@ namespace MovieReviewApi.Infrastructure.Migrations
 
             modelBuilder.Entity("ActorMovie", b =>
                 {
-                    b.Property<int>("ActorsId")
+                    b.Property<int>("ActorId")
                         .HasColumnType("int");
 
-                    b.Property<int>("MoviesId")
+                    b.Property<int>("MovieId")
                         .HasColumnType("int");
 
-                    b.HasKey("ActorsId", "MoviesId");
+                    b.HasKey("ActorId", "MovieId");
 
-                    b.HasIndex("MoviesId");
+                    b.HasIndex("MovieId");
 
                     b.ToTable("ActorMovie");
                 });
@@ -50,11 +50,6 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(13)
-                        .HasColumnType("nvarchar(13)");
-
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -64,9 +59,7 @@ namespace MovieReviewApi.Infrastructure.Migrations
 
                     b.ToTable("BaseEntity");
 
-                    b.HasDiscriminator<string>("Discriminator").HasValue("BaseEntity");
-
-                    b.UseTphMappingStrategy();
+                    b.UseTptMappingStrategy();
                 });
 
             modelBuilder.Entity("MovieReviewApi.Domain.Entities.Actor", b =>
@@ -83,7 +76,7 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasDiscriminator().HasValue("Actor");
+                    b.ToTable("Actors", (string)null);
                 });
 
             modelBuilder.Entity("MovieReviewApi.Domain.Entities.Movie", b =>
@@ -108,20 +101,38 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasDiscriminator().HasValue("Movie");
+                    b.ToTable("Movies", (string)null);
                 });
 
             modelBuilder.Entity("ActorMovie", b =>
                 {
                     b.HasOne("MovieReviewApi.Domain.Entities.Actor", null)
                         .WithMany()
-                        .HasForeignKey("ActorsId")
-                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("MovieReviewApi.Domain.Entities.Movie", null)
                         .WithMany()
-                        .HasForeignKey("MoviesId")
+                        .HasForeignKey("MovieId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Actor", b =>
+                {
+                    b.HasOne("MovieReviewApi.Domain.Common.BaseEntity", null)
+                        .WithOne()
+                        .HasForeignKey("MovieReviewApi.Domain.Entities.Actor", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Movie", b =>
+                {
+                    b.HasOne("MovieReviewApi.Domain.Common.BaseEntity", null)
+                        .WithOne()
+                        .HasForeignKey("MovieReviewApi.Domain.Entities.Movie", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

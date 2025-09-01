@@ -19,4 +19,6 @@ public class Movie:BaseEntity
 
     //one movie multiple actors
    public ICollection<Actor> Actors { get; set; } = new List<Actor>();
+
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
 }

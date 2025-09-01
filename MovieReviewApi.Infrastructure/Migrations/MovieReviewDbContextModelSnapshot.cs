@@ -104,6 +104,29 @@ namespace MovieReviewApi.Infrastructure.Migrations
                     b.ToTable("Movies", (string)null);
                 });
 
+            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Review", b =>
+                {
+                    b.HasBaseType("MovieReviewApi.Domain.Common.BaseEntity");
+
+                    b.Property<string>("Comment")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MovieId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Rating")
+                        .HasPrecision(2, 1)
+                        .HasColumnType("decimal(2,1)");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasIndex("MovieId");
+
+                    b.ToTable("Reviews", (string)null);
+                });
+
             modelBuilder.Entity("ActorMovie", b =>
                 {
                     b.HasOne("MovieReviewApi.Domain.Entities.Actor", null)
@@ -135,6 +158,28 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasForeignKey("MovieReviewApi.Domain.Entities.Movie", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Review", b =>
+                {
+                    b.HasOne("MovieReviewApi.Domain.Common.BaseEntity", null)
+                        .WithOne()
+                        .HasForeignKey("MovieReviewApi.Domain.Entities.Review", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MovieReviewApi.Domain.Entities.Movie", "Movie")
+                        .WithMany("Reviews")
+                        .HasForeignKey("MovieId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Movie");
+                });
+
+            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Movie", b =>
+                {
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

@@ -11,6 +11,8 @@ public class MovieReviewDbContext: DbContext
 
     public DbSet<Actor> Actors { get; set; } = null!;
 
+    public DbSet<Review> Reviews { get; set; } = null!;
+
     //public DbSet<Genre> Genres { get; set; } = null!;
 
     public MovieReviewDbContext(DbContextOptions<MovieReviewDbContext> options) : base(options) { 
@@ -29,6 +31,7 @@ public class MovieReviewDbContext: DbContext
 
         modelBuilder.Entity<Actor>().ToTable("Actors");
         modelBuilder.Entity<Movie>().ToTable("Movies");
+        modelBuilder.Entity<Review>().ToTable("Reviews");
 
         modelBuilder.Entity<Actor>()
         .HasMany(a => a.Movies)
@@ -45,8 +48,18 @@ public class MovieReviewDbContext: DbContext
                   .OnDelete(DeleteBehavior.Restrict)  
         );
 
+        modelBuilder.Entity<Review>()
+        .HasOne(r => r.Movie)
+        .WithMany(m => m.Reviews)
+        .HasForeignKey(r => r.MovieId)
+        .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<Movie>()
             .Property(m => m.Rating)
+            .HasPrecision(2, 1);
+
+        modelBuilder.Entity<Review>()
+            .Property(r => r.Rating)
             .HasPrecision(2, 1);
 
         modelBuilder.Entity<BaseEntity>()

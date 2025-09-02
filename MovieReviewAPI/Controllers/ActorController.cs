@@ -22,7 +22,6 @@ namespace MovieReviewApi.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetActors() {
             var actors = await _service.GetAllActorsAsync();
-            if (!actors.Any()) return Ok("There are no actors");
             return Ok(actors);
         }
 
@@ -37,8 +36,15 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<ActionResult<Actor>> PostActor([FromBody] CreateActorDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            var actor = await _service.CreateActorAsync(dto);
-            return CreatedAtAction(nameof(GetActor), new { id = actor.Id }, actor);
+            try
+            {
+                var actor = await _service.CreateActorAsync(dto);
+                return CreatedAtAction(nameof(GetActor), new { id = actor.Id }, actor);
+            }
+            catch (ArgumentException ex) {
+                return BadRequest(new { error = ex.Message});
+            
+            }
         }
 
         [HttpPut]
@@ -46,16 +52,29 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<ActionResult<Actor>> PutActor([FromRoute] int id, [FromBody] UpdateActorDto dto) {
 
             if (!ModelState.IsValid) return BadRequest(ModelState);
+            try { 
             var updated = await _service.UpdateActorAsync(id, dto);
             return updated ? Ok("Actor updated") : NotFound();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPatch]
         [Route("{id}")]
         public async Task<ActionResult<Actor>> PatchActor([FromRoute] int id, [FromBody] PatchActorDto dto) {
             if (!ModelState.IsValid) return BadRequest(ModelState);
+            try { 
             var patched = await _service.PatchActorAsync(id, dto);
             return patched ? NoContent() : NotFound();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+
+            }
         }
 
         [HttpDelete]

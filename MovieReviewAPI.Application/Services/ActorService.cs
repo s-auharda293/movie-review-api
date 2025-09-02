@@ -118,11 +118,11 @@ public class ActorService: IActorService
 
         if (actor.Movies != null && actor.Movies.Any())
         {
-            actor.Movies.Clear();
+            actor.Movies.Clear(); //remove tracked list actor.Movies
         }
 
         await _repository.DeleteAsync(actor);
-        await _repository.SaveChangesAsync();
+        await _repository.SaveChangesAsync(); //when we do this EF Core deletes the rows in the join table not the movies
         return true;
     }
 }

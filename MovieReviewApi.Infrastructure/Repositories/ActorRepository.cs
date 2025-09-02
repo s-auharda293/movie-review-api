@@ -7,34 +7,34 @@ namespace MovieReviewApi.Infrastructure.Repositories;
 
 public class ActorRepository : IActorRepository
 {
-    private readonly MovieReviewDbContext _context;
+    private readonly MovieReviewDbContext _dbcontext;
     public ActorRepository(MovieReviewDbContext context)
     {
-        _context = context;
+        _dbcontext = context;
     }
     public async Task<IEnumerable<Actor>> GetAllAsync() =>
-      await _context.Actors.Include(a=>a.Movies).ToListAsync();
+      await _dbcontext.Actors.Include(a=>a.Movies).ToListAsync();
 
     public async Task<Actor?> GetByIdAsync(int id) =>
-        await _context.Actors.Include(a => a.Movies).FirstOrDefaultAsync(a => a.Id == id);
+        await _dbcontext.Actors.Include(a => a.Movies).FirstOrDefaultAsync(a => a.Id == id);
 
-    public async Task AddAsync(Actor actor) => await _context.Actors.AddAsync(actor);
+    public async Task AddAsync(Actor actor) => await _dbcontext.Actors.AddAsync(actor);
     public Task UpdateAsync(Actor actor)
     {
-        _context.Actors.Update(actor);
+        _dbcontext.Actors.Update(actor);
         return Task.CompletedTask;
     }
 
     public Task DeleteAsync(Actor actor)
     {
-        _context.Actors.Remove(actor);
+        _dbcontext.Actors.Remove(actor);
         return Task.CompletedTask;
     }
 
-    public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+    public async Task SaveChangesAsync() => await _dbcontext.SaveChangesAsync();
 
     public async Task<IEnumerable<Actor>> GetActorsByIdsAsync(List<int> ids)
     {
-        return await _context.Actors.Where(a => ids.Contains(a.Id)).ToListAsync();
+        return await _dbcontext.Actors.Where(a => ids.Contains(a.Id)).ToListAsync();
     }
 }

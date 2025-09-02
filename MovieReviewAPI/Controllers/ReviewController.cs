@@ -26,14 +26,16 @@ namespace MovieReviewApi.Api.Controllers
         }
 
 
-        [HttpGet("movie/{movieId}")]
+        [HttpGet]
+        [Route("movie/{movieId}")]
         public async Task<ActionResult<IEnumerable<ReviewDto>>> GetByMovie(int movieId) { 
             var review = await _service.GetReviewsByMovieIdAsync(movieId);
             if (!review.Any()) return Ok("There is no review for this movie yet!");
             return Ok(review);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet]
+        [Route("{id}")]
         public async Task<ActionResult<ReviewDto>> GetById(int id)
         {
             var review = await _service.GetReviewByIdAsync(id);
@@ -42,30 +44,33 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ReviewDto>> Create(CreateReviewDto dto)
+        public async Task<ActionResult<ReviewDto>> Create([FromBody] CreateReviewDto dto)
         {
             var created = await _service.CreateReviewAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateReviewDto dto)
+        [HttpPut]
+        [Route("{id}")]
+        public async Task<IActionResult> Update([FromRoute]int id,[FromBody] UpdateReviewDto dto)
         {
             var result = await _service.UpdateReviewAsync(id, dto);
             if (!result) return NotFound();
             return NoContent();
         }
 
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> Patch(int id, PatchReviewDto dto)
+        [HttpPatch]
+        [Route("{id}")]
+        public async Task<IActionResult> Patch([FromRoute] int id,[FromBody] PatchReviewDto dto)
         {
             var result = await _service.PatchReviewAsync(id, dto);
             if (!result) return NotFound();
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpDelete]
+        [Route("{id}")]
+        public async Task<IActionResult> Delete([FromRoute] int id)
         {
             var result = await _service.DeleteReviewAsync(id);
             if (!result) return NotFound();

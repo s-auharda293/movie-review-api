@@ -19,7 +19,6 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<IActionResult> GetMovies()
         {
             var movies = await _service.GetAllMoviesAsync();
-            if (!movies.Any()) return Ok("There are no movies");
             return Ok(movies);
         }
 
@@ -35,9 +34,14 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<IActionResult> PostMovie([FromBody] CreateMovieDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var movie = await _service.CreateMovieAsync(dto);
-            return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
+            try
+            {
+                var movie = await _service.CreateMovieAsync(dto);
+                return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
+            }
+            catch (ArgumentException e) {
+                return BadRequest(new { error = e.Message });
+            }
         }
 
         [HttpPut]
@@ -46,8 +50,14 @@ namespace MovieReviewApi.Api.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            try { 
             var updated = await _service.UpdateMovieAsync(id, dto);
-            return updated ? Ok("Movie updated") : NotFound();
+            return updated ? Ok() : NotFound();
+            }
+            catch (ArgumentException e)
+            {
+                return BadRequest(new { error = e.Message });
+            }
         }
 
         [HttpPatch]
@@ -55,9 +65,14 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<IActionResult> PatchMovie([FromRoute] int id, [FromBody] PatchMovieDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-
+            try { 
             var patched = await _service.PatchMovieAsync(id, dto);
             return patched ? NoContent() : NotFound();
+            }
+            catch (ArgumentException e)
+            {
+                return BadRequest(new { error = e.Message });
+            }
         }
 
         [HttpDelete]

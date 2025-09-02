@@ -21,7 +21,6 @@ namespace MovieReviewApi.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ReviewDto>>> GetAll() { 
             var reviews = await _service.GetAllReviewsAsync();
-            if (!reviews.Any()) return Ok("There are no reviews yet!");
             return Ok(reviews);
         }
 
@@ -30,7 +29,7 @@ namespace MovieReviewApi.Api.Controllers
         [Route("movie/{movieId}")]
         public async Task<ActionResult<IEnumerable<ReviewDto>>> GetByMovie(int movieId) { 
             var review = await _service.GetReviewsByMovieIdAsync(movieId);
-            if (!review.Any()) return Ok("There is no review for this movie yet!");
+            if (review == null) return NotFound();
             return Ok(review);
         }
 
@@ -46,8 +45,14 @@ namespace MovieReviewApi.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<ReviewDto>> Create([FromBody] CreateReviewDto dto)
         {
-            var created = await _service.CreateReviewAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            try
+            {
+                var created = await _service.CreateReviewAsync(dto);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+            }
+            catch (ArgumentException e) {
+                return BadRequest(new { error = e.Message});
+            }
         }
 
         [HttpPut]
@@ -55,17 +60,23 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<IActionResult> Update([FromRoute]int id,[FromBody] UpdateReviewDto dto)
         {
             var result = await _service.UpdateReviewAsync(id, dto);
-            if (!result) return NotFound();
-            return NoContent();
+                if (!result) return NotFound();
+                return NoContent();
         }
 
         [HttpPatch]
         [Route("{id}")]
         public async Task<IActionResult> Patch([FromRoute] int id,[FromBody] PatchReviewDto dto)
         {
+            try { 
             var result = await _service.PatchReviewAsync(id, dto);
             if (!result) return NotFound();
             return NoContent();
+            }
+            catch (ArgumentException e)
+            {
+                return BadRequest(new { error = e.Message });
+            }
         }
 
         [HttpDelete]

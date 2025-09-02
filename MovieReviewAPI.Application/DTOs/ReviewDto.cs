@@ -6,8 +6,6 @@ namespace MovieReviewApi.Application.DTOs
 {
     public abstract class ReviewBaseDto
     {
-        [Required(ErrorMessage = "MovieId is required")]
-        public int MovieId { get; set; }
 
         [StringLength(100, ErrorMessage = "UserName can't exceed 100 characters")]
         public string? UserName { get; set; }
@@ -31,6 +29,8 @@ namespace MovieReviewApi.Application.DTOs
 
     public class CreateReviewDto : ReviewBaseDto
     {
+        [Required(ErrorMessage = "MovieId is required to create reviews")]
+        public int MovieId { get; set; }
     }
 
     public class UpdateReviewDto : ReviewBaseDto
@@ -39,6 +39,7 @@ namespace MovieReviewApi.Application.DTOs
 
     public class PatchReviewDto
     {
+        public string? UserName { get; set; }
         public string? Comment { get; set; }
         public decimal? Rating { get; set; }
     }

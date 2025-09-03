@@ -56,11 +56,11 @@ public class MovieReviewDbContext: DbContext
 
         modelBuilder.Entity<Movie>()
             .Property(m => m.Rating)
-            .HasPrecision(2, 1);
+            .HasPrecision(3, 1);
 
         modelBuilder.Entity<Review>()
             .Property(r => r.Rating)
-            .HasPrecision(2, 1);
+            .HasPrecision(3, 1);
 
         modelBuilder.Entity<BaseEntity>()
             .Property(b => b.CreatedAt)

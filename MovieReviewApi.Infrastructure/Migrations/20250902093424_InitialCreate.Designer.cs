@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MovieReviewApi.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using MovieReviewApi.Infrastructure.Persistence;
 namespace MovieReviewApi.Infrastructure.Migrations
 {
     [DbContext(typeof(MovieReviewDbContext))]
-    partial class MovieReviewDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250902093424_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,8 +94,8 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Rating")
-                        .HasPrecision(3, 1)
-                        .HasColumnType("decimal(3,1)");
+                        .HasPrecision(2, 1)
+                        .HasColumnType("decimal(2,1)");
 
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("datetime2");
@@ -116,8 +119,8 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Rating")
-                        .HasPrecision(3, 1)
-                        .HasColumnType("decimal(3,1)");
+                        .HasPrecision(2, 1)
+                        .HasColumnType("decimal(2,1)");
 
                     b.Property<string>("UserName")
                         .HasColumnType("nvarchar(max)");

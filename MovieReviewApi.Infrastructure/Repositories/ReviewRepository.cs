@@ -7,43 +7,43 @@ namespace MovieReviewApi.Infrastructure.Repositories
 {
     public class ReviewRepository : IReviewRepository
     {
-        private readonly MovieReviewDbContext _context;
+        private readonly MovieReviewDbContext _dbcontext;
 
         public ReviewRepository(MovieReviewDbContext context)
         {
-            _context = context;
+            _dbcontext = context;
         }
 
         public async Task<IEnumerable<Review>> GetAllAsync() =>
-            await _context.Reviews.Include(r => r.Movie).ToListAsync();
+            await _dbcontext.Reviews.Include(r => r.Movie).ToListAsync();
 
         public async Task<IEnumerable<Review>> GetByMovieIdAsync(int movieId) =>
-            await _context.Reviews
+            await _dbcontext.Reviews
                           .Where(r => r.MovieId == movieId)
                           .Include(r => r.Movie)
                           .ToListAsync();
 
         public async Task<Review?> GetByIdAsync(int id) =>
-            await _context.Reviews
+            await _dbcontext.Reviews
                           .Include(r => r.Movie)
                           .FirstOrDefaultAsync(r => r.Id == id);
 
         public async Task AddAsync(Review review) =>
-            await _context.Reviews.AddAsync(review);
+            await _dbcontext.Reviews.AddAsync(review);
 
         public Task UpdateAsync(Review review) {
-            _context.Reviews.Update(review);
+            _dbcontext.Reviews.Update(review);
             return Task.CompletedTask;
         }
 
 
         public Task DeleteAsync(Review review)
         {
-            _context.Reviews.Remove(review);
+            _dbcontext.Reviews.Remove(review);
             return Task.CompletedTask;
         }
 
         public async Task SaveChangesAsync() =>
-            await _context.SaveChangesAsync();
+            await _dbcontext.SaveChangesAsync();
     }
 }

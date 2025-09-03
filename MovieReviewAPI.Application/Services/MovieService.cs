@@ -61,6 +61,10 @@ public class MovieService : IMovieService
 
         if (movieDto.ActorIds != null && movieDto.ActorIds.Any()) { 
             var actors = await _actorRepository.GetActorsByIdsAsync(movieDto.ActorIds);
+            if (actors.ToList().Count != movieDto.ActorIds.Count) {
+                var invalidIds = movieDto.ActorIds.Except(actors.Select(a => a.Id).ToList());
+                throw new ArgumentException($"One or more actors with Ids {string.Join(", ", invalidIds)} do not exist.");
+            }
             movie.Actors = actors.ToList();
         }
 
@@ -92,6 +96,11 @@ public class MovieService : IMovieService
 
         if (movieDto.ActorIds != null && movieDto.ActorIds.Any()) { 
             var actors = await _actorRepository.GetActorsByIdsAsync(movieDto.ActorIds);
+            if (actors.ToList().Count != movieDto.ActorIds.Count)
+            {
+                var invalidIds = movieDto.ActorIds.Except(actors.Select(a => a.Id).ToList());
+                throw new ArgumentException($"One or more actors with Ids {string.Join(", ", invalidIds)} do not exist.");
+            }
             movie.Actors = actors.ToList();
         }
 
@@ -123,6 +132,11 @@ public class MovieService : IMovieService
         if (movieDto.ActorIds != null && movieDto.ActorIds.Any())
         {
             var actors = await _actorRepository.GetActorsByIdsAsync(movieDto.ActorIds);
+            if (actors.ToList().Count != movieDto.ActorIds.Count)
+            {
+                var invalidIds = movieDto.ActorIds.Except(actors.Select(a => a.Id).ToList());
+                throw new ArgumentException($"One or more actors with Ids {string.Join(", ", invalidIds)} do not exist.");
+            }
             movie.Actors = actors.ToList();
         }
 

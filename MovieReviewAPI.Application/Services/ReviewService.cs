@@ -7,10 +7,12 @@ namespace MovieReviewApi.Application.Services
     public class ReviewService : IReviewService
     {
         private readonly IReviewRepository _repository;
+        private readonly IMovieRepository _movieRepository;
 
-        public ReviewService(IReviewRepository repository)
+        public ReviewService(IReviewRepository repository, IMovieRepository movieRepository)
         {
             _repository = repository;
+            _movieRepository = movieRepository;
         }
 
         public async Task<IEnumerable<ReviewDto>> GetAllReviewsAsync()
@@ -64,6 +66,11 @@ namespace MovieReviewApi.Application.Services
                 Rating = dto.Rating
             };
 
+            var movie = await _movieRepository.GetByIdAsync(dto.MovieId);
+            if (movie == null) {
+                throw new ArgumentException("Cannot post review because movie doesn't exist");
+            }
+
             await _repository.AddAsync(review);
             await _repository.SaveChangesAsync();
 
@@ -82,7 +89,6 @@ namespace MovieReviewApi.Application.Services
             var review = await _repository.GetByIdAsync(id);
             if (review == null) return false;
 
-            review.MovieId = dto.MovieId;
             review.UserName = dto.UserName;
             review.Comment = dto.Comment;
             review.Rating = dto.Rating;
@@ -99,7 +105,6 @@ namespace MovieReviewApi.Application.Services
 
             if (!string.IsNullOrEmpty(dto.Comment)) review.Comment = dto.Comment;
             if (dto.Rating.HasValue) review.Rating = dto.Rating.Value;
-
             await _repository.SaveChangesAsync();
             return true;
         }

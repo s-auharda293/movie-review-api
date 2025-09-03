@@ -12,8 +12,8 @@ using MovieReviewApi.Infrastructure.Persistence;
 namespace MovieReviewApi.Infrastructure.Migrations
 {
     [DbContext(typeof(MovieReviewDbContext))]
-    [Migration("20250831172751_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250903045529_ChangeRatingPrecisionTo3,1")]
+    partial class ChangeRatingPrecisionTo31
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -94,8 +94,8 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Rating")
-                        .HasPrecision(2, 1)
-                        .HasColumnType("decimal(2,1)");
+                        .HasPrecision(3, 1)
+                        .HasColumnType("decimal(3,1)");
 
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("datetime2");
@@ -119,8 +119,8 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Rating")
-                        .HasPrecision(2, 1)
-                        .HasColumnType("decimal(2,1)");
+                        .HasPrecision(3, 1)
+                        .HasColumnType("decimal(3,1)");
 
                     b.Property<string>("UserName")
                         .HasColumnType("nvarchar(max)");

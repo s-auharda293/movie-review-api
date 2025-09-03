@@ -55,6 +55,10 @@ public class ActorService: IActorService
 
         if (dto.MovieIds != null && dto.MovieIds.Any()) {
             var movies = await _movieRepository.GetMoviesByIdsAsync(dto.MovieIds);
+            if (movies.ToList().Count != dto.MovieIds.Count) {
+                var invalidIds = dto.MovieIds.Except((movies.Select(m => m.Id).ToList())).ToList();
+                throw new ArgumentException($"One or more movies with Ids {string.Join(", ", invalidIds)} do not exist.");
+            }
             actor.Movies = movies.ToList();
         }
 
@@ -83,6 +87,11 @@ public class ActorService: IActorService
         if (dto.MovieIds != null && dto.MovieIds.Any())
         {
             var movies = await _movieRepository.GetMoviesByIdsAsync(dto.MovieIds);
+            if (movies.ToList().Count != dto.MovieIds.Count)
+            {
+                var invalidIds = dto.MovieIds.Except((movies.Select(m => m.Id).ToList())).ToList();
+                throw new ArgumentException($"One or more movies with Ids {string.Join(", ", invalidIds)} do not exist.");
+            }
             actor.Movies = movies.ToList();
         }
 
@@ -103,6 +112,11 @@ public class ActorService: IActorService
         if (dto.MovieIds != null && dto.MovieIds.Any())
         {
             var movies = await _movieRepository.GetMoviesByIdsAsync(dto.MovieIds);
+            if (movies.ToList().Count != dto.MovieIds.Count)
+            {
+                var invalidIds = dto.MovieIds.Except((movies.Select(m => m.Id).ToList())).ToList();
+                throw new ArgumentException($"One or more movies with Ids {string.Join(", ", invalidIds)} do not exist.");
+            }
             actor.Movies = movies.ToList();
         }
         await _repository.UpdateAsync(actor);
@@ -118,11 +132,11 @@ public class ActorService: IActorService
 
         if (actor.Movies != null && actor.Movies.Any())
         {
-            actor.Movies.Clear();
+            actor.Movies.Clear(); //remove tracked list actor.Movies
         }
 
         await _repository.DeleteAsync(actor);
-        await _repository.SaveChangesAsync();
+        await _repository.SaveChangesAsync(); //when we do this EF Core deletes the rows in the join table not the movies
         return true;
     }
 }

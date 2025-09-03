@@ -12,7 +12,7 @@ using MovieReviewApi.Infrastructure.Persistence;
 namespace MovieReviewApi.Infrastructure.Migrations
 {
     [DbContext(typeof(MovieReviewDbContext))]
-    [Migration("20250831172751_InitialCreate")]
+    [Migration("20250902093424_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

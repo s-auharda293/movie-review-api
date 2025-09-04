@@ -24,7 +24,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetMovie([FromRoute] int id)
+        public async Task<IActionResult> GetMovie([FromRoute] Guid id)
         {
             var movie = await _service.GetMovieByIdAsync(id);
             return movie == null ? NotFound() : Ok(movie);
@@ -46,7 +46,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> PutMovie([FromRoute] int id, [FromBody] UpdateMovieDto dto)
+        public async Task<IActionResult> PutMovie([FromRoute] Guid id, [FromBody] UpdateMovieDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -62,7 +62,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task<IActionResult> PatchMovie([FromRoute] int id, [FromBody] PatchMovieDto dto)
+        public async Task<IActionResult> PatchMovie([FromRoute] Guid id, [FromBody] PatchMovieDto dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             try { 
@@ -77,7 +77,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> DeleteMovie([FromRoute] int id)
+        public async Task<IActionResult> DeleteMovie([FromRoute] Guid id)
         {
             var deleted = await _service.DeleteMovieAsync(id);
             return deleted ? NoContent() : NotFound();

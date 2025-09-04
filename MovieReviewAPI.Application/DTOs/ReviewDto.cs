@@ -20,8 +20,8 @@ namespace MovieReviewApi.Application.DTOs
 
     public class ReviewDto
     {
-        public int Id { get; set; }
-        public int MovieId { get; set; }
+        public Guid Id { get; set; }
+        public Guid MovieId { get; set; }
         public string? UserName { get; set; }
         public string Comment { get; set; } = null!;
         public decimal Rating { get; set; }
@@ -30,7 +30,7 @@ namespace MovieReviewApi.Application.DTOs
     public class CreateReviewDto : ReviewBaseDto
     {
         [Required(ErrorMessage = "MovieId is required to create reviews")]
-        public int MovieId { get; set; }
+        public Guid MovieId { get; set; }
     }
 
     public class UpdateReviewDto : ReviewBaseDto

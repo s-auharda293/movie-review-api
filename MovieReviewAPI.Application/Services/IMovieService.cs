@@ -5,9 +5,9 @@ namespace MovieReviewApi.Application.Services;
 public interface IMovieService
 {
     Task<IEnumerable<MovieDto>> GetAllMoviesAsync();
-    Task<MovieDto?> GetMovieByIdAsync(int id);
+    Task<MovieDto?> GetMovieByIdAsync(Guid id);
     Task<MovieDto> CreateMovieAsync(CreateMovieDto movieDto);
-    Task<bool> UpdateMovieAsync(int id, UpdateMovieDto movieDto);
-    Task<bool> PatchMovieAsync(int id, PatchMovieDto moviedto);
-    Task<bool> DeleteMovieAsync(int id);
+    Task<bool> UpdateMovieAsync(Guid id, UpdateMovieDto movieDto);
+    Task<bool> PatchMovieAsync(Guid id, PatchMovieDto moviedto);
+    Task<bool> DeleteMovieAsync(Guid id);
 }

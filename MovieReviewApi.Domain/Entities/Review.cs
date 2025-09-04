@@ -4,7 +4,7 @@ namespace MovieReviewApi.Domain.Entities;
 
 public class Review: BaseEntity
 {
-    public int MovieId { get; set; }     
+    public Guid MovieId { get; set; }     
     public Movie Movie { get; set; } = null!; 
 
     public string? UserName { get; set; } 

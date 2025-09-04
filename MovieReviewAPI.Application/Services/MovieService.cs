@@ -32,7 +32,7 @@ public class MovieService : IMovieService
     }
 
 
-    public async Task<MovieDto?> GetMovieByIdAsync(int id)
+    public async Task<MovieDto?> GetMovieByIdAsync(Guid id)
     {
         var movie = await _repository.GetByIdAsync(id);
         if (movie == null) return null;
@@ -83,7 +83,7 @@ public class MovieService : IMovieService
         };
     }
 
-    async Task<bool> IMovieService.UpdateMovieAsync(int id, UpdateMovieDto movieDto)
+    async Task<bool> IMovieService.UpdateMovieAsync(Guid id, UpdateMovieDto movieDto)
     {
         var movie = await _repository.GetByIdAsync(id);
         if (movie == null) return false;
@@ -109,7 +109,7 @@ public class MovieService : IMovieService
 
         return true;
     }
-    public async Task<bool> PatchMovieAsync(int id, PatchMovieDto movieDto)
+    public async Task<bool> PatchMovieAsync(Guid id, PatchMovieDto movieDto)
     {
         var movie = await _repository.GetByIdAsync(id);
         if (movie == null) return false;
@@ -147,7 +147,7 @@ public class MovieService : IMovieService
     }
 
 
-    public async Task<bool> DeleteMovieAsync(int id)
+    public async Task<bool> DeleteMovieAsync(Guid id)
     {
         var movie = await _repository.GetByIdAsync(id);
         if (movie == null) return false;

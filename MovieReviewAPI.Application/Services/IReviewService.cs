@@ -7,11 +7,11 @@ namespace MovieReviewApi.Application.Interfaces
     public interface IReviewService
     {
         Task<IEnumerable<ReviewDto>> GetAllReviewsAsync();
-        Task<IEnumerable<ReviewDto>> GetReviewsByMovieIdAsync(int movieId);
-        Task<ReviewDto?> GetReviewByIdAsync(int id);
+        Task<IEnumerable<ReviewDto>> GetReviewsByMovieIdAsync(Guid movieId);
+        Task<ReviewDto?> GetReviewByIdAsync(Guid id);
         Task<ReviewDto> CreateReviewAsync(CreateReviewDto dto);
-        Task<bool> UpdateReviewAsync(int id, UpdateReviewDto dto);
-        Task<bool> PatchReviewAsync(int id, PatchReviewDto dto);
-        Task<bool> DeleteReviewAsync(int id);
+        Task<bool> UpdateReviewAsync(Guid id, UpdateReviewDto dto);
+        Task<bool> PatchReviewAsync(Guid id, PatchReviewDto dto);
+        Task<bool> DeleteReviewAsync(Guid id);
     }
 }

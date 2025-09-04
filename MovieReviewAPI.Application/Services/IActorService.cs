@@ -4,10 +4,10 @@ namespace MovieReviewApi.Application.Services;
 public interface IActorService
 {
     Task<IEnumerable<ActorDto>> GetAllActorsAsync();
-    Task<ActorDto?> GetActorByIdAsync(int id);
+    Task<ActorDto?> GetActorByIdAsync(Guid id);
     Task<ActorDto> CreateActorAsync(CreateActorDto dto);
-    Task<bool> UpdateActorAsync(int id, UpdateActorDto dto);
-    Task<bool> PatchActorAsync(int id, PatchActorDto dto);
-    Task<bool> DeleteActorAsync(int id);
+    Task<bool> UpdateActorAsync(Guid id, UpdateActorDto dto);
+    Task<bool> PatchActorAsync(Guid id, PatchActorDto dto);
+    Task<bool> DeleteActorAsync(Guid id);
 }
 

@@ -4,27 +4,32 @@ using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Services;
 using MovieReviewApi.Infrastructure.Extensions;
 using MovieReviewApi.Infrastructure.Repositories;
+using MovieReviewApi.Api.Filters;
 
 
 try
 {
+    Log.Logger = new LoggerConfiguration()
+      //.ReadFrom.Configuration(builder.Configuration)
+      .MinimumLevel.Information()
+      .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+      .WriteTo.File
+      (
+      path: "Logs/log.txt",
+      rollingInterval: RollingInterval.Day
+      )
+      .CreateLogger();
+
     var builder = WebApplication.CreateBuilder(args);
 
-    Log.Logger = new LoggerConfiguration()
-        //.ReadFrom.Configuration(builder.Configuration)
-        .MinimumLevel.Information()
-        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
-        .WriteTo.File
-        (
-        path: "Logs/log.txt", 
-        rollingInterval: RollingInterval.Day
-        )
-        .CreateLogger();
-
-    builder.Services.AddSerilog();
+    builder.Host.UseSerilog();
     // Add services to the container.
 
-    builder.Services.AddControllers();
+    builder.Services.AddControllers(options =>
+    { 
+        options.Filters.Add<RequestResponseLoggingFilter>();
+    });
+
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();

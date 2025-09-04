@@ -17,13 +17,13 @@ namespace MovieReviewApi.Infrastructure.Repositories
         public async Task<IEnumerable<Review>> GetAllAsync() =>
             await _dbcontext.Reviews.Include(r => r.Movie).ToListAsync();
 
-        public async Task<IEnumerable<Review>> GetByMovieIdAsync(int movieId) =>
+        public async Task<IEnumerable<Review>> GetByMovieIdAsync(Guid movieId) =>
             await _dbcontext.Reviews
                           .Where(r => r.MovieId == movieId)
                           .Include(r => r.Movie)
                           .ToListAsync();
 
-        public async Task<Review?> GetByIdAsync(int id) =>
+        public async Task<Review?> GetByIdAsync(Guid id) =>
             await _dbcontext.Reviews
                           .Include(r => r.Movie)
                           .FirstOrDefaultAsync(r => r.Id == id);

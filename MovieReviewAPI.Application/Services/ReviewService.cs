@@ -28,7 +28,7 @@ namespace MovieReviewApi.Application.Services
             }).ToList();
         }
 
-        public async Task<IEnumerable<ReviewDto>> GetReviewsByMovieIdAsync(int movieId)
+        public async Task<IEnumerable<ReviewDto>> GetReviewsByMovieIdAsync(Guid movieId)
         {
             var reviews = await _repository.GetByMovieIdAsync(movieId);
             return reviews.Select(r => new ReviewDto
@@ -41,7 +41,7 @@ namespace MovieReviewApi.Application.Services
             }).ToList();
         }
 
-        public async Task<ReviewDto?> GetReviewByIdAsync(int id)
+        public async Task<ReviewDto?> GetReviewByIdAsync(Guid id)
         {
             var r = await _repository.GetByIdAsync(id);
             if (r == null) return null;
@@ -84,7 +84,7 @@ namespace MovieReviewApi.Application.Services
             };
         }
 
-        public async Task<bool> UpdateReviewAsync(int id, UpdateReviewDto dto)
+        public async Task<bool> UpdateReviewAsync(Guid id, UpdateReviewDto dto)
         {
             var review = await _repository.GetByIdAsync(id);
             if (review == null) return false;
@@ -98,7 +98,7 @@ namespace MovieReviewApi.Application.Services
             return true;
         }
 
-        public async Task<bool> PatchReviewAsync(int id, PatchReviewDto dto)
+        public async Task<bool> PatchReviewAsync(Guid id, PatchReviewDto dto)
         {
             var review = await _repository.GetByIdAsync(id);
             if (review == null) return false;
@@ -109,7 +109,7 @@ namespace MovieReviewApi.Application.Services
             return true;
         }
 
-        public async Task<bool> DeleteReviewAsync(int id)
+        public async Task<bool> DeleteReviewAsync(Guid id)
         {
             var review = await _repository.GetByIdAsync(id);
             if (review == null) return false;

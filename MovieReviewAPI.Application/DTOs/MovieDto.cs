@@ -21,12 +21,12 @@ public abstract class MovieBaseDto
     [Range(0, 10, ErrorMessage = "Rating must be between 0 and 10")]
     public decimal Rating { get; set; }
 
-    public List<int>? ActorIds { get; set; }
+    public List<Guid>? ActorIds { get; set; }
 
 }
 public class MovieDto
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Title { get; set; } = null!;
     public string Description { get; set; } = null!;
     public DateTime ReleaseDate { get; set; }
@@ -59,5 +59,5 @@ public class PatchMovieDto
     [Range(0, 10, ErrorMessage = "Rating must be between 0 and 10")]
     public decimal? Rating { get; set; }
 
-    public List<int>? ActorIds { get; set; }
+    public List<Guid>? ActorIds { get; set; }
 }

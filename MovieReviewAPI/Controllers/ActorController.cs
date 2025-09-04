@@ -27,7 +27,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetActor([FromRoute] int id) {
+        public async Task<IActionResult> GetActor([FromRoute] Guid id) {
             var actor = await _service.GetActorByIdAsync(id);
             return actor == null ? NotFound() : Ok(actor);
         }
@@ -49,7 +49,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<ActionResult<Actor>> PutActor([FromRoute] int id, [FromBody] UpdateActorDto dto) {
+        public async Task<ActionResult<Actor>> PutActor([FromRoute] Guid id, [FromBody] UpdateActorDto dto) {
 
             if (!ModelState.IsValid) return BadRequest(ModelState);
             try { 
@@ -64,7 +64,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task<ActionResult<Actor>> PatchActor([FromRoute] int id, [FromBody] PatchActorDto dto) {
+        public async Task<ActionResult<Actor>> PatchActor([FromRoute] Guid id, [FromBody] PatchActorDto dto) {
             if (!ModelState.IsValid) return BadRequest(ModelState);
             try { 
             var patched = await _service.PatchActorAsync(id, dto);
@@ -79,7 +79,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> DeleteActor(int id) {    
+        public async Task<IActionResult> DeleteActor(Guid id) {    
                 var deleted = await _service.DeleteActorAsync(id);
             return deleted ? NoContent() : NotFound(); 
         }

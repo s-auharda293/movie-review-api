@@ -18,7 +18,7 @@ namespace MovieReviewApi.Infrastructure.Repositories;
             return await _dbContext.Movies.Include(m => m.Actors).ToListAsync();
     }
 
-    public async Task<Movie?> GetByIdAsync(int id)
+    public async Task<Movie?> GetByIdAsync(Guid id)
     {
         return await _dbContext.Movies.Include(m=>m.Actors).FirstOrDefaultAsync(m=>m.Id==id);
     }
@@ -45,7 +45,7 @@ namespace MovieReviewApi.Infrastructure.Repositories;
        await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Movie>> GetMoviesByIdsAsync(List<int> ids)
+    public async Task<IEnumerable<Movie>> GetMoviesByIdsAsync(List<Guid> ids)
     {
         return await _dbContext.Movies
             .Where(m => ids.Contains(m.Id))

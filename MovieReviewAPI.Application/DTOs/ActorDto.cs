@@ -14,7 +14,7 @@ namespace MovieReviewApi.Application.DTOs
         [StringLength(500, ErrorMessage = "Bio can't exceed 500 characters")]
         public string? Bio { get; set; }
 
-        public List<int>? MovieIds { get; set; }
+        public List<Guid>? MovieIds { get; set; }
 
         public static ValidationResult? ValidateDateOfBirth(DateTime? dob, ValidationContext context)
         {
@@ -27,7 +27,7 @@ namespace MovieReviewApi.Application.DTOs
 
     public class ActorDto
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; } = null!;
 
         public DateTime? DateOfBirth { get; set; }

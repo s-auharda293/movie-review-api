@@ -17,18 +17,18 @@ namespace MovieReviewApi.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("ActorMovie", b =>
                 {
-                    b.Property<int>("ActorId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("MovieId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MovieId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ActorId", "MovieId");
 
@@ -39,11 +39,9 @@ namespace MovieReviewApi.Infrastructure.Migrations
 
             modelBuilder.Entity("MovieReviewApi.Domain.Common.BaseEntity", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -112,8 +110,8 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("MovieId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("MovieId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Rating")
                         .HasPrecision(3, 1)

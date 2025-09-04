@@ -29,7 +29,7 @@ public class ActorService: IActorService
     }
 
 
-    public async Task<ActorDto?> GetActorByIdAsync(int id) {
+    public async Task<ActorDto?> GetActorByIdAsync(Guid id) {
         var a = await _repository.GetByIdAsync(id);
         if (a == null) return null;
 
@@ -75,7 +75,7 @@ public class ActorService: IActorService
         };
     }
 
-    public async Task<bool> UpdateActorAsync(int id, UpdateActorDto dto)
+    public async Task<bool> UpdateActorAsync(Guid id, UpdateActorDto dto)
     {
         var actor = await _repository.GetByIdAsync(id);
         if (actor == null) return false;
@@ -100,7 +100,7 @@ public class ActorService: IActorService
         return true;
     }
 
-    public async Task<bool> PatchActorAsync(int id, PatchActorDto dto)
+    public async Task<bool> PatchActorAsync(Guid id, PatchActorDto dto)
     {
         var actor = await _repository.GetByIdAsync(id);
         if (actor == null) return false;
@@ -125,7 +125,7 @@ public class ActorService: IActorService
         return true;
     }
 
-    public async Task<bool> DeleteActorAsync(int id)
+    public async Task<bool> DeleteActorAsync(Guid id)
     {
         var actor = await _repository.GetByIdAsync(id);
         if (actor == null) return false;

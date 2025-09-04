@@ -27,7 +27,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpGet]
         [Route("movie/{movieId}")]
-        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetByMovie(int movieId) { 
+        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetByMovie(Guid movieId) { 
             var review = await _service.GetReviewsByMovieIdAsync(movieId);
             if (review == null) return NotFound();
             return Ok(review);
@@ -35,7 +35,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<ActionResult<ReviewDto>> GetById(int id)
+        public async Task<ActionResult<ReviewDto>> GetById(Guid id)
         {
             var review = await _service.GetReviewByIdAsync(id);
             if (review == null) return NotFound();
@@ -57,7 +57,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> Update([FromRoute]int id,[FromBody] UpdateReviewDto dto)
+        public async Task<IActionResult> Update([FromRoute]Guid id,[FromBody] UpdateReviewDto dto)
         {
             var result = await _service.UpdateReviewAsync(id, dto);
                 if (!result) return NotFound();
@@ -66,7 +66,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task<IActionResult> Patch([FromRoute] int id,[FromBody] PatchReviewDto dto)
+        public async Task<IActionResult> Patch([FromRoute] Guid id,[FromBody] PatchReviewDto dto)
         {
             try { 
             var result = await _service.PatchReviewAsync(id, dto);
@@ -81,7 +81,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> Delete([FromRoute] int id)
+        public async Task<IActionResult> Delete([FromRoute] Guid id)
         {
             var result = await _service.DeleteReviewAsync(id);
             if (!result) return NotFound();

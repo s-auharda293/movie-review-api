@@ -15,7 +15,7 @@ public class ActorRepository : IActorRepository
     public async Task<IEnumerable<Actor>> GetAllAsync() =>
       await _dbcontext.Actors.Include(a=>a.Movies).ToListAsync();
 
-    public async Task<Actor?> GetByIdAsync(int id) =>
+    public async Task<Actor?> GetByIdAsync(Guid id) =>
         await _dbcontext.Actors.Include(a => a.Movies).FirstOrDefaultAsync(a => a.Id == id);
 
     public async Task AddAsync(Actor actor) => await _dbcontext.Actors.AddAsync(actor);
@@ -33,7 +33,7 @@ public class ActorRepository : IActorRepository
 
     public async Task SaveChangesAsync() => await _dbcontext.SaveChangesAsync();
 
-    public async Task<IEnumerable<Actor>> GetActorsByIdsAsync(List<int> ids)
+    public async Task<IEnumerable<Actor>> GetActorsByIdsAsync(List<Guid> ids)
     {
         return await _dbcontext.Actors.Where(a => ids.Contains(a.Id)).ToListAsync();
     }

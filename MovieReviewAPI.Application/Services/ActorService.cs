@@ -2,6 +2,7 @@
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Entities;
 using MovieReviewApi.Infrastructure.Repositories;
+using System.ComponentModel.DataAnnotations;
 
 namespace MovieReviewApi.Application.Services;
 
@@ -17,6 +18,9 @@ public class ActorService: IActorService
 
     public async Task<IEnumerable<ActorDto>> GetAllActorsAsync()
     {
+
+        throw new ValidationException("The data sent is not in proper format please verify!");
+
         var actors = await _repository.GetAllAsync();
         return actors.Select(a => new ActorDto
         {

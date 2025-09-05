@@ -6,6 +6,7 @@ using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Services;
 using MovieReviewApi.Domain.Entities;
 using MovieReviewApi.Infrastructure.Persistence;
+using System.ComponentModel.DataAnnotations;
 
 namespace MovieReviewApi.Api.Controllers
 {
@@ -35,7 +36,8 @@ namespace MovieReviewApi.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<Actor>> PostActor([FromBody] CreateActorDto dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            //if (!ModelState.IsValid) return BadRequest(ModelState);
+            //if (!ModelState.IsValid) throw new ValidationException("The data sent is not in proper format please verify
             try
             {
                 var actor = await _service.CreateActorAsync(dto);

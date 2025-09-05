@@ -1,10 +1,10 @@
-using Serilog;
-
+using MovieReviewApi.Api.Filters;
+using MovieReviewApi.Api.Middleware;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Services;
 using MovieReviewApi.Infrastructure.Extensions;
 using MovieReviewApi.Infrastructure.Repositories;
-using MovieReviewApi.Api.Filters;
+using Serilog;
 
 
 try
@@ -46,6 +46,8 @@ try
     builder.Services.AddScoped<IReviewService, ReviewService>();
 
     var app = builder.Build();
+
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())

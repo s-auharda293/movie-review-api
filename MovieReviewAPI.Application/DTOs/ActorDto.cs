@@ -1,27 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
-namespace MovieReviewApi.Application.DTOs
+﻿namespace MovieReviewApi.Application.DTOs
 {
     public abstract class ActorBaseDto
     {
-        [Required(ErrorMessage = "Actor name is required")]
-        [StringLength(100, ErrorMessage = "Name can't exceed 100 characters")]
         public string Name { get; set; } = null!;
 
-        [DataType(DataType.Date)]
-        [CustomValidation(typeof(ActorBaseDto), nameof(ValidateDateOfBirth))]
         public DateTime? DateOfBirth { get; set; }
 
-        [StringLength(500, ErrorMessage = "Bio can't exceed 500 characters")]
         public string? Bio { get; set; }
 
         public List<Guid>? MovieIds { get; set; }
-
-        public static ValidationResult? ValidateDateOfBirth(DateTime? dob, ValidationContext context)
-        {
-            if (dob.HasValue && dob.Value >= DateTime.UtcNow)
-                return new ValidationResult("Date of birth must be in the past");
-            return ValidationResult.Success;
-        }
 
     }
 
@@ -46,9 +33,9 @@ namespace MovieReviewApi.Application.DTOs
 
     public class PatchActorDto: ActorBaseDto
     {
-        public string? Name { get; set; }
-        public DateTime? DateOfBirth { get; set; }
-        public string? Bio { get; set; }
+        public new string? Name { get; set; }
+        public new DateTime? DateOfBirth { get; set; }
+        public new string? Bio { get; set; }
 
     }
 }

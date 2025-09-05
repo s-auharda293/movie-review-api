@@ -1,11 +1,12 @@
-using Serilog;
-
+using FluentValidation;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using MovieReviewApi.Api.Filters;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Services;
 using MovieReviewApi.Infrastructure.Extensions;
 using MovieReviewApi.Infrastructure.Repositories;
-using MovieReviewApi.Api.Filters;
-
+using Serilog;
+using MovieReviewApi.Application.Validators.ActorValidator;
 
 try
 {
@@ -25,14 +26,19 @@ try
     builder.Host.UseSerilog();
     // Add services to the container.
 
+    builder.Services.AddValidatorsFromAssemblyContaining<CreateActorValidator>();
+
+    builder.Services.AddFluentValidationAutoValidation();
+
     builder.Services.AddControllers(options =>
-    { 
+    {
         options.Filters.Add<RequestResponseLoggingFilter>();
     });
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+
 
     builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -44,6 +50,11 @@ try
 
     builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
     builder.Services.AddScoped<IReviewService, ReviewService>();
+
+    //builder.Services.AddControllers(options =>
+    //{
+    //    options.Filters.Add<ValidationFilter>();
+    //});
 
     var app = builder.Build();
 

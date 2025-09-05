@@ -1,7 +1,6 @@
 ﻿using Azure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Services;
 using MovieReviewApi.Domain.Entities;

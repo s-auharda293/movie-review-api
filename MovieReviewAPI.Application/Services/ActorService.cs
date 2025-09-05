@@ -2,6 +2,8 @@
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Entities;
 using MovieReviewApi.Infrastructure.Repositories;
+using FluentValidation;
+using FluentValidation.Results;
 
 namespace MovieReviewApi.Application.Services;
 
@@ -9,10 +11,9 @@ public class ActorService: IActorService
 {
     private readonly IActorRepository _repository;
     private readonly IMovieRepository _movieRepository;
-    public ActorService(IActorRepository repository, IMovieRepository movieRepository) {
+    public ActorService(IActorRepository repository, IMovieRepository movieRepository/*, IValidator<CreateActorDto> createValidator, IValidator<UpdateActorDto> updateValidator, IValidator<PatchActorDto> patchValidator*/) {
         _repository = repository;
         _movieRepository = movieRepository;
-
     }
 
     public async Task<IEnumerable<ActorDto>> GetAllActorsAsync()
@@ -30,6 +31,9 @@ public class ActorService: IActorService
 
 
     public async Task<ActorDto?> GetActorByIdAsync(Guid id) {
+        if (id == Guid.Empty)
+            throw new ArgumentException("Actor Id cannot be empty.", nameof(id));
+
         var a = await _repository.GetByIdAsync(id);
         if (a == null) return null;
 
@@ -46,6 +50,11 @@ public class ActorService: IActorService
 
     public async Task<ActorDto> CreateActorAsync(CreateActorDto dto)
     {
+
+        //ValidationResult validationResult = await _createValidator.ValidateAsync(dto);
+        //if (!validationResult.IsValid)
+        //    throw new ValidationException(validationResult.Errors);
+
         var actor = new Actor
         {
             Name = dto.Name,
@@ -77,6 +86,10 @@ public class ActorService: IActorService
 
     public async Task<bool> UpdateActorAsync(Guid id, UpdateActorDto dto)
     {
+        //ValidationResult validationResult = await _updateValidator.ValidateAsync(dto);
+        //if (!validationResult.IsValid)
+        //    throw new ValidationException(validationResult.Errors);
+
         var actor = await _repository.GetByIdAsync(id);
         if (actor == null) return false;
 
@@ -102,6 +115,10 @@ public class ActorService: IActorService
 
     public async Task<bool> PatchActorAsync(Guid id, PatchActorDto dto)
     {
+        //ValidationResult validationResult = await _patchValidator.ValidateAsync(dto);
+        //if (!validationResult.IsValid)
+        //    throw new ValidationException(validationResult.Errors);
+
         var actor = await _repository.GetByIdAsync(id);
         if (actor == null) return false;
 

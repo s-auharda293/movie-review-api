@@ -28,12 +28,15 @@ try
 
     builder.Services.AddValidatorsFromAssemblyContaining<CreateActorValidator>();
 
+    builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(MovieReviewApi.Application.MediatRAssemblyMarker).Assembly));
+
     builder.Services.AddFluentValidationAutoValidation();
 
     builder.Services.AddControllers(options =>
     {
         options.Filters.Add<RequestResponseLoggingFilter>();
     });
+
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();

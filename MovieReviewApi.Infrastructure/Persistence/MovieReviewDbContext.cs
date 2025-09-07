@@ -1,11 +1,12 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
+using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Common;
 using MovieReviewApi.Domain.Entities;
 
 namespace MovieReviewApi.Infrastructure.Persistence;
 
-public class MovieReviewDbContext: DbContext
+public class MovieReviewDbContext: DbContext, IApplicationDbContext
 {
     public DbSet<Movie> Movies { get; set; } = null!;
 
@@ -17,6 +18,11 @@ public class MovieReviewDbContext: DbContext
 
     public MovieReviewDbContext(DbContextOptions<MovieReviewDbContext> options) : base(options) { 
     }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) {
+       return base.SaveChangesAsync(cancellationToken);
+    }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,6 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.DTOs;
+using MovieReviewApi.Application.Queries.Actor;
 using MovieReviewApi.Application.Services;
+using MovieReviewApi.Application.Commands.Movie;
 
 namespace MovieReviewApi.Api.Controllers
 {
@@ -9,34 +12,35 @@ namespace MovieReviewApi.Api.Controllers
     public class MoviesController : ControllerBase
     {
         private readonly IMovieService _service;
+        private readonly IMediator _mediator;
 
-        public MoviesController(IMovieService service)
+        public MoviesController(IMovieService service, IMediator mediator)
         {
             _service = service;
+            _mediator = mediator;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMovies()
+        public async Task<IActionResult> GetMovies(CancellationToken cancellationToken)
         {
-            var movies = await _service.GetAllMoviesAsync();
+            var movies = await _mediator.Send(new GetMoviesQuery(),cancellationToken);
             return Ok(movies);
         }
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetMovie([FromRoute] Guid id)
+        public async Task<IActionResult> GetMovie([FromRoute] Guid id, CancellationToken cancellationToken)
         {
-            var movie = await _service.GetMovieByIdAsync(id);
+            var movie = await _mediator.Send(new GetMovieByIdQuery(id), cancellationToken);
             return movie == null ? NotFound() : Ok(movie);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostMovie([FromBody] CreateMovieDto dto)
+        public async Task<IActionResult> PostMovie([FromBody] CreateMovieDto dto, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
             try
             {
-                var movie = await _service.CreateMovieAsync(dto);
+                var movie = await _mediator.Send(new CreateMovieCommand(dto),cancellationToken);
                 return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
             }
             catch (ArgumentException e) {

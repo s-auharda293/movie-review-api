@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using MovieReviewApi.Application.Commands.Review;
 using MovieReviewApi.Application.DTOs;
-using MovieReviewApi.Application.Interfaces;
-using MovieReviewApi.Domain.Entities;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using MovieReviewApi.Application.Queries.Review;
 
 namespace MovieReviewApi.Api.Controllers
 {
@@ -11,43 +10,43 @@ namespace MovieReviewApi.Api.Controllers
     [ApiController]
     public class ReviewsController : ControllerBase
     {
-        private readonly IReviewService _service;
+        private readonly IMediator _mediator;
 
-        public ReviewsController(IReviewService service)
+        public ReviewsController(IMediator mediator)
         {
-            _service = service;
+            _mediator = mediator;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetAll() { 
-            var reviews = await _service.GetAllReviewsAsync();
+        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetAll(CancellationToken cancellationToken) { 
+            var reviews = await _mediator.Send(new GetReviewsQuery(), cancellationToken);
             return Ok(reviews);
         }
 
 
         [HttpGet]
         [Route("movie/{movieId}")]
-        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetByMovie(int movieId) { 
-            var review = await _service.GetReviewsByMovieIdAsync(movieId);
+        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetByMovie(Guid movieId, CancellationToken cancellationToken) { 
+            var review = await _mediator.Send(new GetReviewsByMovieIdQuery(movieId), cancellationToken);
             if (review == null) return NotFound();
             return Ok(review);
         }
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<ActionResult<ReviewDto>> GetById(int id)
+        public async Task<ActionResult<ReviewDto>> GetById(Guid id, CancellationToken cancellationToken)
         {
-            var review = await _service.GetReviewByIdAsync(id);
+            var review = await _mediator.Send(new GetReviewByIdQuery(id), cancellationToken);
             if (review == null) return NotFound();
             return Ok(review);
         }
 
         [HttpPost]
-        public async Task<ActionResult<ReviewDto>> Create([FromBody] CreateReviewDto dto)
+        public async Task<ActionResult<ReviewDto>> Create(CreateReviewDto dto,CancellationToken cancellationToken)
         {
             try
             {
-                var created = await _service.CreateReviewAsync(dto);
+                var created = await _mediator.Send(new CreateReviewCommand(dto),cancellationToken);
                 return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
             catch (ArgumentException e) {
@@ -57,19 +56,19 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> Update([FromRoute]int id,[FromBody] UpdateReviewDto dto)
+        public async Task<IActionResult> Update(Guid id, UpdateReviewDto dto, CancellationToken cancellationToken)
         {
-            var result = await _service.UpdateReviewAsync(id, dto);
+            var result = await _mediator.Send(new UpdateReviewCommand(id, dto), cancellationToken);
                 if (!result) return NotFound();
                 return NoContent();
         }
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task<IActionResult> Patch([FromRoute] int id,[FromBody] PatchReviewDto dto)
+        public async Task<IActionResult> Patch(Guid id, PatchReviewDto dto, CancellationToken cancellationToken)
         {
             try { 
-            var result = await _service.PatchReviewAsync(id, dto);
+            var result = await _mediator.Send(new PatchReviewCommand(id, dto),cancellationToken);
             if (!result) return NotFound();
             return NoContent();
             }
@@ -81,9 +80,9 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> Delete([FromRoute] int id)
+        public async Task<IActionResult> Delete( Guid id, CancellationToken cancellationToken)
         {
-            var result = await _service.DeleteReviewAsync(id);
+            var result = await _mediator.Send(new DeleteReviewCommand(id), cancellationToken);
             if (!result) return NotFound();
             return NoContent();
         }

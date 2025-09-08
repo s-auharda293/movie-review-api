@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.DTOs;
-using MovieReviewApi.Application.Services;
+using MovieReviewApi.Application.Queries.Actor;
+using MovieReviewApi.Application.Commands.Movie;
 
 namespace MovieReviewApi.Api.Controllers
 {
@@ -8,35 +10,34 @@ namespace MovieReviewApi.Api.Controllers
     [ApiController]
     public class MoviesController : ControllerBase
     {
-        private readonly IMovieService _service;
+        private readonly IMediator _mediator;
 
-        public MoviesController(IMovieService service)
+        public MoviesController(IMediator mediator)
         {
-            _service = service;
+            _mediator = mediator;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMovies()
+        public async Task<IActionResult> GetMovies(CancellationToken cancellationToken)
         {
-            var movies = await _service.GetAllMoviesAsync();
+            var movies = await _mediator.Send(new GetMoviesQuery(),cancellationToken);
             return Ok(movies);
         }
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetMovie([FromRoute] int id)
+        public async Task<IActionResult> GetMovie(Guid id, CancellationToken cancellationToken)
         {
-            var movie = await _service.GetMovieByIdAsync(id);
+            var movie = await _mediator.Send(new GetMovieByIdQuery(id), cancellationToken);
             return movie == null ? NotFound() : Ok(movie);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostMovie([FromBody] CreateMovieDto dto)
+        public async Task<IActionResult> PostMovie( CreateMovieDto dto, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
             try
             {
-                var movie = await _service.CreateMovieAsync(dto);
+                var movie = await _mediator.Send(new CreateMovieCommand(dto),cancellationToken);
                 return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
             }
             catch (ArgumentException e) {
@@ -46,12 +47,11 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> PutMovie([FromRoute] int id, [FromBody] UpdateMovieDto dto)
+        public async Task<IActionResult> PutMovie(Guid id, UpdateMovieDto dto, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             try { 
-            var updated = await _service.UpdateMovieAsync(id, dto);
+            var updated = await _mediator.Send(new UpdateMovieCommand(id, dto), cancellationToken);
             return updated ? Ok() : NotFound();
             }
             catch (ArgumentException e)
@@ -62,11 +62,10 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task<IActionResult> PatchMovie([FromRoute] int id, [FromBody] PatchMovieDto dto)
+        public async Task<IActionResult> PatchMovie( Guid id,  PatchMovieDto dto, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
             try { 
-            var patched = await _service.PatchMovieAsync(id, dto);
+            var patched = await _mediator.Send(new PatchMovieCommand(id, dto),cancellationToken);
             return patched ? NoContent() : NotFound();
             }
             catch (ArgumentException e)
@@ -77,9 +76,9 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> DeleteMovie([FromRoute] int id)
+        public async Task<IActionResult> DeleteMovie( Guid id, CancellationToken cancellationToken)
         {
-            var deleted = await _service.DeleteMovieAsync(id);
+            var deleted = await _mediator.Send(new DeleteMovieCommand(id),cancellationToken);
             return deleted ? NoContent() : NotFound();
         }
     }

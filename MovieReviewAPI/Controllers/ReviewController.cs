@@ -59,19 +59,19 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> Update([FromRoute]Guid id,[FromBody] UpdateReviewDto dto)
+        public async Task<IActionResult> Update([FromRoute]Guid id,[FromBody] UpdateReviewDto dto, CancellationToken cancellationToken)
         {
-            var result = await _service.UpdateReviewAsync(id, dto);
+            var result = await _mediator.Send(new UpdateReviewCommand(id, dto), cancellationToken);
                 if (!result) return NotFound();
                 return NoContent();
         }
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task<IActionResult> Patch([FromRoute] Guid id,[FromBody] PatchReviewDto dto)
+        public async Task<IActionResult> Patch([FromRoute] Guid id,[FromBody] PatchReviewDto dto, CancellationToken cancellationToken)
         {
             try { 
-            var result = await _service.PatchReviewAsync(id, dto);
+            var result = await _mediator.Send(new PatchReviewCommand(id, dto),cancellationToken);
             if (!result) return NotFound();
             return NoContent();
             }
@@ -83,9 +83,9 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> Delete([FromRoute] Guid id)
+        public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
         {
-            var result = await _service.DeleteReviewAsync(id);
+            var result = await _mediator.Send(new DeleteReviewCommand(id), cancellationToken);
             if (!result) return NotFound();
             return NoContent();
         }

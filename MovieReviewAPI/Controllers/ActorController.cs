@@ -1,13 +1,10 @@
-﻿using Azure;
-using MediatR;
-using Microsoft.AspNetCore.Http;
+﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Queries.Actor;
 using MovieReviewApi.Application.Services;
 using MovieReviewApi.Domain.Entities;
-using MovieReviewApi.Infrastructure.Persistence;
 
 namespace MovieReviewApi.Api.Controllers
 {
@@ -52,11 +49,11 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<ActionResult<Actor>> PutActor([FromRoute] Guid id, [FromBody] UpdateActorDto dto) {
+        public async Task<ActionResult<Actor>> PutActor([FromRoute] Guid id, [FromBody] UpdateActorDto dto, CancellationToken cancellationToken) {
 
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            try { 
-            var updated = await _service.UpdateActorAsync(id, dto);
+            try
+            {
+                var updated = await _mediator.Send(new UpdateActorCommand(id, dto),cancellationToken);
             return updated ? Ok("Actor updated") : NotFound();
             }
             catch (ArgumentException ex)
@@ -67,10 +64,9 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task<ActionResult<Actor>> PatchActor([FromRoute] Guid id, [FromBody] PatchActorDto dto) {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+        public async Task<ActionResult<Actor>> PatchActor([FromRoute] Guid id, [FromBody] PatchActorDto dto, CancellationToken cancellationToken) {
             try { 
-            var patched = await _service.PatchActorAsync(id, dto);
+            var patched = await _mediator.Send(new PatchActorCommand(id, dto), cancellationToken);
             return patched ? NoContent() : NotFound();
             }
             catch (ArgumentException ex)
@@ -82,8 +78,8 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> DeleteActor(Guid id) {    
-                var deleted = await _service.DeleteActorAsync(id);
+        public async Task<IActionResult> DeleteActor(Guid id, CancellationToken cancellationToken) {    
+                var deleted = await _mediator.Send(new DeleteActorCommand(id),cancellationToken);
             return deleted ? NoContent() : NotFound(); 
         }
 

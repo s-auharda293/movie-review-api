@@ -50,12 +50,11 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> PutMovie([FromRoute] Guid id, [FromBody] UpdateMovieDto dto)
+        public async Task<IActionResult> PutMovie([FromRoute] Guid id, [FromBody] UpdateMovieDto dto, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
 
             try { 
-            var updated = await _service.UpdateMovieAsync(id, dto);
+            var updated = await _mediator.Send(new UpdateMovieCommand(id, dto), cancellationToken);
             return updated ? Ok() : NotFound();
             }
             catch (ArgumentException e)
@@ -66,11 +65,10 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task<IActionResult> PatchMovie([FromRoute] Guid id, [FromBody] PatchMovieDto dto)
+        public async Task<IActionResult> PatchMovie([FromRoute] Guid id, [FromBody] PatchMovieDto dto, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
             try { 
-            var patched = await _service.PatchMovieAsync(id, dto);
+            var patched = await _mediator.Send(new PatchMovieCommand(id, dto),cancellationToken);
             return patched ? NoContent() : NotFound();
             }
             catch (ArgumentException e)
@@ -81,9 +79,9 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> DeleteMovie([FromRoute] Guid id)
+        public async Task<IActionResult> DeleteMovie([FromRoute] Guid id, CancellationToken cancellationToken)
         {
-            var deleted = await _service.DeleteMovieAsync(id);
+            var deleted = await _mediator.Send(new DeleteMovieCommand(id),cancellationToken);
             return deleted ? NoContent() : NotFound();
         }
     }

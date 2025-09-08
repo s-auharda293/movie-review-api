@@ -3,12 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
-using MovieReviewApi.Infrastructure.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {

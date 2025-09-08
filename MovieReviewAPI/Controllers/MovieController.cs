@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Queries.Actor;
-using MovieReviewApi.Application.Services;
 using MovieReviewApi.Application.Commands.Movie;
 
 namespace MovieReviewApi.Api.Controllers
@@ -11,12 +10,10 @@ namespace MovieReviewApi.Api.Controllers
     [ApiController]
     public class MoviesController : ControllerBase
     {
-        private readonly IMovieService _service;
         private readonly IMediator _mediator;
 
-        public MoviesController(IMovieService service, IMediator mediator)
+        public MoviesController(IMediator mediator)
         {
-            _service = service;
             _mediator = mediator;
         }
 
@@ -29,14 +26,14 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetMovie([FromRoute] Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetMovie(Guid id, CancellationToken cancellationToken)
         {
             var movie = await _mediator.Send(new GetMovieByIdQuery(id), cancellationToken);
             return movie == null ? NotFound() : Ok(movie);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostMovie([FromBody] CreateMovieDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostMovie( CreateMovieDto dto, CancellationToken cancellationToken)
         {
             try
             {
@@ -50,7 +47,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> PutMovie([FromRoute] Guid id, [FromBody] UpdateMovieDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PutMovie(Guid id, UpdateMovieDto dto, CancellationToken cancellationToken)
         {
 
             try { 
@@ -65,7 +62,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task<IActionResult> PatchMovie([FromRoute] Guid id, [FromBody] PatchMovieDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PatchMovie( Guid id,  PatchMovieDto dto, CancellationToken cancellationToken)
         {
             try { 
             var patched = await _mediator.Send(new PatchMovieCommand(id, dto),cancellationToken);
@@ -79,7 +76,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> DeleteMovie([FromRoute] Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteMovie( Guid id, CancellationToken cancellationToken)
         {
             var deleted = await _mediator.Send(new DeleteMovieCommand(id),cancellationToken);
             return deleted ? NoContent() : NotFound();

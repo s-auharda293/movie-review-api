@@ -6,7 +6,7 @@ using MovieReviewApi.Application.Interfaces;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class PatchActorHandler : IRequestHandler<UpdateActorCommand, bool>
+    public class PatchActorHandler : IRequestHandler<PatchActorCommand, bool>
     {
         private readonly IApplicationDbContext _context;
 
@@ -16,7 +16,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
         }
 
 
-        public async Task<bool> Handle(UpdateActorCommand request, CancellationToken cancellationToken)
+        public async Task<bool> Handle(PatchActorCommand request, CancellationToken cancellationToken)
         {
             var actor = await _context.Actors.FirstOrDefaultAsync(a=>a.Id == request.Id);
             if (actor == null) return false;

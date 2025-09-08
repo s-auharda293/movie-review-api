@@ -1,12 +1,11 @@
 using FluentValidation;
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using MovieReviewApi.Api.Filters;
+using MovieReviewApi.Application.Handlers.Actor;
 using MovieReviewApi.Application.Interfaces;
-using MovieReviewApi.Application.Services;
-using MovieReviewApi.Infrastructure.Extensions;
-using MovieReviewApi.Infrastructure.Repositories;
-using Serilog;
 using MovieReviewApi.Application.Validators.ActorValidator;
+using MovieReviewApi.Infrastructure.Extensions;
+using Serilog;
+using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 
 try
 {
@@ -28,7 +27,8 @@ try
 
     builder.Services.AddValidatorsFromAssemblyContaining<CreateActorValidator>();
 
-    builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(MovieReviewApi.Application.MediatRAssemblyMarker).Assembly));
+    builder.Services.AddMediatR(cfg =>
+        cfg.RegisterServicesFromAssembly(typeof(IApplicationDbContext).Assembly));
 
     builder.Services.AddFluentValidationAutoValidation();
 
@@ -44,15 +44,6 @@ try
 
 
     builder.Services.AddInfrastructure(builder.Configuration);
-
-    builder.Services.AddScoped<IActorRepository, ActorRepository>();
-    builder.Services.AddScoped<IActorService, ActorService>();
-
-    builder.Services.AddScoped<IMovieRepository, MovieRepository>();
-    builder.Services.AddScoped<IMovieService, MovieService>();
-
-    builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
-    builder.Services.AddScoped<IReviewService, ReviewService>();
 
     //builder.Services.AddControllers(options =>
     //{

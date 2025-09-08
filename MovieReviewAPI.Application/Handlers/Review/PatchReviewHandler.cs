@@ -18,6 +18,7 @@ namespace MovieReviewApi.Application.Handlers.Review
             if (review == null) return false;
 
             if (!string.IsNullOrEmpty(request.dto.Comment)) review.Comment = request.dto.Comment;
+            if (!string.IsNullOrEmpty(request.dto.UserName)) review.UserName = request.dto.UserName;
             if (request.dto.Rating.HasValue) review.Rating = request.dto.Rating.Value;
             _context.Reviews.Update(review);
             await _context.SaveChangesAsync(cancellationToken);

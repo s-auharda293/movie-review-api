@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.Commands.Review;
 using MovieReviewApi.Application.DTOs;
-using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Review;
 
 namespace MovieReviewApi.Api.Controllers
@@ -11,12 +10,10 @@ namespace MovieReviewApi.Api.Controllers
     [ApiController]
     public class ReviewsController : ControllerBase
     {
-        private readonly IReviewService _service;
         private readonly IMediator _mediator;
 
-        public ReviewsController(IReviewService service, IMediator mediator)
+        public ReviewsController(IMediator mediator)
         {
-            _service = service;
             _mediator = mediator;
         }
 
@@ -45,7 +42,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ReviewDto>> Create([FromBody] CreateReviewDto dto,CancellationToken cancellationToken)
+        public async Task<ActionResult<ReviewDto>> Create(CreateReviewDto dto,CancellationToken cancellationToken)
         {
             try
             {
@@ -59,7 +56,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         [Route("{id}")]
-        public async Task<IActionResult> Update([FromRoute]Guid id,[FromBody] UpdateReviewDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> Update(Guid id, UpdateReviewDto dto, CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new UpdateReviewCommand(id, dto), cancellationToken);
                 if (!result) return NotFound();
@@ -68,7 +65,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPatch]
         [Route("{id}")]
-        public async Task<IActionResult> Patch([FromRoute] Guid id,[FromBody] PatchReviewDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> Patch(Guid id, PatchReviewDto dto, CancellationToken cancellationToken)
         {
             try { 
             var result = await _mediator.Send(new PatchReviewCommand(id, dto),cancellationToken);
@@ -83,7 +80,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpDelete]
         [Route("{id}")]
-        public async Task<IActionResult> Delete([FromRoute] Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> Delete( Guid id, CancellationToken cancellationToken)
         {
             var result = await _mediator.Send(new DeleteReviewCommand(id), cancellationToken);
             if (!result) return NotFound();

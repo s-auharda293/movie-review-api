@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Actor;
+using MovieReviewApi.Domain.Common.Movies;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {
-    public class GetMovieByIdHandler:IRequestHandler<GetMovieByIdQuery,MovieDto>
+    public class GetMovieByIdHandler:IRequestHandler<GetMovieByIdQuery,Result<MovieDto>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -15,11 +16,11 @@ namespace MovieReviewApi.Application.Handlers.Movie
             _context = context;   
         }
 
-        public async Task<MovieDto> Handle(GetMovieByIdQuery request, CancellationToken cancellationToken)
+        public async Task<Result<MovieDto>> Handle(GetMovieByIdQuery request, CancellationToken cancellationToken)
         {
             var movie = await _context.Movies.Include(m => m.Actors).FirstOrDefaultAsync(m => m.Id == request.Id,cancellationToken);
-            if (movie == null) return null;
-            return new MovieDto
+            if (movie == null) return Result<MovieDto>.Failure(MovieErrors.NotFound);
+            var dto = new MovieDto
             {
                 Id = movie.Id,
                 Title = movie.Title,
@@ -29,6 +30,8 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 Rating = movie.Rating,
                 Actors = movie.Actors.Select(a => a.Name).ToList(),
             };
+
+            return Result<MovieDto>.Success(dto);
         }
     }
 }

@@ -3,8 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Review;
+using MovieReviewApi.Domain.Entities;
 
-public class GetReviewsByMovieIdHandler : IRequestHandler<GetReviewsByMovieIdQuery, IEnumerable<ReviewDto>>
+public class GetReviewsByMovieIdHandler : IRequestHandler<GetReviewsByMovieIdQuery, Result<IEnumerable<ReviewDto>>>
 {
     private readonly IApplicationDbContext _context;
 
@@ -13,7 +14,7 @@ public class GetReviewsByMovieIdHandler : IRequestHandler<GetReviewsByMovieIdQue
         _context = context;
     }
 
-    public async Task<IEnumerable<ReviewDto>> Handle(GetReviewsByMovieIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<ReviewDto>>> Handle(GetReviewsByMovieIdQuery request, CancellationToken cancellationToken)
     {
         var reviewDtos = await _context.Reviews
             .Where(r => r.MovieId == request.Id)
@@ -27,6 +28,6 @@ public class GetReviewsByMovieIdHandler : IRequestHandler<GetReviewsByMovieIdQue
             })
             .ToListAsync(cancellationToken);
 
-        return reviewDtos;
+        return Result<IEnumerable<ReviewDto>>.Success(reviewDtos);
     }
 }

@@ -3,5 +3,5 @@ using MovieReviewApi.Application.DTOs;
 
 namespace MovieReviewApi.Application.Queries.Actor
 {
-    public record GetActorsQuery(): IRequest<IEnumerable<ActorDto>>;
+    public record GetActorsQuery(): IRequest<Result<IEnumerable<ActorDto>>>;
 }

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Handlers.Review
 {
-    public class GetReviewByIdHandler:IRequestHandler<GetReviewByIdQuery,ReviewDto>
+    public class GetReviewByIdHandler:IRequestHandler<GetReviewByIdQuery,ReviewDto?>
     {
         private readonly IApplicationDbContext _context;
         public GetReviewByIdHandler(IApplicationDbContext context)

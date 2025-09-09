@@ -1,5 +1,6 @@
 using FluentValidation;
-using MovieReviewApi.Api.Filters;
+using MediatR;
+using MovieReviewApi.Application.Behaviors;
 using MovieReviewApi.Application.Handlers.Actor;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Validators.ActorValidator;
@@ -16,7 +17,8 @@ try
       .WriteTo.File
       (
       path: "Logs/log.txt",
-      rollingInterval: RollingInterval.Day
+      rollingInterval: RollingInterval.Day,
+      formatProvider: System.Globalization.CultureInfo.CurrentCulture
       )
       .CreateLogger();
 
@@ -30,12 +32,15 @@ try
     builder.Services.AddMediatR(cfg =>
         cfg.RegisterServicesFromAssembly(typeof(IApplicationDbContext).Assembly));
 
+    //access http context while using mediatr logging pipeline
+    builder.Services.AddHttpContextAccessor();
+
+    //register the IPipelineBehavior and it's implementation LoggingPipelineBehavior
+    builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingPipelineBehavior<,>));
+
     builder.Services.AddFluentValidationAutoValidation();
 
-    builder.Services.AddControllers(options =>
-    {
-        options.Filters.Add<RequestResponseLoggingFilter>();
-    });
+    builder.Services.AddControllers();
 
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

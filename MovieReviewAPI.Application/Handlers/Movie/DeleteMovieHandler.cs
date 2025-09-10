@@ -1,7 +1,9 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Movie;
+using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Domain.Common.Movies;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {
-    public class DeleteMovieHandler:IRequestHandler<DeleteMovieCommand,bool>
+    public class DeleteMovieHandler:IRequestHandler<DeleteMovieCommand,Result<bool>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -19,11 +21,11 @@ namespace MovieReviewApi.Application.Handlers.Movie
             _context = context;
         }
 
-        public async Task<bool> Handle(DeleteMovieCommand request, CancellationToken cancellationToken) {
+        public async Task<Result<bool>> Handle(DeleteMovieCommand request, CancellationToken cancellationToken) {
 
             var movie = await _context.Movies.FirstOrDefaultAsync(m=>m.Id == request.Id);
             
-            if (movie == null) return false;
+            if (movie == null) return Result<bool>.Failure(MovieErrors.NotFound);
 
             if (movie.Actors != null && movie.Actors.Any())
             {
@@ -33,7 +35,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
             _context.Movies.Remove(movie);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return true;
+            return Result<bool>.Success(true);
 
         }
     }

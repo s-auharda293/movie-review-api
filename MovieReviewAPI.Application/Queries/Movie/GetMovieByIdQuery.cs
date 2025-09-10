@@ -8,5 +8,5 @@ using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Queries.Actor
 {
-    public record GetMovieByIdQuery(Guid Id) : IRequest<MovieDto>;
+    public record GetMovieByIdQuery(Guid Id) : IRequest<Result<MovieDto>>;
 }

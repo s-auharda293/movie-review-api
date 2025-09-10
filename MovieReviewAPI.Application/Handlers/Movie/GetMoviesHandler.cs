@@ -6,7 +6,7 @@ using MovieReviewApi.Application.Queries.Actor;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class GetMoviesHandler: IRequestHandler<GetMoviesQuery, IEnumerable<MovieDto>>
+    public class GetMoviesHandler: IRequestHandler<GetMoviesQuery, Result<IEnumerable<MovieDto>>>
     {
         private readonly IApplicationDbContext _context;
         public GetMoviesHandler(IApplicationDbContext context)
@@ -14,9 +14,9 @@ namespace MovieReviewApi.Application.Handlers.Actor
             _context = context;
         }
 
-        public async Task<IEnumerable<MovieDto>> Handle(GetMoviesQuery request, CancellationToken cancellationToken) {
+        public async Task<Result<IEnumerable<MovieDto>>> Handle(GetMoviesQuery request, CancellationToken cancellationToken) {
             var movies = await _context.Movies.Include(m => m.Actors).ToListAsync(cancellationToken);
-            return movies.Select(m => new MovieDto
+            var movieDtos = movies.Select(m => new MovieDto
             {
                 Id = m.Id,
                 Title = m.Title,
@@ -26,6 +26,8 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 Rating = m.Rating,
                 Actors = m.Actors?.Select(a => a.Name).ToList() ?? new List<string>(),
             }).ToList();
+
+            return Result<IEnumerable<MovieDto>>.Success(movieDtos);
         }
     }
 }

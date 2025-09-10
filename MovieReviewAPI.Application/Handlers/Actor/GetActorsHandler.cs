@@ -6,7 +6,7 @@ using MovieReviewApi.Application.Queries.Actor;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class GetActorsHandler: IRequestHandler<GetActorsQuery, IEnumerable<ActorDto>>
+    public class GetActorsHandler: IRequestHandler<GetActorsQuery, Result<IEnumerable<ActorDto>>>
     {
         private readonly IApplicationDbContext _context;
         public GetActorsHandler(IApplicationDbContext context)
@@ -14,7 +14,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
             _context = context;
         }
 
-        public async Task<IEnumerable<ActorDto>> Handle(GetActorsQuery request, CancellationToken cancellationToken) {
+        public async Task<Result<IEnumerable<ActorDto>>> Handle(GetActorsQuery request, CancellationToken cancellationToken) {
             var actors = await _context.Actors.Include(a => a.Movies).ToListAsync(cancellationToken);
             var actorDtos = actors.Select(a => new ActorDto
             {
@@ -24,7 +24,8 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 DateOfBirth = a.DateOfBirth,
                 Movies = a.Movies?.Select(m => m.Title).ToList() ?? new List<string>(),
             });
-            return actorDtos;
+
+            return Result<IEnumerable<ActorDto>>.Success(actorDtos);
         }
     }
 }

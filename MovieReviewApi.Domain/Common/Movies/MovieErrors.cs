@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MovieReviewApi.Domain.Common.Movies
+{
+    public class MovieErrors
+    {
+        public static readonly Error NotFound = new("Movie.NotFound", "The requested movie was not found");
+
+        public static readonly Error DuplicateTitle = new("Movie.DuplicateTitle", "A movie with same title already exists.");
+
+        public static readonly Error ActorAlreadyAssigned = new("Movie.ActorAlreadyAssigned", "This actor is already assigned to the movie.");
+
+        public static Error ActorsNotFound(IEnumerable<Guid> invalidIds) {
+            return new Error("Movie.ActorsNotFound", $"One or more actors with Ids {string.Join(", ", invalidIds)} do not exist.");
+        }
+    }
+}

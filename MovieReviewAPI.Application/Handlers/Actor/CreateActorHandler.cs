@@ -3,11 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Domain.Common.Actors;
 using MovieReviewApi.Domain.Entities;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class CreateActorHandler : IRequestHandler<CreateActorCommand, ActorDto>
+    public class CreateActorHandler : IRequestHandler<CreateActorCommand, Result<ActorDto>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -16,7 +17,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
             _context = context;
         }
 
-        public async Task<ActorDto> Handle(CreateActorCommand request, CancellationToken cancellationToken)
+        public async Task<Result<ActorDto>> Handle(CreateActorCommand request, CancellationToken cancellationToken)
         {
             var actor = new MovieReviewApi.Domain.Entities.Actor
             {
@@ -35,7 +36,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 if (movies.Count != request.dto.MovieIds.Count)
                 {
                     var invalidIds = request.dto.MovieIds.Except(movies.Select(m => m.Id)).ToList();
-                    throw new ArgumentException($"One or more movies with Ids {string.Join(", ", invalidIds)} do not exist.");
+                    return Result<ActorDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
                 }
 
                 actor.Movies = movies;
@@ -44,7 +45,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
             await _context.Actors.AddAsync(actor, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return new ActorDto
+            var actorDto = new ActorDto
             {
                 Id = actor.Id,
                 Name = actor.Name,
@@ -52,6 +53,8 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 DateOfBirth = actor.DateOfBirth,
                 Movies = actor.Movies?.Select(m => m.Title).ToList() ?? new List<string>()
             };
+
+            return Result<ActorDto>.Success(actorDto);
         }
     }
 }

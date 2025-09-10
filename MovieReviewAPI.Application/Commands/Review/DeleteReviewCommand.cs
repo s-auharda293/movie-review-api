@@ -7,5 +7,5 @@ using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Commands.Review
 {
-    public record DeleteReviewCommand(Guid Id):IRequest<bool>;
+    public record DeleteReviewCommand(Guid Id):IRequest<Result<bool>>;
 }

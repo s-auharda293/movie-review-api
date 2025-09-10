@@ -28,6 +28,10 @@ public class GetReviewsByMovieIdHandler : IRequestHandler<GetReviewsByMovieIdQue
             })
             .ToListAsync(cancellationToken);
 
+        if (!reviewDtos.Any()) {
+            return Result<IEnumerable<ReviewDto>>.Failure(ReviewErrors.ReviewsForNonExistentMovie);
+        }
+
         return Result<IEnumerable<ReviewDto>>.Success(reviewDtos);
     }
 }

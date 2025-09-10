@@ -3,46 +3,43 @@ using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Review;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Domain.Entities;
 
-namespace MovieReviewApi.Application.Handlers.Review
+public class CreateReviewHandler : IRequestHandler<CreateReviewCommand, Result<ReviewDto>>
 {
-    public class CreateReviewHandler:IRequestHandler<CreateReviewCommand, ReviewDto>
+    private readonly IApplicationDbContext _context;
+
+    public CreateReviewHandler(IApplicationDbContext context)
     {
-        private readonly IApplicationDbContext _context;
+        _context = context;
+    }
 
-        public CreateReviewHandler(IApplicationDbContext context)
+    public async Task<Result<ReviewDto>> Handle(CreateReviewCommand request, CancellationToken cancellationToken)
+    {
+        var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == request.dto.MovieId, cancellationToken);
+        if (movie == null)
+            return Result<ReviewDto>.Failure(ReviewErrors.MovieNotFound);
+
+        var review = new Review
         {
-            _context = context;
-        }
+            MovieId = request.dto.MovieId,
+            UserName = request.dto.UserName,
+            Comment = request.dto.Comment,
+            Rating = request.dto.Rating
+        };
 
-        public async Task<ReviewDto> Handle(CreateReviewCommand request, CancellationToken cancellationToken)
+        await _context.Reviews.AddAsync(review, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        var reviewDto = new ReviewDto
         {
-            var review = new MovieReviewApi.Domain.Entities.Review()
-            {
-                MovieId = request.dto.MovieId,
-                UserName = request.dto.UserName,
-                Comment = request.dto.Comment,
-                Rating = request.dto.Rating
-            };
+            Id = review.Id,
+            MovieId = review.MovieId,
+            UserName = review.UserName,
+            Comment = review.Comment,
+            Rating = review.Rating
+        };
 
-            var movie = await _context.Movies.FirstOrDefaultAsync(m=>m.Id==request.dto.MovieId, cancellationToken);
-            if (movie == null)
-            {
-                throw new ArgumentException("Cannot post review because movie doesn't exist");
-            }
-
-            await _context.Reviews.AddAsync(review, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return new ReviewDto
-            {
-                Id = review.Id,
-                MovieId = review.MovieId,
-                UserName = review.UserName,
-                Comment = review.Comment,
-                Rating = review.Rating
-            };
-        }
+        return Result<ReviewDto>.Success(reviewDto);
     }
 }
-

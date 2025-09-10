@@ -3,5 +3,5 @@ using MovieReviewApi.Application.DTOs;
 
 namespace MovieReviewApi.Application.Commands.Review
 {
-    public record CreateReviewCommand(CreateReviewDto dto) : IRequest<ReviewDto>;
+    public record CreateReviewCommand(CreateReviewDto dto) : IRequest<Result<ReviewDto>>;
 }

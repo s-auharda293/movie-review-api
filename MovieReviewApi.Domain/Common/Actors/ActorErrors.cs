@@ -9,7 +9,7 @@ namespace MovieReviewApi.Domain.Common.Actors
 
         public static Error MoviesNotFound(IEnumerable<Guid> ids)
         {
-            return new Error("Movie.NotFound", $"One or more movies with Ids {string.Join(", ", ids)} do not exist.");
+            return new Error("Actor.MoviesNotFound", $"One or more movies with Ids {string.Join(", ", ids)} do not exist.");
         }
     }
 }

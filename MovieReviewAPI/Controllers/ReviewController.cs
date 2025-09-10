@@ -1,8 +1,10 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileSystemGlobbing;
 using MovieReviewApi.Application.Commands.Review;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Queries.Review;
+using MovieReviewApi.Domain.Entities;
 
 namespace MovieReviewApi.Api.Controllers
 {
@@ -28,63 +30,49 @@ namespace MovieReviewApi.Api.Controllers
         [Route("movie/{movieId}")]
         public async Task<ActionResult<IEnumerable<ReviewDto>>> GetByMovie(Guid movieId, CancellationToken cancellationToken) { 
             var review = await _mediator.Send(new GetReviewsByMovieIdQuery(movieId), cancellationToken);
-            if (review == null) return NotFound();
-            return Ok(review);
+            if (review.IsSuccess) return Ok(review);
+            return NotFound(review);
         }
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<ActionResult<ReviewDto>> GetById(Guid id, CancellationToken cancellationToken)
+        public async Task<ActionResult<ReviewDto>> GetReview(Guid id, CancellationToken cancellationToken)
         {
             var review = await _mediator.Send(new GetReviewByIdQuery(id), cancellationToken);
-            if (review == null) return NotFound();
-            return Ok(review);
+            return review.IsSuccess ? Ok(review) : NotFound(review);
         }
 
         [HttpPost]
         public async Task<ActionResult<ReviewDto>> Create(CreateReviewDto dto,CancellationToken cancellationToken)
         {
-            try
-            {
-                var created = await _mediator.Send(new CreateReviewCommand(dto),cancellationToken);
-                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-            }
-            catch (ArgumentException e) {
-                return BadRequest(new { error = e.Message});
-            }
+                var review = await _mediator.Send(new CreateReviewCommand(dto),cancellationToken);
+                return review.IsSuccess ? CreatedAtAction(nameof(GetReview),
+                                               new { id = review?.Value?.Id },
+                                               review) : BadRequest(review);
         }
 
         [HttpPut]
         [Route("{id}")]
         public async Task<IActionResult> Update(Guid id, UpdateReviewDto dto, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new UpdateReviewCommand(id, dto), cancellationToken);
-                if (!result) return NotFound();
-                return NoContent();
+            var updated = await _mediator.Send(new UpdateReviewCommand(id, dto), cancellationToken);
+            return updated.IsSuccess ? Ok(updated) : NotFound(updated.Error);
         }
 
         [HttpPatch]
         [Route("{id}")]
         public async Task<IActionResult> Patch(Guid id, PatchReviewDto dto, CancellationToken cancellationToken)
         {
-            try { 
-            var result = await _mediator.Send(new PatchReviewCommand(id, dto),cancellationToken);
-            if (!result) return NotFound();
-            return NoContent();
-            }
-            catch (ArgumentException e)
-            {
-                return BadRequest(new { error = e.Message });
-            }
+            var patched = await _mediator.Send(new PatchReviewCommand(id, dto),cancellationToken);
+            return patched.IsSuccess ? Ok(patched) : BadRequest(patched);
         }
 
         [HttpDelete]
         [Route("{id}")]
         public async Task<IActionResult> Delete( Guid id, CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new DeleteReviewCommand(id), cancellationToken);
-            if (!result) return NotFound();
-            return NoContent();
+            var deleted = await _mediator.Send(new DeleteReviewCommand(id), cancellationToken);
+            return deleted.IsSuccess ? NoContent() : NotFound(deleted);
         }
     }
 }

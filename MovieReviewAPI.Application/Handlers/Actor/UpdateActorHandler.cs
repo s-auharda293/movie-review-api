@@ -1,11 +1,13 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Actor;
+using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Domain.Common.Actors;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class UpdateActorHandler : IRequestHandler<UpdateActorCommand, bool>
+    public class UpdateActorHandler : IRequestHandler<UpdateActorCommand, Result<ActorDto>>
     {
         private readonly IApplicationDbContext _context;
         public UpdateActorHandler(IApplicationDbContext context)
@@ -13,10 +15,10 @@ namespace MovieReviewApi.Application.Handlers.Actor
             _context = context;
         }
 
-        public async Task<bool> Handle(UpdateActorCommand request, CancellationToken cancellationToken)
+        public async Task<Result<ActorDto>> Handle(UpdateActorCommand request, CancellationToken cancellationToken)
         {
             var actor = await _context.Actors.FirstOrDefaultAsync(a=>a.Id==request.Id,cancellationToken);
-        if (actor == null) return false;
+        if (actor == null) return Result<ActorDto>.Failure(ActorErrors.NotFound);
 
             actor.Name = request.dto.Name;
             actor.Bio = request.dto.Bio;
@@ -25,10 +27,10 @@ namespace MovieReviewApi.Application.Handlers.Actor
             if (request.dto.MovieIds != null && request.dto.MovieIds.Any())
             {
                 var movies = await _context.Movies.Where(m=>request.dto.MovieIds.Contains(m.Id)).ToListAsync(cancellationToken);
-                if (movies.ToList().Count != request.dto.MovieIds.Count)
+                if (movies.Count != request.dto.MovieIds.Count)
                 {
-                    var invalidIds = request.dto.MovieIds.Except((movies.Select(m => m.Id).ToList())).ToList();
-                    throw new ArgumentException($"One or more movies with Ids {string.Join(", ", invalidIds)} do not exist.");
+                    var invalidIds = request.dto.MovieIds.Except(movies.Select(m => m.Id)).ToList();
+                    return Result<ActorDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
                 }
                 actor.Movies = movies.ToList();
             }
@@ -37,7 +39,16 @@ namespace MovieReviewApi.Application.Handlers.Actor
             _context.Actors.Update(actor);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return true;
+            var actorDto = new ActorDto
+            {
+                Id = actor.Id,
+                Name = actor.Name,
+                Bio = actor.Bio,
+                DateOfBirth = actor.DateOfBirth,
+                Movies = actor.Movies?.Select(m => m.Title).ToList() ?? new List<string>()
+            };
+
+            return Result<ActorDto>.Success(actorDto);
 
         }
     }

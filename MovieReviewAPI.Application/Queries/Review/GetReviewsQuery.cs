@@ -1,12 +1,7 @@
 ﻿using MediatR;
 using MovieReviewApi.Application.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Queries.Review
 {
-    public record GetReviewsQuery:IRequest<IEnumerable<ReviewDto>>;
+    public record GetReviewsQuery:IRequest<Result<IEnumerable<ReviewDto>>>;
 }

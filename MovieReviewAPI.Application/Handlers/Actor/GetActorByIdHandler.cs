@@ -2,18 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-
-public record GetActorByIdQuery(Guid Id) : IRequest<ActorDto>;
+using MovieReviewApi.Application.Queries.Actor;
+using MovieReviewApi.Domain.Common.Actors;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class GetActorByIdHandler : IRequestHandler<GetActorByIdQuery, ActorDto> {
+    public class GetActorByIdHandler : IRequestHandler<GetActorByIdQuery, Result<ActorDto>> {
         private readonly IApplicationDbContext _context;
 
         public GetActorByIdHandler(IApplicationDbContext context)
@@ -21,12 +15,12 @@ namespace MovieReviewApi.Application.Handlers.Actor
             _context = context;
         }
 
-        public async Task<ActorDto> Handle(GetActorByIdQuery request,CancellationToken cancellationToken) {
+        public async Task<Result<ActorDto>> Handle(GetActorByIdQuery request,CancellationToken cancellationToken) {
             var actor = await _context.Actors.FirstOrDefaultAsync(a => a.Id == request.Id);
 
-            if (actor == null) return null;
+            if (actor == null) return Result<ActorDto>.Failure(ActorErrors.NotFound);
 
-            return new ActorDto
+            var dto =  new ActorDto
             {
                 Id = actor.Id,
                 Name = actor.Name,
@@ -34,6 +28,8 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 DateOfBirth = actor.DateOfBirth,
                 Movies = actor.Movies?.Select(m=>m.Title).ToList()??new List<string>()
             };
+
+            return Result<ActorDto>.Success(dto);
 
         }
 

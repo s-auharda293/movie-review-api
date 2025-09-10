@@ -4,10 +4,11 @@ using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Entities;
 using MovieReviewApi.Application.Commands.Movie;
+using MovieReviewApi.Domain.Common.Movies;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {
-    public class CreateMovieHandler : IRequestHandler<CreateMovieCommand, MovieDto>
+    public class CreateMovieHandler : IRequestHandler<CreateMovieCommand, Result<MovieDto>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -16,7 +17,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
             _context = context;
         }
 
-        public async Task<MovieDto> Handle(CreateMovieCommand request, CancellationToken cancellationToken)
+        public async Task<Result<MovieDto>> Handle(CreateMovieCommand request, CancellationToken cancellationToken)
         {
             var movie = new MovieReviewApi.Domain.Entities.Movie
             {
@@ -37,7 +38,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 if (actors.Count != request.dto.ActorIds.Count)
                 {
                     var invalidIds = request.dto.ActorIds.Except(actors.Select(a => a.Id)).ToList();
-                    throw new ArgumentException($"One or more actors with Ids {string.Join(", ", invalidIds)} do not exist.");
+                    return Result<MovieDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
                 }
 
                 movie.Actors = actors;
@@ -46,7 +47,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
             await _context.Movies.AddAsync(movie, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return new MovieDto
+            var movieDto =  new MovieDto
             {
                 Id = movie.Id,
                 Title = movie.Title,
@@ -56,6 +57,8 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 Rating = movie.Rating,
                 Actors = movie.Actors?.Select(a => a.Name).ToList() ?? new List<string>()
             };
+
+            return Result<MovieDto>.Success(movieDto);
         }
     }
 }

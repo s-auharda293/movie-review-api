@@ -3,15 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Review;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MovieReviewApi.Domain.Entities;
 
 namespace MovieReviewApi.Application.Handlers.Review
 {
-    public class GetReviewByIdHandler:IRequestHandler<GetReviewByIdQuery,ReviewDto?>
+    public class GetReviewByIdHandler:IRequestHandler<GetReviewByIdQuery,Result<ReviewDto>>
     {
         private readonly IApplicationDbContext _context;
         public GetReviewByIdHandler(IApplicationDbContext context)
@@ -19,14 +15,14 @@ namespace MovieReviewApi.Application.Handlers.Review
             _context = context;
         }
 
-        public async Task<ReviewDto?> Handle(GetReviewByIdQuery request, CancellationToken cancellationToken)
+        public async Task<Result<ReviewDto>> Handle(GetReviewByIdQuery request, CancellationToken cancellationToken)
         {
             var r = await _context.Reviews
                           .Include(r => r.Movie)
                           .FirstOrDefaultAsync(r => r.Id == request.Id,cancellationToken);
-            if (r == null) return null;
+            if (r == null) return Result<ReviewDto>.Failure(ReviewErrors.NotFound);
 
-            return new ReviewDto
+            var reviewDto = new ReviewDto
             {
                 Id = r.Id,
                 MovieId = r.MovieId,
@@ -34,6 +30,8 @@ namespace MovieReviewApi.Application.Handlers.Review
                 Comment = r.Comment,
                 Rating = r.Rating
             };
+
+            return Result<ReviewDto>.Success(reviewDto);
         }
 
     }

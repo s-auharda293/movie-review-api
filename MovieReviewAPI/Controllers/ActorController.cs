@@ -27,57 +27,40 @@ namespace MovieReviewApi.Api.Controllers
         [Route("{id}")]
         public async Task<IActionResult> GetActor(Guid id, CancellationToken cancellationToken) {
             var actor = await _mediator.Send(new GetActorByIdQuery(id), cancellationToken);
-            return actor == null ? NotFound() : Ok(actor);
+            return actor.IsSuccess ? Ok(actor):NotFound(actor);
         }
 
         [HttpPost]
         public async Task<ActionResult<ActorDto>> PostActor(CreateActorDto dto,CancellationToken cancellationToken)
         {
-            try
-            {
-                var actor = await _mediator.Send( new CreateActorCommand(dto),cancellationToken);
-                return CreatedAtAction(nameof(GetActor), new { id = actor.Id }, actor);
-            }
-            catch (ArgumentException ex) {
-                return BadRequest(new { error = ex.Message});
-            
-            }
+            var actor = await _mediator.Send( new CreateActorCommand(dto),cancellationToken);
+            return actor.IsSuccess ? CreatedAtAction(nameof(GetActor),
+                                                     new { id = actor?.Value?.Id },
+                                                     actor) : BadRequest(actor);
         }
 
         [HttpPut]
         [Route("{id}")]
         public async Task<ActionResult<Actor>> PutActor(Guid id, UpdateActorDto dto, CancellationToken cancellationToken) {
 
-            try
-            {
-                var updated = await _mediator.Send(new UpdateActorCommand(id, dto),cancellationToken);
-            return updated ? Ok() : NotFound();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            var updated = await _mediator.Send(new UpdateActorCommand(id, dto),cancellationToken);
+            return updated.IsSuccess ? Ok(updated) : NotFound(updated.Error);
+           
         }
 
         [HttpPatch]
         [Route("{id}")]
         public async Task<ActionResult<Actor>> PatchActor( Guid id, PatchActorDto dto, CancellationToken cancellationToken) {
-            try { 
+            
             var patched = await _mediator.Send(new PatchActorCommand(id, dto), cancellationToken);
-            return patched ? NoContent() : NotFound();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-
-            }
+            return patched.IsSuccess ? Ok(patched) : BadRequest(patched);
         }
 
         [HttpDelete]
         [Route("{id}")]
         public async Task<IActionResult> DeleteActor(Guid id, CancellationToken cancellationToken) {    
-                var deleted = await _mediator.Send(new DeleteActorCommand(id),cancellationToken);
-            return deleted ? NoContent() : NotFound(); 
+            var deleted = await _mediator.Send(new DeleteActorCommand(id),cancellationToken);
+            return deleted.IsSuccess ? NoContent() : NotFound(deleted);
         }
 
     }

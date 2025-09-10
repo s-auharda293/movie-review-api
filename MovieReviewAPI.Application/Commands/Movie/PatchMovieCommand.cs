@@ -8,6 +8,6 @@ using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Commands.Movie
 {
-    public record PatchMovieCommand(Guid Id, PatchMovieDto dto):IRequest<bool>;
+    public record PatchMovieCommand(Guid Id, PatchMovieDto dto):IRequest<Result<MovieDto>>;
 
 }

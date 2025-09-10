@@ -1,12 +1,14 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Movie;
+using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Domain.Common.Movies;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {
 
-    public class UpdateMovieHandler:IRequestHandler<UpdateMovieCommand,bool>
+    public class UpdateMovieHandler:IRequestHandler<UpdateMovieCommand,Result<MovieDto>>
     {
         private readonly IApplicationDbContext _context;
         public UpdateMovieHandler(IApplicationDbContext context)
@@ -14,9 +16,9 @@ namespace MovieReviewApi.Application.Handlers.Movie
             _context = context;   
         }
 
-        public async Task<bool> Handle(UpdateMovieCommand request, CancellationToken cancellationToken) {
+        public async Task<Result<MovieDto>> Handle(UpdateMovieCommand request, CancellationToken cancellationToken) {
             var movie = await _context.Movies.FirstOrDefaultAsync(m=>m.Id == request.Id);
-            if (movie == null) return false;
+            if (movie == null) return Result<MovieDto>.Failure(MovieErrors.NotFound);
 
             movie.Title = request.dto.Title;
             movie.Description = request.dto.Description;
@@ -38,7 +40,18 @@ namespace MovieReviewApi.Application.Handlers.Movie
             _context.Movies.Update(movie);
             await _context.SaveChangesAsync(cancellationToken);
 
-            return true;
+            var dto = new MovieDto
+            {
+                Id = movie.Id,
+                Title = movie.Title,
+                Description = movie.Description,
+                ReleaseDate = movie.ReleaseDate,
+                DurationMinutes = movie.DurationMinutes,
+                Rating = movie.Rating,
+                Actors = movie.Actors.Select(a => a.Name).ToList(),
+            };
+
+            return Result<MovieDto>.Success(dto);
 
         }
     }

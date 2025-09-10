@@ -13,5 +13,9 @@ namespace MovieReviewApi.Domain.Common.Movies
         public static readonly Error DuplicateTitle = new("Movies.DuplicateTitle", "A movie with same title already exists.");
 
         public static readonly Error ActorAlreadyAssigned = new("Movies.ActorAlreadyAssigned", "This actor is already assigned to the movie.");
+
+        public static Error ActorsNotFound(IEnumerable<Guid> invalidIds) {
+            return new Error("Movies.ActorsNotFound", $"One or more actors with Ids {string.Join(", ", invalidIds)} do not exist.");
+        }
     }
 }

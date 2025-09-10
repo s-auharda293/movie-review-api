@@ -1,8 +1,9 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Queries.Actor;
-using MovieReviewApi.Application.Commands.Movie;
+using MovieReviewApi.Domain.Entities;
 
 namespace MovieReviewApi.Api.Controllers
 {
@@ -29,20 +30,16 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<IActionResult> GetMovie(Guid id, CancellationToken cancellationToken)
         {
             var movie = await _mediator.Send(new GetMovieByIdQuery(id), cancellationToken);
-            return movie == null ? NotFound() : Ok(movie);
+            return movie.IsSuccess? Ok(movie) : NotFound(movie);
         }
 
         [HttpPost]
         public async Task<IActionResult> PostMovie( CreateMovieDto dto, CancellationToken cancellationToken)
         {
-            try
-            {
                 var movie = await _mediator.Send(new CreateMovieCommand(dto),cancellationToken);
-                return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
-            }
-            catch (ArgumentException e) {
-                return BadRequest(new { error = e.Message });
-            }
+                return movie.IsSuccess ? CreatedAtAction(nameof(GetMovie),
+                                                new { id = movie?.Value?.Id },
+                                                movie) : BadRequest(movie);
         }
 
         [HttpPut]
@@ -50,28 +47,16 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<IActionResult> PutMovie(Guid id, UpdateMovieDto dto, CancellationToken cancellationToken)
         {
 
-            try { 
             var updated = await _mediator.Send(new UpdateMovieCommand(id, dto), cancellationToken);
-            return updated ? Ok() : NotFound();
-            }
-            catch (ArgumentException e)
-            {
-                return BadRequest(new { error = e.Message });
-            }
+                return updated.IsSuccess ? Ok(updated) : NotFound(updated.Error);
         }
 
         [HttpPatch]
         [Route("{id}")]
         public async Task<IActionResult> PatchMovie( Guid id,  PatchMovieDto dto, CancellationToken cancellationToken)
         {
-            try { 
             var patched = await _mediator.Send(new PatchMovieCommand(id, dto),cancellationToken);
-            return patched ? NoContent() : NotFound();
-            }
-            catch (ArgumentException e)
-            {
-                return BadRequest(new { error = e.Message });
-            }
+            return patched.IsSuccess ? Ok(patched) : BadRequest(patched);
         }
 
         [HttpDelete]
@@ -79,7 +64,7 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<IActionResult> DeleteMovie( Guid id, CancellationToken cancellationToken)
         {
             var deleted = await _mediator.Send(new DeleteMovieCommand(id),cancellationToken);
-            return deleted ? NoContent() : NotFound();
+            return deleted.IsSuccess ? NoContent() : NotFound(deleted);
         }
     }
 }

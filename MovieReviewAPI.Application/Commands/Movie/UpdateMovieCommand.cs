@@ -8,5 +8,5 @@ using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Commands.Movie
 {
-    public record UpdateMovieCommand(Guid Id, UpdateMovieDto dto):IRequest<bool>;
+    public record UpdateMovieCommand(Guid Id, UpdateMovieDto dto):IRequest<Result<MovieDto>>;
 }

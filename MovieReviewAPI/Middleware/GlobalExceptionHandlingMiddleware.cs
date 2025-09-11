@@ -39,6 +39,11 @@ namespace MovieReviewApi.Api.Middleware
 
                 await HandleException(context, 500, "An unexpected server error occurred.", _logger);
             }
+            catch (ArgumentException argEx)
+            {
+                _logger.LogError(argEx, "Argument exception occurred");
+                await HandleException(context, 500, "An invalid argument was provided.", _logger);
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unhandled exception occurred");

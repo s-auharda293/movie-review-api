@@ -56,7 +56,7 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<IActionResult> Update(Guid id, UpdateReviewDto dto, CancellationToken cancellationToken)
         {
             var updated = await _mediator.Send(new UpdateReviewCommand(id, dto), cancellationToken);
-            return updated.IsSuccess ? Ok(updated) : NotFound(updated.Error);
+            return updated.IsSuccess ? Ok(updated) : NotFound(updated);
         }
 
         [HttpPatch]

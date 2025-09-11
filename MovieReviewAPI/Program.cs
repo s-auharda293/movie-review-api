@@ -5,7 +5,6 @@ using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Validators.ActorValidator;
 using MovieReviewApi.Infrastructure.Extensions;
 using Serilog;
-using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using MovieReviewApi.Api.Middleware;
 
 try
@@ -37,9 +36,12 @@ try
     builder.Services.AddHttpContextAccessor();
 
     //register the IPipelineBehavior and it's implementation LoggingPipelineBehavior
-    builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingPipelineBehavior<,>));
+    builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingPipelineBehavior<,>));
 
-    builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
+
+
+    //builder.Services.AddFluentValidationAutoValidation();
 
     builder.Services.AddControllers();
 

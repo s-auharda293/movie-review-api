@@ -1,12 +1,12 @@
 using FluentValidation;
 using MediatR;
 using MovieReviewApi.Application.Behaviors;
-using MovieReviewApi.Application.Handlers.Actor;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Validators.ActorValidator;
 using MovieReviewApi.Infrastructure.Extensions;
 using Serilog;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+using MovieReviewApi.Api.Middleware;
 
 try
 {
@@ -26,6 +26,7 @@ try
 
     builder.Host.UseSerilog();
     // Add services to the container.
+
 
     builder.Services.AddValidatorsFromAssemblyContaining<CreateActorValidator>();
 
@@ -57,6 +58,8 @@ try
 
     var app = builder.Build();
 
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
+
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
@@ -65,6 +68,7 @@ try
     }
 
     app.UseHttpsRedirection();
+
 
     app.UseAuthorization();
 

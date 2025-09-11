@@ -48,7 +48,7 @@ namespace MovieReviewApi.Api.Controllers
         {
 
             var updated = await _mediator.Send(new UpdateMovieCommand(id, dto), cancellationToken);
-                return updated.IsSuccess ? Ok(updated) : NotFound(updated.Error);
+                return updated.IsSuccess ? Ok(updated) : NotFound(updated);
         }
 
         [HttpPatch]

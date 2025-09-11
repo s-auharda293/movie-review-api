@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
@@ -44,7 +45,7 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<ActionResult<Actor>> PutActor(Guid id, UpdateActorDto dto, CancellationToken cancellationToken) {
 
             var updated = await _mediator.Send(new UpdateActorCommand(id, dto),cancellationToken);
-            return updated.IsSuccess ? Ok(updated) : NotFound(updated.Error);
+            return updated.IsSuccess ? Ok(updated) : NotFound(updated);
            
         }
 
@@ -62,6 +63,5 @@ namespace MovieReviewApi.Api.Controllers
             var deleted = await _mediator.Send(new DeleteActorCommand(id),cancellationToken);
             return deleted.IsSuccess ? NoContent() : NotFound(deleted);
         }
-
     }
 }

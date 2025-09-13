@@ -24,4 +24,8 @@
     <ProjectReference Include="..\MovieReviewApi.Domain\MovieReviewApi.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Persistence\Entities\" />
+  </ItemGroup>
+
 </Project>

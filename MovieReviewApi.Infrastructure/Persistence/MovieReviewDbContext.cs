@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Application.KeylessEntities.CreateActorResult;
 using MovieReviewApi.Domain.Common;
 using MovieReviewApi.Domain.Entities;
 
@@ -38,6 +39,8 @@ public class MovieReviewDbContext: DbContext, IApplicationDbContext
         modelBuilder.Entity<Actor>().ToTable("Actors");
         modelBuilder.Entity<Movie>().ToTable("Movies");
         modelBuilder.Entity<Review>().ToTable("Reviews");
+
+        modelBuilder.Entity<CreateActorResult>().HasNoKey();
 
         modelBuilder.Entity<Actor>()
         .HasMany(a => a.Movies)

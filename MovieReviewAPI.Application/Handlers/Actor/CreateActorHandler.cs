@@ -1,10 +1,12 @@
 ﻿using MediatR;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Application.KeylessEntities.CreateActorResult;
 using MovieReviewApi.Domain.Common.Actors;
-using MovieReviewApi.Domain.Entities;
+using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
@@ -19,39 +21,32 @@ namespace MovieReviewApi.Application.Handlers.Actor
 
         public async Task<Result<ActorDto>> Handle(CreateActorCommand request, CancellationToken cancellationToken)
         {
-            var actor = new MovieReviewApi.Domain.Entities.Actor
-            {
-                Name = request.dto.Name,
-                Bio = request.dto.Bio,
-                DateOfBirth = request.dto.DateOfBirth,
-            };
+            var dto = request.dto;
 
-            // Add movies if provided
-            if (request.dto.MovieIds != null && request.dto.MovieIds.Any())
-            {
-                var movies = await _context.Movies
-                    .Where(m => request.dto.MovieIds.Contains(m.Id))
-                    .ToListAsync(cancellationToken);
+            // Call stored procedure and get the created actor
+            var spResult = await _context.Set<CreateActorResult>()
+                .FromSqlInterpolated($@"
+            EXEC CreateActor 
+                @Bio = {dto.Bio ?? (object)DBNull.Value}, 
+                @DateOfBirth = {dto.DateOfBirth ?? (object)DBNull.Value}, 
+                @Name = {dto.Name}
+        ")
+                .AsNoTracking()
+                .ToListAsync(cancellationToken); // executes the SQL
 
-                if (movies.Count != request.dto.MovieIds.Count)
-                {
-                    var invalidIds = request.dto.MovieIds.Except(movies.Select(m => m.Id)).ToList();
-                    return Result<ActorDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
-                }
+            var actor = spResult.FirstOrDefault();
 
-                actor.Movies = movies;
-            }
+            if (actor == null)
+                return Result<ActorDto>.Failure(ActorErrors.CreationFailed);
 
-            await _context.Actors.AddAsync(actor, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-
+            // Map to DTO
             var actorDto = new ActorDto
             {
                 Id = actor.Id,
                 Name = actor.Name,
                 Bio = actor.Bio,
                 DateOfBirth = actor.DateOfBirth,
-                Movies = actor.Movies?.Select(m => m.Title).ToList() ?? new List<string>()
+                Movies = new List<string>() // empty at creation
             };
 
             return Result<ActorDto>.Success(actorDto);

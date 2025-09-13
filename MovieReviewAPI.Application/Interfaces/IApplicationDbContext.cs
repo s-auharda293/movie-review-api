@@ -8,7 +8,7 @@ namespace MovieReviewApi.Application.Interfaces
         DbSet<Movie> Movies { get; }
         DbSet<Actor> Actors { get; }
         DbSet<Review> Reviews { get; }
-
+        DbSet<TEntity> Set<TEntity>() where TEntity : class;
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 
     }

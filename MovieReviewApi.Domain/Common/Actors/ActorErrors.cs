@@ -7,6 +7,9 @@ namespace MovieReviewApi.Domain.Common.Actors
 
         public static readonly Error NotFound = new("Actor.NotFound","The requested actor was not found");
 
+
+        public static readonly Error CreationFailed = new("Actor.CreationFailed", "Failed to create actor via stored procedure.");
+
         public static Error MoviesNotFound(IEnumerable<Guid> ids)
         {
             return new Error("Actor.MoviesNotFound", $"One or more movies with Ids {string.Join(", ", ids)} do not exist.");

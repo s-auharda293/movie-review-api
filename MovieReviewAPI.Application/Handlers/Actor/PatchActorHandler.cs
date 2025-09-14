@@ -1,30 +1,32 @@
-﻿using MediatR;
+﻿using Dapper;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Common.Actors;
+using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
     public class PatchActorHandler : IRequestHandler<PatchActorCommand,Result<ActorDto>>
     {
         private readonly IApplicationDbContext _context;
+        private readonly IDbConnectionFactory _connection;
 
-        public PatchActorHandler(IApplicationDbContext context)
+        public PatchActorHandler(IApplicationDbContext context, IDbConnectionFactory connection)
         {
             _context = context;
+            _connection = connection;
         }
 
 
         public async Task<Result<ActorDto>> Handle(PatchActorCommand request, CancellationToken cancellationToken)
         {
+            string? movieIdsCsv = null;
+
             var actor = await _context.Actors.FirstOrDefaultAsync(a=>a.Id == request.Id);
             if (actor == null) return Result<ActorDto>.Failure(ActorErrors.NotFound);
-
-            if (!string.IsNullOrEmpty(request.dto.Name)) actor.Name = request.dto.Name;
-            if (request.dto.DateOfBirth.HasValue) actor.DateOfBirth = request.dto.DateOfBirth;
-            if (!string.IsNullOrEmpty(request.dto.Bio)) actor.Bio = request.dto.Bio;
 
             if (request.dto.MovieIds != null && request.dto.MovieIds.Any())
             {
@@ -34,21 +36,35 @@ namespace MovieReviewApi.Application.Handlers.Actor
                     var invalidIds = request.dto.MovieIds.Except(movies.Select(m => m.Id)).ToList();
                     return Result<ActorDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
                 }
-                actor.Movies = movies.ToList();
+                movieIdsCsv = string.Join(",", request.dto.MovieIds);
             }
-            _context.Actors.Update(actor);
-            await _context.SaveChangesAsync(cancellationToken);
+            using var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
-            var dto = new ActorDto
-            {
-                Id = actor.Id,
-                Name = actor.Name,
-                Bio = actor.Bio,
-                DateOfBirth = actor.DateOfBirth,
-                Movies = actor.Movies?.Select(m => m.Title).ToList() ?? new List<string>()
-            };
+            var parameters = new DynamicParameters();
+            parameters.Add("@Id", request.Id, DbType.Guid);
+            parameters.Add("@Name", request.dto.Name, DbType.String);
+            parameters.Add("@Bio", request.dto.Bio, DbType.String);
+            parameters.Add("@DateOfBirth", request.dto.DateOfBirth, DbType.DateTime2);
+            parameters.Add("@MovieIds", movieIdsCsv, DbType.String);
 
-            return Result<ActorDto>.Success(dto);
+            // Call stored procedure
+            var updatedActor = await connection.QueryFirstOrDefaultAsync<ActorDto>(
+                "PatchActor",
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+
+            if (updatedActor == null)
+                return Result<ActorDto>.Failure(ActorErrors.NotFound);
+
+            updatedActor.Movies = await _context.Movies
+             .Where(m => request.dto.MovieIds == null
+                      ? m.Actors.Any(a => a.Id == request.Id)
+                      : request.dto.MovieIds.Contains(m.Id))
+             .Select(m => m.Title)
+             .ToListAsync(cancellationToken);
+
+            return Result<ActorDto>.Success(updatedActor);
         }
     }
 }

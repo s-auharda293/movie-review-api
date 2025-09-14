@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using MovieReviewApi.Infrastructure.Persistence;
+using MovieReviewApi.Infrastructure.Data;    
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Interfaces;
 

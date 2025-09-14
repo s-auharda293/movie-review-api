@@ -1,10 +1,9 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Interfaces;
-using MovieReviewApi.Domain.Common;
 using MovieReviewApi.Domain.Entities;
 
-namespace MovieReviewApi.Infrastructure.Persistence;
+namespace MovieReviewApi.Infrastructure.Data;
 
 public class MovieReviewDbContext: DbContext, IApplicationDbContext
 {
@@ -68,13 +67,27 @@ public class MovieReviewDbContext: DbContext, IApplicationDbContext
             .Property(r => r.Rating)
             .HasPrecision(3, 1);
 
-        modelBuilder.Entity<BaseEntity>()
-            .Property(b => b.CreatedAt)
+        modelBuilder.Entity<Actor>()
+            .Property(a => a.CreatedAt)
+            .HasDefaultValueSql("GETUTCDATE()");
+        modelBuilder.Entity<Actor>()
+            .Property(a => a.UpdatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
 
-        modelBuilder.Entity<BaseEntity>()
-            .Property(b => b.UpdatedAt)
+        modelBuilder.Entity<Movie>()
+            .Property(m => m.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
+        modelBuilder.Entity<Movie>()
+            .Property(m => m.UpdatedAt)
+            .HasDefaultValueSql("GETUTCDATE()");
+
+        modelBuilder.Entity<Review>()
+            .Property(r => r.CreatedAt)
+            .HasDefaultValueSql("GETUTCDATE()");
+        modelBuilder.Entity<Review>()
+            .Property(r => r.UpdatedAt)
+            .HasDefaultValueSql("GETUTCDATE()");
+
     }
 
 

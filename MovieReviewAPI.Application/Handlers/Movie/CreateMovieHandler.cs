@@ -1,34 +1,31 @@
-﻿using MediatR;
+﻿using Dapper;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
-using MovieReviewApi.Domain.Entities;
-using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Domain.Common.Movies;
+using MovieReviewApi.Domain.Entities;
+using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {
     public class CreateMovieHandler : IRequestHandler<CreateMovieCommand, Result<MovieDto>>
     {
         private readonly IApplicationDbContext _context;
+        private readonly IDbConnectionFactory _connection;
 
-        public CreateMovieHandler(IApplicationDbContext context)
+        public CreateMovieHandler(IApplicationDbContext context, IDbConnectionFactory connection)
         {
             _context = context;
+            _connection = connection;
         }
 
         public async Task<Result<MovieDto>> Handle(CreateMovieCommand request, CancellationToken cancellationToken)
         {
-            var movie = new MovieReviewApi.Domain.Entities.Movie
-            {
-                Title = request.dto.Title,
-                Description = request.dto.Description,
-                ReleaseDate = request.dto.ReleaseDate ?? DateTime.UtcNow,
-                DurationMinutes = request.dto.DurationMinutes,
-                Rating = request.dto.Rating,
-            };
+            string? actorIdsCsv = null;
+            List<string> actorNames = new List<string>();
 
-            // Add actors if provided
             if (request.dto.ActorIds != null && request.dto.ActorIds.Any())
             {
                 var actors = await _context.Actors
@@ -41,13 +38,31 @@ namespace MovieReviewApi.Application.Handlers.Movie
                     return Result<MovieDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
                 }
 
-                movie.Actors = actors;
+                actorIdsCsv = string.Join(",", request.dto.ActorIds);
+                actorNames = await _context.Actors
+               .Where(a => request.dto.ActorIds.Contains(a.Id))
+               .Select(a => a.Name)
+               .ToListAsync(cancellationToken);
             }
 
-            await _context.Movies.AddAsync(movie, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
+           var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
-            var movieDto =  new MovieDto
+            var parameters = new DynamicParameters();
+            parameters.Add("@Title", request.dto.Title, DbType.String);
+            parameters.Add("@Description", request.dto.Description, DbType.String);
+            parameters.Add("@ReleaseDate", request.dto.ReleaseDate ?? DateTime.UtcNow, DbType.DateTime2);
+            parameters.Add("@DurationMinutes", request.dto.DurationMinutes, DbType.Int32);
+            parameters.Add("@Rating", request.dto.Rating, DbType.Decimal);
+            parameters.Add("@ActorIds", actorIdsCsv, DbType.String);
+
+            var movie = await connection.QueryFirstAsync<dynamic>(
+                "CreateMovie",
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
+
+            // 3️⃣ Map result to DTO
+            var movieDto = new MovieDto
             {
                 Id = movie.Id,
                 Title = movie.Title,
@@ -55,7 +70,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 ReleaseDate = movie.ReleaseDate,
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
-                Actors = movie.Actors?.Select(a => a.Name).ToList() ?? new List<string>()
+                Actors = actorNames ?? new List<string>() 
             };
 
             return Result<MovieDto>.Success(movieDto);

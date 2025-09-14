@@ -12,12 +12,12 @@ namespace MovieReviewApi.Application.Handlers.Actor
     public class PatchActorHandler : IRequestHandler<PatchActorCommand,Result<ActorDto>>
     {
         private readonly IApplicationDbContext _context;
-        private readonly IDbConnectionFactory _connectionFactory;
+        private readonly IDbConnectionFactory _connection;
 
-        public PatchActorHandler(IApplicationDbContext context, IDbConnectionFactory connectionFactory)
+        public PatchActorHandler(IApplicationDbContext context, IDbConnectionFactory connection)
         {
             _context = context;
-            _connectionFactory = connectionFactory;
+            _connection = connection;
         }
 
 
@@ -38,7 +38,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 }
                 movieIdsCsv = string.Join(",", request.dto.MovieIds);
             }
-            using var connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
+            using var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
             var parameters = new DynamicParameters();
             parameters.Add("@Id", request.Id, DbType.Guid);

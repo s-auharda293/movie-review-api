@@ -11,24 +11,36 @@ namespace MovieReviewApi.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql(@"
-            CREATE PROCEDURE CreateActor
-                @Name NVARCHAR(4000),
-                @Bio NVARCHAR(4000) = NULL,
-                @DateOfBirth DATETIME2 = NULL
-            AS
-            BEGIN
-                SET NOCOUNT ON;
+           CREATE PROCEDURE CreateActor
+    @Name NVARCHAR(4000),
+    @Bio NVARCHAR(4000) = NULL,
+    @DateOfBirth DATETIME2 = NULL,
+    @MovieIds NVARCHAR(MAX) = NULL -- comma-separated movie GUIDs
+AS
+BEGIN
+    SET NOCOUNT ON;
 
-                DECLARE @Id UNIQUEIDENTIFIER = NEWID();
-                DECLARE @CreatedAt DATETIME2 = SYSUTCDATETIME();
-                DECLARE @UpdatedAt DATETIME2 = SYSUTCDATETIME();
+    -- Insert actor
+    DECLARE @ActorId UNIQUEIDENTIFIER = NEWID();
+    DECLARE @CreatedAt DATETIME2 = SYSUTCDATETIME();
+    DECLARE @UpdatedAt DATETIME2 = SYSUTCDATETIME();
 
-                INSERT INTO Actors (Id, Name, Bio, DateOfBirth, CreatedAt, UpdatedAt)
-                VALUES (@Id, @Name, @Bio, @DateOfBirth, @CreatedAt, @UpdatedAt);
+    INSERT INTO Actors (Id, Name, Bio, DateOfBirth, CreatedAt, UpdatedAt)
+    VALUES (@ActorId, @Name, @Bio, @DateOfBirth, @CreatedAt, @UpdatedAt);
 
-                SELECT @Id AS Id, @Name AS Name, @Bio AS Bio, @DateOfBirth AS DateOfBirth,
-                       @CreatedAt AS CreatedAt, @UpdatedAt AS UpdatedAt;
-            END
+    -- Insert actor-movie links if MovieIds provided
+    IF @MovieIds IS NOT NULL AND LEN(@MovieIds) > 0
+    BEGIN
+        INSERT INTO ActorMovie (ActorId, MovieId)
+        SELECT @ActorId, CAST(value AS UNIQUEIDENTIFIER)
+        FROM STRING_SPLIT(@MovieIds, ',');
+    END
+
+    -- Return actor info
+    SELECT @ActorId AS Id, @Name AS Name, @Bio AS Bio, @DateOfBirth AS DateOfBirth,
+           @CreatedAt AS CreatedAt, @UpdatedAt AS UpdatedAt;
+END
+
         ");
         }
 

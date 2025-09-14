@@ -28,12 +28,25 @@ namespace MovieReviewApi.Application.Handlers.Actor
 
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
             List<string> movieTitles = new List<string>();
+            string? movieIdsCsv = null;
+
+            if (request.dto.MovieIds != null && request.dto.MovieIds.Any())
+            {
+                var movies = await _context.Movies.Where(m => request.dto.MovieIds.Contains(m.Id)).ToListAsync(cancellationToken);
+                if (movies.Count != request.dto.MovieIds.Count)
+                {
+                    var invalidIds = request.dto.MovieIds.Except(movies.Select(m => m.Id)).ToList();
+                    return Result<ActorDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
+                }
+                movieIdsCsv = string.Join(",", request.dto.MovieIds);
+            }
 
             // Prepare parameters
             var parameters = new DynamicParameters();
             parameters.Add("@Name", request.dto.Name, DbType.String);
             parameters.Add("@Bio", request.dto.Bio, DbType.String);
             parameters.Add("@DateOfBirth", request.dto.DateOfBirth, DbType.DateTime2);
+            parameters.Add("@MovieIds", movieIdsCsv, DbType.String);
 
             // Execute stored procedure and get the first row
             var actor = await connection.QueryFirstAsync<dynamic>(
@@ -44,13 +57,10 @@ namespace MovieReviewApi.Application.Handlers.Actor
 
             if (request.dto.MovieIds != null && request.dto.MovieIds.Any())
             {
-                var movies = await _context.Movies.Where(m => request.dto.MovieIds.Contains(m.Id)).ToListAsync(cancellationToken);
-                if (movies.Count != request.dto.MovieIds.Count)
-                {
-                    var invalidIds = request.dto.MovieIds.Except(movies.Select(m => m.Id)).ToList();
-                    return Result<ActorDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
-                }
-                movieTitles = movies.Select(m => m.Title).ToList();
+                movieTitles = await _context.Movies
+                    .Where(m => request.dto.MovieIds.Contains(m.Id))
+                    .Select(m => m.Title)
+                    .ToListAsync(cancellationToken);
             }
 
             // Map to ActorDto

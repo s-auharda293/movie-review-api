@@ -1,11 +1,12 @@
 using FluentValidation;
 using MediatR;
+using MovieReviewApi.Api.Middleware;
 using MovieReviewApi.Application.Behaviors;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Validators.ActorValidator;
+using MovieReviewApi.Infrastructure.Data;
 using MovieReviewApi.Infrastructure.Extensions;
 using Serilog;
-using MovieReviewApi.Api.Middleware;
 
 try
 {
@@ -26,6 +27,7 @@ try
     builder.Host.UseSerilog();
     // Add services to the container.
 
+    builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
     builder.Services.AddValidatorsFromAssemblyContaining<CreateActorValidator>();
 
@@ -39,6 +41,8 @@ try
     builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingPipelineBehavior<,>));
 
     builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
+
+
 
 
     //builder.Services.AddFluentValidationAutoValidation();

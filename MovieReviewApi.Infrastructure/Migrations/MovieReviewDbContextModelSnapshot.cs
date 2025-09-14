@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using MovieReviewApi.Infrastructure.Persistence;
+using MovieReviewApi.Infrastructure.Data;
 
 #nullable disable
 
@@ -37,7 +37,38 @@ namespace MovieReviewApi.Infrastructure.Migrations
                     b.ToTable("ActorMovie");
                 });
 
-            modelBuilder.Entity("MovieReviewApi.Domain.Common.BaseEntity", b =>
+            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Actor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Bio")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Actors", (string)null);
+                });
+
+            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Movie", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -47,39 +78,6 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("BaseEntity");
-
-                    b.UseTptMappingStrategy();
-                });
-
-            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Actor", b =>
-                {
-                    b.HasBaseType("MovieReviewApi.Domain.Common.BaseEntity");
-
-                    b.Property<string>("Bio")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.ToTable("Actors", (string)null);
-                });
-
-            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Movie", b =>
-                {
-                    b.HasBaseType("MovieReviewApi.Domain.Common.BaseEntity");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -99,16 +97,30 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.HasKey("Id");
+
                     b.ToTable("Movies", (string)null);
                 });
 
             modelBuilder.Entity("MovieReviewApi.Domain.Entities.Review", b =>
                 {
-                    b.HasBaseType("MovieReviewApi.Domain.Common.BaseEntity");
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Comment")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<Guid>("MovieId")
                         .HasColumnType("uniqueidentifier");
@@ -117,8 +129,15 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasPrecision(3, 1)
                         .HasColumnType("decimal(3,1)");
 
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
                     b.Property<string>("UserName")
                         .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("MovieId");
 
@@ -140,32 +159,8 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Actor", b =>
-                {
-                    b.HasOne("MovieReviewApi.Domain.Common.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("MovieReviewApi.Domain.Entities.Actor", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("MovieReviewApi.Domain.Entities.Movie", b =>
-                {
-                    b.HasOne("MovieReviewApi.Domain.Common.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("MovieReviewApi.Domain.Entities.Movie", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("MovieReviewApi.Domain.Entities.Review", b =>
                 {
-                    b.HasOne("MovieReviewApi.Domain.Common.BaseEntity", null)
-                        .WithOne()
-                        .HasForeignKey("MovieReviewApi.Domain.Entities.Review", "Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("MovieReviewApi.Domain.Entities.Movie", "Movie")
                         .WithMany("Reviews")
                         .HasForeignKey("MovieId")

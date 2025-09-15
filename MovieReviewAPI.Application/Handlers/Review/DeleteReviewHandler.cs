@@ -1,25 +1,32 @@
-﻿using MediatR;
+﻿using Dapper;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.Commands.Review;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Entities;
+using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Review
 {
     public class DeleteReviewHandler:IRequestHandler<DeleteReviewCommand,Result<bool>>
     {
-        private readonly IApplicationDbContext _context;
-        public DeleteReviewHandler(IApplicationDbContext context) { 
-            _context = context;
+        private readonly IDbConnectionFactory _connection;
+        public DeleteReviewHandler(IDbConnectionFactory connection) { 
+            _connection = connection;
         }
 
         public async Task<Result<bool>> Handle(DeleteReviewCommand request, CancellationToken cancellationToken) {
-            var review = await _context.Reviews.FirstOrDefaultAsync(r=>r.Id == request.Id);
-            if (review == null) return Result<bool>.Failure(ReviewErrors.NotFound);
 
-            _context.Reviews.Remove(review);
-            await _context.SaveChangesAsync(cancellationToken);
+            var connection = await _connection.CreateConnectionAsync(cancellationToken);
+            var affectedRows = await connection.ExecuteAsync(
+                "DeleteReview",
+                 new { Id = request.Id },
+                 commandType: CommandType.StoredProcedure
+                );
+
+            if (affectedRows == 0) return Result<bool>.Failure(ReviewErrors.NotFound);
+
             return Result<bool>.Success(true);
         }
     }

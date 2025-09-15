@@ -1,18 +1,22 @@
-﻿using MediatR;
+﻿using Dapper;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Review;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Entities;
+using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Review
 {
     public class UpdateReviewHandler:IRequestHandler<UpdateReviewCommand,Result<ReviewDto>>
     {
         private readonly IApplicationDbContext _context;
-        public UpdateReviewHandler(IApplicationDbContext context)
+        private readonly IDbConnectionFactory _connection;
+        public UpdateReviewHandler(IApplicationDbContext context, IDbConnectionFactory connection)
         {
             _context = context;   
+            _connection = connection;
         }
 
         public async Task<Result<ReviewDto>> Handle(UpdateReviewCommand request, CancellationToken cancellationToken) {
@@ -20,20 +24,27 @@ namespace MovieReviewApi.Application.Handlers.Review
             var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == request.Id);
             if (review == null) return Result<ReviewDto>.Failure(ReviewErrors.NotFound);
 
-            review.UserName = request.dto.UserName;
-            review.Comment = request.dto.Comment;
-            review.Rating = request.dto.Rating;
+            var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
-            _context.Reviews.Update(review);
-            await _context.SaveChangesAsync(cancellationToken);
+            var parameters = new DynamicParameters();
+            parameters.Add("@Id", request.Id, DbType.Guid);
+            parameters.Add("@UserName", request.dto.UserName, DbType.String);
+            parameters.Add("@Comment", request.dto.Comment, DbType.String);
+            parameters.Add("@Rating", request.dto.Rating, DbType.Decimal);
+
+            var updatedReview = await connection.QueryFirstAsync<ReviewDto>(
+                "UpdateReview",
+                parameters,
+                commandType: CommandType.StoredProcedure
+                );
 
             var reviewDto = new ReviewDto
             {
-                Id = review.Id,
-                MovieId = review.MovieId,
-                UserName = review.UserName,
-                Comment = review.Comment,
-                Rating = review.Rating
+                Id = updatedReview.Id,
+                MovieId = updatedReview.MovieId,
+                UserName = updatedReview.UserName,
+                Comment = updatedReview.Comment,
+                Rating = updatedReview.Rating
             };
 
             return Result<ReviewDto>.Success(reviewDto);

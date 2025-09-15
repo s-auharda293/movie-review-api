@@ -1,39 +1,36 @@
-﻿using MediatR;
+﻿using Dapper;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Movie;
-using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Common.Movies;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {
-    public class DeleteMovieHandler:IRequestHandler<DeleteMovieCommand,Result<bool>>
+    public class DeleteMovieHandler : IRequestHandler<DeleteMovieCommand, Result<bool>>
     {
-        private readonly IApplicationDbContext _context;
-
-        public DeleteMovieHandler(IApplicationDbContext context)
+        private readonly IDbConnectionFactory _connection;
+        public DeleteMovieHandler(IDbConnectionFactory connection)
         {
-            _context = context;
+            _connection = connection;
         }
+        public async Task<Result<bool>> Handle(DeleteMovieCommand request, CancellationToken cancellationToken)
+        {
+            var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
-        public async Task<Result<bool>> Handle(DeleteMovieCommand request, CancellationToken cancellationToken) {
+            var affectedRows = await connection.ExecuteAsync(
+                 "DeleteMovie",                      // SQL / stored procedure name
+                 new { Id = request.Id },            // parameters
+                 null,                               // transaction
+                 null,                               // commandTimeout
+                 CommandType.StoredProcedure         // commandType
+             );
 
-            var movie = await _context.Movies.FirstOrDefaultAsync(m=>m.Id == request.Id);
-            
-            if (movie == null) return Result<bool>.Failure(MovieErrors.NotFound);
 
-            if (movie.Actors != null && movie.Actors.Any())
-            {
-                movie.Actors.Clear();
-            }
 
-            _context.Movies.Remove(movie);
-            await _context.SaveChangesAsync(cancellationToken);
+            if (affectedRows == 0)
+                return Result<bool>.Failure(MovieErrors.NotFound);
 
             return Result<bool>.Success(true);
 

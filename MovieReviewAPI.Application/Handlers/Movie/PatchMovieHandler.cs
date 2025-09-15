@@ -1,39 +1,31 @@
-﻿using MediatR;
+﻿using Dapper;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Common.Movies;
+using System.Data;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {
     public class PatchMovieHandler:IRequestHandler<PatchMovieCommand,Result<MovieDto>>
     {
         private readonly IApplicationDbContext _context;
+        private readonly IDbConnectionFactory _connection;
 
-        public PatchMovieHandler(IApplicationDbContext context)
+        public PatchMovieHandler(IApplicationDbContext context, IDbConnectionFactory connection)
         {
             _context = context;
+            _connection = connection;
         }
 
         public async Task<Result<MovieDto>> Handle(PatchMovieCommand request, CancellationToken cancellationToken) {
+            string? actorIdsCsv = null;
+            List<string> actorNames = new List<string>();
             var movie = await _context.Movies.FirstOrDefaultAsync(m=>m.Id==request.Id);
             if (movie == null) return Result<MovieDto>.Failure(MovieErrors.NotFound);
-
-            if (!string.IsNullOrEmpty(request.dto.Title))
-                movie.Title = request.dto.Title;
-
-            if (!string.IsNullOrEmpty(request.dto.Description))
-                movie.Description = request.dto.Description;
-
-            if (request.dto.ReleaseDate.HasValue)
-                movie.ReleaseDate = request.dto.ReleaseDate.Value;
-
-            if (request.dto.DurationMinutes.HasValue)
-                movie.DurationMinutes = request.dto.DurationMinutes.Value;
-
-            if (request.dto.Rating.HasValue)
-                movie.Rating = request.dto.Rating.Value;
 
             if (request.dto.ActorIds != null && request.dto.ActorIds.Any())
             {
@@ -41,23 +33,43 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 if (actors.ToList().Count != request.dto.ActorIds.Count)
                 {
                     var invalidIds = request.dto.ActorIds.Except(actors.Select(a => a.Id).ToList());
-                    throw new ArgumentException($"One or more actors with Ids {string.Join(", ", invalidIds)} do not exist.");
+                    return Result<MovieDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
                 }
-                movie.Actors = actors.ToList();
+                actorIdsCsv = string.Join(",", request.dto.ActorIds);
+                actorNames = await _context.Actors
+               .Where(a => request.dto.ActorIds.Contains(a.Id))
+               .Select(a => a.Name)
+               .ToListAsync(cancellationToken);
             }
 
-             _context.Movies.Update(movie);
-            await _context.SaveChangesAsync(cancellationToken);
+
+            var connection = await _connection.CreateConnectionAsync(cancellationToken);
+
+            var parameters = new DynamicParameters();
+            parameters.Add("@Id", request.Id, DbType.Guid);
+            parameters.Add("@Title", request.dto.Title, DbType.String);
+            parameters.Add("@Description", request.dto.Description, DbType.String);
+            parameters.Add("@ReleaseDate", request.dto.ReleaseDate, DbType.DateTime2);
+            parameters.Add("@DurationMinutes", request.dto.DurationMinutes, DbType.Int32);
+            parameters.Add("@Rating", request.dto.Rating, DbType.Decimal);
+            parameters.Add("@ActorIds", actorIdsCsv, DbType.String);
+
+
+            var patchMovie = await connection.QueryFirstAsync<dynamic>(
+                "PatchMovie",
+                parameters,
+                commandType: CommandType.StoredProcedure
+            );
 
             var dto = new MovieDto
             {
-                Id = movie.Id,
-                Title = movie.Title,
-                Description = movie.Description,
-                ReleaseDate = movie.ReleaseDate,
-                DurationMinutes = movie.DurationMinutes,
-                Rating = movie.Rating,
-                Actors = movie.Actors.Select(a => a.Name).ToList(),
+                Id = patchMovie.Id,
+                Title = patchMovie.Title,
+                Description = patchMovie.Description,
+                ReleaseDate = patchMovie.ReleaseDate,
+                DurationMinutes = patchMovie.DurationMinutes,
+                Rating = patchMovie.Rating,
+                Actors = actorNames,
             };
 
             return Result<MovieDto>.Success(dto);

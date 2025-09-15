@@ -24,7 +24,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
         public async Task<Result<MovieDto>> Handle(PatchMovieCommand request, CancellationToken cancellationToken) {
             string? actorIdsCsv = null;
             List<string> actorNames = new List<string>();
-            var movie = await _context.Movies.FirstOrDefaultAsync(m=>m.Id==request.Id);
+            var movie = await _context.Movies.Include(m=>m.Actors).FirstOrDefaultAsync(m=>m.Id==request.Id);
             if (movie == null) return Result<MovieDto>.Failure(MovieErrors.NotFound);
 
             if (request.dto.ActorIds != null && request.dto.ActorIds.Any())
@@ -36,12 +36,10 @@ namespace MovieReviewApi.Application.Handlers.Movie
                     return Result<MovieDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
                 }
                 actorIdsCsv = string.Join(",", request.dto.ActorIds);
-                actorNames = await _context.Actors
-               .Where(a => request.dto.ActorIds.Contains(a.Id))
-               .Select(a => a.Name)
-               .ToListAsync(cancellationToken);
+               
             }
 
+            actorNames = movie.Actors.Select(a => a.Name).ToList();
 
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
 

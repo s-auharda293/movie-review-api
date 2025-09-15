@@ -2,7 +2,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Actor;
-using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Common.Actors;
 using System.Data;
@@ -21,13 +20,10 @@ namespace MovieReviewApi.Application.Handlers.Actor
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
             var affectedRows = await connection.ExecuteAsync(
-                 "DeleteActor",                      // SQL / stored procedure name
-                 new { Id = request.Id },            // parameters
-                 null,                               // transaction
-                 null,                               // commandTimeout
-                 CommandType.StoredProcedure         // commandType
+                 "DeleteActor",                      
+                 new { Id = request.Id },
+                 commandType: CommandType.StoredProcedure
              );
-
 
 
             if (affectedRows == 0)

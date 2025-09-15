@@ -20,14 +20,10 @@ namespace MovieReviewApi.Application.Handlers.Movie
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
             var affectedRows = await connection.ExecuteAsync(
-                 "DeleteMovie",                      // SQL / stored procedure name
-                 new { Id = request.Id },            // parameters
-                 null,                               // transaction
-                 null,                               // commandTimeout
-                 CommandType.StoredProcedure         // commandType
+                 "DeleteMovie",                   
+                 new { Id = request.Id },
+                 commandType: CommandType.StoredProcedure         
              );
-
-
 
             if (affectedRows == 0)
                 return Result<bool>.Failure(MovieErrors.NotFound);

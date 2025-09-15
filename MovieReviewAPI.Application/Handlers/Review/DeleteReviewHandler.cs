@@ -21,10 +21,8 @@ namespace MovieReviewApi.Application.Handlers.Review
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
             var affectedRows = await connection.ExecuteAsync(
                 "DeleteReview",
-                new { Id = request.Id },
-                null,
-                null,
-                CommandType.StoredProcedure
+                 new { Id = request.Id },
+                 commandType: CommandType.StoredProcedure
                 );
 
             if (affectedRows == 0) return Result<bool>.Failure(ReviewErrors.NotFound);

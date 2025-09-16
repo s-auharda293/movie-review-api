@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Entities;
+using MovieReviewApi.Application.KeylessEntities;
 
 namespace MovieReviewApi.Infrastructure.Data;
 
@@ -14,6 +15,10 @@ public class MovieReviewDbContext: DbContext, IApplicationDbContext
     public DbSet<Review> Reviews { get; set; } = null!;
 
     //public DbSet<Genre> Genres { get; set; } = null!;
+
+    //Keyless entities
+    public DbSet<GetMoviesResult> GetMoviesResult { get; set; }
+
 
     public MovieReviewDbContext(DbContextOptions<MovieReviewDbContext> options) : base(options) { 
     }
@@ -37,6 +42,9 @@ public class MovieReviewDbContext: DbContext, IApplicationDbContext
         modelBuilder.Entity<Actor>().ToTable("Actors");
         modelBuilder.Entity<Movie>().ToTable("Movies");
         modelBuilder.Entity<Review>().ToTable("Reviews");
+
+        modelBuilder.Entity<GetMoviesResult>().HasNoKey();
+        modelBuilder.Entity<GetMoviesResult>().ToView(null);
 
         modelBuilder.Entity<Actor>()
         .HasMany(a => a.Movies)

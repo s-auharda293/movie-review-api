@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36414.22 d17.14
+VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieReviewApi.Api", "MovieReviewAPI\MovieReviewApi.Api.csproj", "{241E5BB5-3CE0-4732-BB38-2B6B6AF5FC31}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieReviewApi.Domain", "MovieReviewApi.Domain\MovieReviewApi.Domain.csproj", "{8194500D-16C3-4A8F-8FD7-95626505C953}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieReviewApi.Infrastructure", "MovieReviewApi.Infrastructure\MovieReviewApi.Infrastructure.csproj", "{915F7329-E4E1-41E8-B3FC-7200AF93953E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieReviewApi.IntegrationTests", "MovieReviewApi.IntegrationTests\MovieReviewApi.IntegrationTests.csproj", "{48126A20-7291-4BBF-9BEE-4C1522B32576}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{915F7329-E4E1-41E8-B3FC-7200AF93953E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{915F7329-E4E1-41E8-B3FC-7200AF93953E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{915F7329-E4E1-41E8-B3FC-7200AF93953E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48126A20-7291-4BBF-9BEE-4C1522B32576}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48126A20-7291-4BBF-9BEE-4C1522B32576}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48126A20-7291-4BBF-9BEE-4C1522B32576}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48126A20-7291-4BBF-9BEE-4C1522B32576}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

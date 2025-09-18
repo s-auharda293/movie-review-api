@@ -8,8 +8,6 @@ using MovieReviewApi.Infrastructure.Data;
 using MovieReviewApi.Infrastructure.Extensions;
 using Serilog;
 
-try
-{
     Log.Logger = new LoggerConfiguration()
       //.ReadFrom.Configuration(builder.Configuration)
       .MinimumLevel.Information()
@@ -82,11 +80,5 @@ try
 
     app.Run();
 
-}
-catch (Exception ex)
-{
-    Log.Fatal(ex, "Server terminated unexpectedly");
-}
-finally {
-    Log.CloseAndFlush();
-}
+
+public partial class Program { }

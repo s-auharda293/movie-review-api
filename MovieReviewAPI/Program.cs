@@ -1,5 +1,8 @@
 using FluentValidation;
+using Hangfire;
+using Hangfire.SqlServer;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using MovieReviewApi.Api.Middleware;
 using MovieReviewApi.Application.Behaviors;
 using MovieReviewApi.Application.Interfaces;
@@ -23,9 +26,18 @@ using Serilog;
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Host.UseSerilog();
-    // Add services to the container.
+// Add services to the container.
 
-    builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
+builder.Services.AddHangfire(configuration => configuration
+     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+     .UseSimpleAssemblyNameTypeSerializer()
+     .UseRecommendedSerializerSettings()
+     .UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
+
+// Add the processing server as IHostedService
+builder.Services.AddHangfireServer();
+
+builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
     builder.Services.AddValidatorsFromAssemblyContaining<CreateActorValidator>();
 
@@ -78,7 +90,11 @@ using Serilog;
 
     app.MapControllers();
 
-    app.Run();
+    app.MapHangfireDashboard();
+
+    BackgroundJob.Enqueue(() => Console.WriteLine("Hello Hangfire! Test job executed."));
+
+app.Run();
 
 
 public partial class Program { }

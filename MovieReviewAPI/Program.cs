@@ -6,9 +6,12 @@ using Microsoft.Extensions.Configuration;
 using MovieReviewApi.Api.Middleware;
 using MovieReviewApi.Application.Behaviors;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Application.Interfaces.Hangfire;
 using MovieReviewApi.Application.Validators.ActorValidator;
 using MovieReviewApi.Infrastructure.Data;
 using MovieReviewApi.Infrastructure.Extensions;
+using MovieReviewApi.Infrastructure.Jobs;
+using MovieReviewApi.Infrastructure.Services;
 using Serilog;
 
     Log.Logger = new LoggerConfiguration()
@@ -52,12 +55,14 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
     builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
 
+    builder.Services.AddScoped<ILogFileCleaner, LogFileCleaner>();
+    builder.Services.AddScoped<DeleteLogsJob>();
 
 
 
-    //builder.Services.AddFluentValidationAutoValidation();
+//builder.Services.AddFluentValidationAutoValidation();
 
-    builder.Services.AddControllers();
+builder.Services.AddControllers();
 
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -92,7 +97,7 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
     app.MapHangfireDashboard();
 
-    BackgroundJob.Enqueue(() => Console.WriteLine("Hello Hangfire! Test job executed."));
+HangfireJobScheduler.ScheduleJobs();
 
 app.Run();
 

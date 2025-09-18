@@ -1,40 +1,59 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Infrastructure.Data;
+using System.Data;
 
 namespace MovieReviewApi.IntegrationTests
 {
     public class MovieReviewWebApplicationFactory : WebApplicationFactory<Program>
     {
-        //private readonly string _connectionString = @"Server=localhost\MSSQLSERVER02;Database=MovieReviewTestDb;User Id=sauharda;Password=M3w<c9]238#;TrustServerCertificate=True";
-       //customize DI and services of the app
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
+            IConfiguration? configuration = null;
+
+            // Load appsettings.Test.json and capture configuration
+            builder.ConfigureAppConfiguration((context, config) =>
+            {
+                config.AddJsonFile("appsettings.Test.json", optional: false);
+                configuration = config.Build();
+            });
+
             builder.ConfigureTestServices(services =>
             {
-                // Remove existing DbContext registration
-                services.RemoveAll(typeof(DbContextOptions<MovieReviewDbContext>));
+                // Get connection string from configuration we just built
+                var connectionString = configuration!.GetConnectionString("MovieReviewDb");
 
-                // Register test database
+                // Remove existing DbContext registrations
+                services.RemoveAll(typeof(DbContextOptions<MovieReviewDbContext>));
+                services.RemoveAll<IApplicationDbContext>();
+
+                // Add test DbContext done for ef core and stored procedure
                 services.AddDbContext<MovieReviewDbContext>(options =>
                 {
-                    options.UseSqlServer("Server=localhost\\MSSQLSERVER02;Database=MovieReviewTestDb;User Id=sauharda;Password=M3w<c9]238#;TrustServerCertificate=True");
+                    options.UseSqlServer(connectionString);
                 });
 
-                // Build service provider and reset test database
-                var sp = services.BuildServiceProvider();
-                using var scope = sp.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<MovieReviewDbContext>();
-                Console.WriteLine("Resetting test database...");
-                Console.WriteLine($"Using DB: {db.Database.GetDbConnection().Database}");
-                db.Database.EnsureDeleted();
-                db.Database.Migrate();
-                Console.WriteLine("Database ready.");
+                services.AddScoped<IApplicationDbContext, MovieReviewDbContext>();
+
+                // Replace IDbConnection with one using the same connection string this is done for dapper
+                services.RemoveAll<IDbConnection>();
+                services.AddScoped<IDbConnection>(_ => new SqlConnection(connectionString));
             });
+        }
+
+        public void EnsureDatabase()
+        {
+            using var scope = Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<MovieReviewDbContext>();
+            db.Database.EnsureDeleted();
+            db.Database.Migrate();
         }
     }
 }

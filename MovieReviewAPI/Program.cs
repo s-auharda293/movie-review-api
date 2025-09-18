@@ -1,11 +1,17 @@
 using FluentValidation;
+using Hangfire;
+using Hangfire.SqlServer;
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using MovieReviewApi.Api.Middleware;
 using MovieReviewApi.Application.Behaviors;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Application.Interfaces.Hangfire;
 using MovieReviewApi.Application.Validators.ActorValidator;
 using MovieReviewApi.Infrastructure.Data;
 using MovieReviewApi.Infrastructure.Extensions;
+using MovieReviewApi.Infrastructure.Jobs;
+using MovieReviewApi.Infrastructure.Services;
 using Serilog;
 
     Log.Logger = new LoggerConfiguration()
@@ -23,9 +29,18 @@ using Serilog;
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Host.UseSerilog();
-    // Add services to the container.
+// Add services to the container.
 
-    builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
+builder.Services.AddHangfire(configuration => configuration
+     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+     .UseSimpleAssemblyNameTypeSerializer()
+     .UseRecommendedSerializerSettings()
+     .UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
+
+// Add the processing server as IHostedService
+builder.Services.AddHangfireServer();
+
+builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
     builder.Services.AddValidatorsFromAssemblyContaining<CreateActorValidator>();
 
@@ -40,12 +55,14 @@ using Serilog;
 
     builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
 
+    builder.Services.AddScoped<ILogFileCleaner, LogFileCleaner>();
+    builder.Services.AddScoped<DeleteLogsJob>();
 
 
 
-    //builder.Services.AddFluentValidationAutoValidation();
+//builder.Services.AddFluentValidationAutoValidation();
 
-    builder.Services.AddControllers();
+builder.Services.AddControllers();
 
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -78,7 +95,11 @@ using Serilog;
 
     app.MapControllers();
 
-    app.Run();
+    app.MapHangfireDashboard();
+
+HangfireJobScheduler.ScheduleJobs();
+
+app.Run();
 
 
 public partial class Program { }

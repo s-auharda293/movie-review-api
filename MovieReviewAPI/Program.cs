@@ -1,17 +1,20 @@
 using FluentValidation;
 using Hangfire;
-using Hangfire.SqlServer;
 using MediatR;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Identity;
 using MovieReviewApi.Api.Middleware;
 using MovieReviewApi.Application.Behaviors;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Interfaces.Hangfire;
+using MovieReviewApi.Application.Interfaces.Identity;
 using MovieReviewApi.Application.Validators.ActorValidator;
+using MovieReviewApi.Domain.Entities;
 using MovieReviewApi.Infrastructure.Data;
 using MovieReviewApi.Infrastructure.Extensions;
 using MovieReviewApi.Infrastructure.Jobs;
+using MovieReviewApi.Infrastructure.Mapping;
 using MovieReviewApi.Infrastructure.Services;
+using MovieReviewApi.Infrastructure.Services.Identity;
 using Serilog;
 
     Log.Logger = new LoggerConfiguration()
@@ -62,22 +65,42 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
 //builder.Services.AddFluentValidationAutoValidation();
 
-builder.Services.AddControllers();
+    builder.Services.AddControllers();
 
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
+    // Adding Identity
+    builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+        .AddEntityFrameworkStores<MovieReviewDbContext>()
+        .AddDefaultTokenProviders();
 
-    builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<ITokenService, TokenService>();
+    builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-    //builder.Services.AddControllers(options =>
-    //{
-    //    options.Filters.Add<ValidationFilter>();
-    //});
+    // Adding Jwt from extension method
+    builder.Services.ConfigureIdentity();
+    builder.Services.ConfigureJwt(builder.Configuration);
+    builder.Services.ConfigureCors();
 
-    var app = builder.Build();
+
+builder.Services.AddInfrastructure(builder.Configuration);
+
+//builder.Services.AddControllers(options =>
+//{
+//    options.Filters.Add<ValidationFilter>();
+//});
+
+builder.Services.AddAutoMapper(cfg =>
+{
+    // configure your profiles here
+    cfg.AddProfile<MappingProfile>();
+});
+
+var app = builder.Build();
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -97,7 +120,7 @@ builder.Services.AddControllers();
 
     app.MapHangfireDashboard();
 
-HangfireJobScheduler.ScheduleJobs();
+    HangfireJobScheduler.ScheduleJobs();
 
 app.Run();
 

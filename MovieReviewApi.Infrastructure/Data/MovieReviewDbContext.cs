@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Entities;
 using MovieReviewApi.Application.KeylessEntities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace MovieReviewApi.Infrastructure.Data;
 
-public class MovieReviewDbContext: DbContext, IApplicationDbContext
+public class MovieReviewDbContext: IdentityDbContext<ApplicationUser>, IApplicationDbContext
 {
     public DbSet<Movie> Movies { get; set; } = null!;
 
@@ -30,6 +31,7 @@ public class MovieReviewDbContext: DbContext, IApplicationDbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         // modelBuilder.Entity<Actor>()
         //.HasIndex(a => new { a.Name, a.DateOfBirth })
         //.IsUnique(); //handle duplicate entries later on
@@ -74,6 +76,11 @@ public class MovieReviewDbContext: DbContext, IApplicationDbContext
         modelBuilder.Entity<Review>()
             .Property(r => r.Rating)
             .HasPrecision(3, 1);
+
+        modelBuilder.Entity<GetMoviesResult>()
+        .Property(g => g.Rating)
+        .HasPrecision(3, 1); // 3 digits total, 1 digit after decimal
+
 
         modelBuilder.Entity<Actor>()
             .Property(a => a.CreatedAt)

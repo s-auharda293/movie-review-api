@@ -1,8 +1,9 @@
-﻿using MediatR;
+﻿using Azure.Core;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Commands.Auth;
+using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Queries.Auth;
 
 namespace MovieReviewApi.Api.Controllers
@@ -19,9 +20,9 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register( UserRegisterRequest request)
+        public async Task<IActionResult> Register(RegisterUserCommand registerUserCommand)
         {
-            var result = await _mediator.Send(new RegisterUserCommand(request));
+            var result = await _mediator.Send(registerUserCommand);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -30,8 +31,9 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpGet("user/{id}")]
-        public async Task<IActionResult> GetUserById(Guid id){
-            var result = await _mediator.Send(new GetUserByIdQuery(id));
+        public async Task<IActionResult> GetUserById([FromRoute]GetUserByIdQuery getUserByIdQuery)
+        {
+            var result = await _mediator.Send(getUserByIdQuery);
             if (!result.IsSuccess)
                 return BadRequest(result);
             return Ok(result);
@@ -39,9 +41,9 @@ namespace MovieReviewApi.Api.Controllers
 
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(UserLoginRequest request)
+        public async Task<IActionResult> Login(LoginUserCommand loginUserCommand)
         {
-            var result = await _mediator.Send(new LoginUserCommand(request));
+            var result = await _mediator.Send(loginUserCommand);
 
             if (!result.IsSuccess)
                 return Unauthorized(result);
@@ -51,17 +53,17 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPost("generate-access-token")]
         //[Authorize]
-        public async Task<IActionResult> RefreshToken(GenerateTokenRequest request)
+        public async Task<IActionResult> RefreshToken(GenerateTokenCommand generateTokenCommand)
         {
-            var response = await _mediator.Send(new GenerateTokenCommand(request.RefreshToken!));
+            var response = await _mediator.Send(generateTokenCommand);
             return Ok(response);
         }
 
         [HttpPost("revoke-refresh-token")]
         //[Authorize]
-        public async Task<IActionResult> RevokeRefreshToken(RevokeRefreshToken request)
+        public async Task<IActionResult> RevokeRefreshToken(RevokeRefreshTokenCommand revokeRefreshTokenCommand)
         {
-            var response = await _mediator.Send(new RevokeRefreshTokenCommand(request.RefreshToken!));
+            var response = await _mediator.Send(revokeRefreshTokenCommand);
             if (response != null && response?.Value?.Message == "Refresh token revoked successfully")
             {
                 return Ok(response);
@@ -81,11 +83,11 @@ namespace MovieReviewApi.Api.Controllers
             return Ok(result);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
         //[Authorize]
-        public async Task<IActionResult> UpdateUser(Guid id,  UpdateUserRequest request)
+        public async Task<IActionResult> UpdateUser(UpdateUserCommand updateUserCommand)
         {
-            var result = await _mediator.Send(new UpdateUserCommand(id, request));
+            var result = await _mediator.Send(updateUserCommand);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -93,11 +95,11 @@ namespace MovieReviewApi.Api.Controllers
             return Ok(result.Value);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete]
         //[Authorize]
-        public async Task<IActionResult> DeleteUser(Guid id)
+        public async Task<IActionResult> DeleteUser(DeleteUserCommand deleteUserCommand)
         {
-            var result = await _mediator.Send(new DeleteUserCommand(id));
+            var result = await _mediator.Send(deleteUserCommand);
 
             if (!result.IsSuccess)
                 return BadRequest(result);
@@ -107,9 +109,9 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPost("change-password")]
         [Authorize]
-        public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+        public async Task<IActionResult> ChangePassword(ChangePasswordCommand changePasswordCommand)
         {
-            var result = await _mediator.Send(new ChangePasswordCommand(request));
+            var result = await _mediator.Send(changePasswordCommand);
 
             if (!result.IsSuccess)
                 return BadRequest(result);

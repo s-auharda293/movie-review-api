@@ -12,8 +12,8 @@ using MovieReviewApi.Infrastructure.Data;
 namespace MovieReviewApi.Infrastructure.Migrations
 {
     [DbContext(typeof(MovieReviewDbContext))]
-    [Migration("20250921160014_CreateIdentitySchema")]
-    partial class CreateIdentitySchema
+    [Migration("20250922094930_StoredProcedure")]
+    partial class StoredProcedure
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

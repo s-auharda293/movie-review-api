@@ -1,17 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-
-#nullable disable
-
-namespace MovieReviewApi.Infrastructure.Migrations
-{
-    /// <inheritdoc />
-    public partial class PatchMovie : Migration
-    {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.Sql(@"
-            CREATE PROCEDURE PatchMovie
+﻿ CREATE PROCEDURE PatchMovie
                 @Id UNIQUEIDENTIFIER,
                 @Title NVARCHAR(4000) = NULL,
                 @Description NVARCHAR(MAX) = NULL,
@@ -55,12 +42,3 @@ namespace MovieReviewApi.Infrastructure.Migrations
                 FROM Movies
                 WHERE Id = @MovieId;
             END
-            ");
-        }
-
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.Sql(@"DROP PROCEDURE IF EXISTS PatchMovie");
-        }
-    }
-}

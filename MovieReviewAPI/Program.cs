@@ -2,6 +2,7 @@ using FluentValidation;
 using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.OpenApi.Models;
 using MovieReviewApi.Api.Middleware;
 using MovieReviewApi.Application.Behaviors;
 using MovieReviewApi.Application.Interfaces;
@@ -70,10 +71,46 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
     builder.Services.AddEndpointsApiExplorer();
+
     builder.Services.AddSwaggerGen();
 
-    // Adding Identity
-    builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    // Adding Swagger
+    //builder.Services.AddSwaggerGen(c =>
+    //{
+    //    c.SwaggerDoc("v1", new OpenApiInfo { Title = "MovieReviewApi", Version = "v1" });
+
+
+    //    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    //    {
+    //        Name = "Authorization",
+    //        Type = SecuritySchemeType.Http,
+    //        Scheme = "Bearer",
+    //        BearerFormat = "JWT",
+    //        In = ParameterLocation.Header,
+    //        Description = "Please enter a valid token in the following format: {your token here} do not add the word 'Bearer' before it."
+    //    });
+
+    //    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    //    {
+    //        {
+    //            new OpenApiSecurityScheme
+    //            {
+    //                Reference = new OpenApiReference
+    //                {
+    //                    Type = ReferenceType.SecurityScheme,
+    //                    Id = "Bearer"
+    //                },
+    //                Scheme = "oauth2",
+    //                Name = "Bearer",
+    //                In = ParameterLocation.Header,
+    //            },
+    //            new List<string>()
+    //        }
+    //    });
+    //});
+
+// Adding Identity
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
         .AddEntityFrameworkStores<MovieReviewDbContext>()
         .AddDefaultTokenProviders();
 

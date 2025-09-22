@@ -281,6 +281,53 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             return Result<bool>.Success(true);
         }
 
+        public async Task<Result<ChangePasswordResponse>> ChangePasswordAsync(ChangePasswordRequest request)
+        {
+            // 1. Get the current user
+            var userId = _currentUserService.GetUserId();
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogError("User not found in context");
+                return Result<ChangePasswordResponse>.Failure(IdentityErrors.UserNotFound);
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogError("User not found in database");
+                return Result<ChangePasswordResponse>.Failure(IdentityErrors.UserNotFound);
+            }
+
+            // 2. Check if current password is correct
+            var passwordCheck = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+            if (!passwordCheck)
+            {
+                _logger.LogWarning("Incorrect current password for user ID: {UserId}", user.Id);
+                return Result<ChangePasswordResponse>.Failure(IdentityErrors.CurrentPasswordIncorrect);
+            }
+
+            // 3. Change password
+            var changeResult = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+            if (!changeResult.Succeeded)
+            {
+                var errors = string.Join(", ", changeResult.Errors.Select(e => e.Description));
+                _logger.LogError("Failed to change password for user ID {UserId}: {Errors}", user.Id, errors);
+                return Result<ChangePasswordResponse>.Failure(IdentityErrors.PasswordChangeFailedWithDetails(errors));
+            }
+
+            // 4. Update updatedAt timestamp
+            user.UpdatedAt = DateTime.Now;
+            await _userManager.UpdateAsync(user);
+
+            // 5. Return success response
+            var response = new ChangePasswordResponse
+            {
+                Message = "Password changed successfully",
+                UpdatedAt = DateTime.Now
+            };
+
+            return Result<ChangePasswordResponse>.Success(response);
+        }
 
     }
 }

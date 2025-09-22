@@ -78,5 +78,19 @@
         public string? RefreshToken { get; set; }
     }
 
+    public class ChangePasswordRequest { 
+        public string? Email { get; set; }
+        public string? CurrentPassword { get; set; }
+        public string? NewPassword { get; set; }
+    
+    }
+
+    public class ChangePasswordResponse
+    {
+        public string? Message { get; set; }     
+        public DateTime? UpdatedAt { get; set; } 
+    }
+
+
 
 }

@@ -49,6 +49,26 @@ namespace MovieReviewApi.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPost("generate-access-token")]
+        //[Authorize]
+        public async Task<IActionResult> RefreshToken(GenerateTokenRequest request)
+        {
+            var response = await _mediator.Send(new GenerateTokenCommand(request.RefreshToken!));
+            return Ok(response);
+        }
+
+        [HttpPost("revoke-refresh-token")]
+        //[Authorize]
+        public async Task<IActionResult> RevokeRefreshToken(RevokeRefreshToken request)
+        {
+            var response = await _mediator.Send(new RevokeRefreshTokenCommand(request.RefreshToken!));
+            if (response != null && response?.Value?.Message == "Refresh token revoked successfully")
+            {
+                return Ok(response);
+            }
+            return BadRequest(response);
+        }
+
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()

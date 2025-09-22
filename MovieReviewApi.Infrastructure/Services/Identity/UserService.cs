@@ -102,8 +102,8 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
                 return Result<UserResponse>.Failure(IdentityErrors.LoginRequestNull);
             }
 
-            var user = await _userManager.FindByEmailAsync(request.Email);
-            if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
+            var user = await _userManager.FindByEmailAsync(request.Email!);
+            if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password!))
             {
                 _logger.LogError("Invalid email or password");
                 return Result<UserResponse>.Failure(IdentityErrors.InvalidCredentials);
@@ -168,12 +168,12 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
         }
 
 
-        public async Task<Result<CurrentUserResponse>> GenerateNewAccessTokenAsync(RefreshTokenRequest request)
+        public async Task<Result<CurrentUserResponse>> GenerateNewAccessTokenAsync(GenerateTokenRequest request)
         {
             _logger.LogInformation("Generating new Access token");
 
             using var sha256 = SHA256.Create();
-            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(request.RefreshToken));
+            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(request.RefreshToken!));
             var hashedRefreshToken = Convert.ToBase64String(refreshTokenHash);
 
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == hashedRefreshToken);
@@ -201,11 +201,11 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
 
 
 
-        public async Task<Result<RevokeRefreshTokenResponse>> RevokeRefreshToken(RefreshTokenRequest refreshTokenRemoveRequest)
+        public async Task<Result<RevokeRefreshTokenResponse>> RevokeRefreshToken(RevokeRefreshToken refreshTokenRemoveRequest)
         {
             _logger.LogInformation("Revoking refresh token");
             var sha256 = SHA256.Create();
-            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(refreshTokenRemoveRequest.RefreshToken));
+            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(refreshTokenRemoveRequest.RefreshToken!));
             var hashedRefreshToken = Convert.ToBase64String(refreshTokenHash);
 
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == hashedRefreshToken);

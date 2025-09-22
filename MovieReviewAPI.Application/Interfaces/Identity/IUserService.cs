@@ -12,7 +12,7 @@ namespace MovieReviewApi.Application.Interfaces.Identity
         Task<Result<UserResponse>> GetByIdAsync(Guid id);
         //Task<Result<UserResponse>> UpdateAsync(Guid id, UpdateUserRequest request);
         //Task<Result<bool>> DeleteAsync(Guid id);
-        Task<Result<RevokeRefreshTokenResponse>> RevokeRefreshToken(RefreshTokenRequest refreshTokenRemoveRequest);
-        Task<Result<CurrentUserResponse>> GenerateNewAccessTokenAsync(RefreshTokenRequest request);
+        Task<Result<RevokeRefreshTokenResponse>> RevokeRefreshToken(RevokeRefreshToken refreshTokenRemoveRequest);
+        Task<Result<CurrentUserResponse>> GenerateNewAccessTokenAsync(GenerateTokenRequest request);
     }
 }

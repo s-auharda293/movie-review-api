@@ -71,10 +71,10 @@
     }
 
     public class RevokeRefreshToken {
-        public string? Token { get; set; }
+        public string? RefreshToken { get; set; }
     }
 
-    public class RefreshTokenRequest
+    public class GenerateTokenRequest
     {
         public string? RefreshToken { get; set; }
     }

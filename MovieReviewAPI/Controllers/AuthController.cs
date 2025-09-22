@@ -104,5 +104,17 @@ namespace MovieReviewApi.Api.Controllers
 
             return Ok(result.Value);
         }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+        {
+            var result = await _mediator.Send(new ChangePasswordCommand(request));
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result.Value);
+        }
     }
 }

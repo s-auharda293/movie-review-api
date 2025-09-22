@@ -40,7 +40,13 @@ namespace MovieReviewApi.Domain.Common.Identity
           "Login request cannot be null.");
 
         public static Error UserCreationFailedWithDetails(string details) =>
-          new("Identity.UserCreationFailed", $"Failed to create user. Details: {details}");
+            new("Identity.UserCreationFailed", $"Failed to create user. Details: {details}");
+
+        public static Error CurrentPasswordIncorrect =>
+            new("Identity.CurrentPasswordIncorrect", "Current password is incorrect");
+
+        public static Error PasswordChangeFailedWithDetails(string details) =>
+            new("Identity.PasswordChangeFailed", $"Failed to change password. Details: {details}");
 
     }
 }

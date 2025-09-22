@@ -5,6 +5,24 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+	
+	
+	<!-- SQL scripts as embedded resources -->
+	<ItemGroup>
+		<EmbeddedResource Include="Scripts\CreateActorStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\CreateMovieStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\CreateReviewStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\DeleteActorStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\DeleteMovieStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\DeleteReviewStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\GetMoviesStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\PatchActorStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\PatchMovieStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\PatchReviewStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\UpdateActorStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\UpdateMovieStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\UpdateReviewStoredProcedure.sql" />
+	</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="15.0.1" />

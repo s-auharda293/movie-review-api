@@ -19,51 +19,48 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMovies(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetMovies()
         {
-            var movies = await _mediator.Send(new GetMoviesQuery(),cancellationToken);
+            var movies = await _mediator.Send(new GetMoviesQuery());
             return Ok(movies);
         }
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetMovie(Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetMovie([FromRoute] GetMovieByIdQuery getMovieByIdQuery)
         {
-            var movie = await _mediator.Send(new GetMovieByIdQuery(id), cancellationToken);
+            var movie = await _mediator.Send(getMovieByIdQuery);
             return movie.IsSuccess? Ok(movie) : NotFound(movie);
         }
 
         [HttpPost]
-        public async Task<IActionResult> PostMovie( CreateMovieDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PostMovie(CreateMovieCommand createMovieCommand)
         {
-                var movie = await _mediator.Send(new CreateMovieCommand(dto),cancellationToken);
+                var movie = await _mediator.Send(createMovieCommand);
                 return movie.IsSuccess ? CreatedAtAction(nameof(GetMovie),
                                                 new { id = movie?.Value?.Id },
                                                 movie) : BadRequest(movie);
         }
 
         [HttpPut]
-        [Route("{id}")]
-        public async Task<IActionResult> PutMovie(Guid id, UpdateMovieDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PutMovie(UpdateMovieCommand updateMovieCommand)
         {
 
-            var updated = await _mediator.Send(new UpdateMovieCommand(id, dto), cancellationToken);
+            var updated = await _mediator.Send(updateMovieCommand);
                 return updated.IsSuccess ? Ok(updated) : NotFound(updated);
         }
 
         [HttpPatch]
-        [Route("{id}")]
-        public async Task<IActionResult> PatchMovie( Guid id,  PatchMovieDto dto, CancellationToken cancellationToken)
+        public async Task<IActionResult> PatchMovie(PatchMovieCommand patchMovieCommand)
         {
-            var patched = await _mediator.Send(new PatchMovieCommand(id, dto),cancellationToken);
+            var patched = await _mediator.Send(patchMovieCommand);
             return patched.IsSuccess ? Ok(patched) : BadRequest(patched);
         }
 
         [HttpDelete]
-        [Route("{id}")]
-        public async Task<IActionResult> DeleteMovie( Guid id, CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteMovie(DeleteMovieCommand deleteMovieCommand)
         {
-            var deleted = await _mediator.Send(new DeleteMovieCommand(id),cancellationToken);
+            var deleted = await _mediator.Send(deleteMovieCommand);
             return deleted.IsSuccess ? NoContent() : NotFound(deleted);
         }
     }

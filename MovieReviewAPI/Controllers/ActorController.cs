@@ -19,48 +19,45 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetActors(CancellationToken cancellationToken) {
-            var actors = await _mediator.Send(new GetActorsQuery(), cancellationToken);
+        public async Task<IActionResult> GetActors() {
+            var actors = await _mediator.Send(new GetActorsQuery());
             return Ok(actors);
         }
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetActor(Guid id, CancellationToken cancellationToken) {
-            var actor = await _mediator.Send(new GetActorByIdQuery(id), cancellationToken);
+        public async Task<IActionResult> GetActor([FromRoute] GetActorByIdQuery getActorByIdQuery) {
+            var actor = await _mediator.Send(getActorByIdQuery);
             return actor.IsSuccess ? Ok(actor):NotFound(actor);
         }
 
         [HttpPost]
-        public async Task<ActionResult<ActorDto>> PostActor(CreateActorDto dto,CancellationToken cancellationToken)
+        public async Task<ActionResult<ActorDto>> PostActor(CreateActorCommand createActorCommand)
         {
-            var actor = await _mediator.Send( new CreateActorCommand(dto),cancellationToken);
+            var actor = await _mediator.Send(createActorCommand);
             return actor.IsSuccess ? CreatedAtAction(nameof(GetActor),
                                                      new { id = actor?.Value?.Id },
                                                      actor) : BadRequest(actor);
         }
 
         [HttpPut]
-        [Route("{id}")]
-        public async Task<ActionResult<Actor>> PutActor(Guid id, UpdateActorDto dto, CancellationToken cancellationToken) {
+        public async Task<ActionResult<Actor>> PutActor(UpdateActorCommand updateActorCommand) {
 
-            var updated = await _mediator.Send(new UpdateActorCommand(id, dto),cancellationToken);
+            var updated = await _mediator.Send(updateActorCommand);
             return updated.IsSuccess ? Ok(updated) : NotFound(updated);
            
         }
 
         [HttpPatch]
-        [Route("{id}")]
-        public async Task<ActionResult<Actor>> PatchActor( Guid id, PatchActorDto dto, CancellationToken cancellationToken) {
+        public async Task<ActionResult<Actor>> PatchActor( PatchActorCommand patchActorCommand) {
             
-            var patched = await _mediator.Send(new PatchActorCommand(id, dto), cancellationToken);
+            var patched = await _mediator.Send(patchActorCommand);
             return patched.IsSuccess ? Ok(patched) : BadRequest(patched);
         }
 
         [HttpDelete]
-        [Route("{id}")]
-        public async Task<IActionResult> DeleteActor(Guid id, CancellationToken cancellationToken) {    
-            var deleted = await _mediator.Send(new DeleteActorCommand(id),cancellationToken);
+        public async Task<IActionResult> DeleteActor(DeleteActorCommand deleteActorCommand) {    
+            var deleted = await _mediator.Send(deleteActorCommand);
             return deleted.IsSuccess ? NoContent() : NotFound(deleted);
         }
     }

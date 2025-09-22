@@ -1,17 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-
-#nullable disable
-
-namespace MovieReviewApi.Infrastructure.Migrations
-{
-    /// <inheritdoc />
-    public partial class UpdateActorStoredProcedure : Migration
-    {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.Sql(@"
-           CREATE PROCEDURE UpdateActor
+﻿     CREATE PROCEDURE UpdateActor
     @Id UNIQUEIDENTIFIER, 
     @Name NVARCHAR(4000),
     @Bio NVARCHAR(4000) = NULL,
@@ -48,15 +35,3 @@ BEGIN
             FROM Actors
             WHERE Id=@Id;
 END
-
-        ");
-
-        }
-
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.Sql(@"DROP PROCEDURE IF EXISTS UpdateActor");
-        }
-    }
-}

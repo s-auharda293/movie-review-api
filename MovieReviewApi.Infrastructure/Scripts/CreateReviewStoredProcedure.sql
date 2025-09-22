@@ -1,17 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-
-#nullable disable
-
-namespace MovieReviewApi.Infrastructure.Migrations
-{
-    /// <inheritdoc />
-    public partial class CreateReviewStoredProcedure : Migration
-    {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.Sql(@"
-CREATE PROCEDURE CreateReview
+﻿CREATE PROCEDURE CreateReview
     @MovieId UNIQUEIDENTIFIER,
     @UserName NVARCHAR(4000),
     @Comment NVARCHAR(4000) = NULL,
@@ -36,13 +23,3 @@ BEGIN
            @CreatedAt AS CreatedAt,
            @UpdatedAt AS UpdatedAt;
 END
-            ");
-        }
-
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.Sql(@"DROP PROCEDURE IF EXISTS CreateReview");
-        }
-    }
-}

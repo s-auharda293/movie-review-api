@@ -32,6 +32,9 @@ namespace MovieReviewApi.Domain.Common.Identity
         public static readonly Error RevokeRefreshTokenFailed =
             new("Identity.RevokeRefreshTokenFailed", "Failed to revoke refresh token.");
 
+        public static readonly Error UserDeletionFailed =
+            new("Identity.UserDeletionFailed", "Failed to delete user.");
+
         public static readonly Error LoginRequestNull = new(
           "Identity.LoginRequestNull",
           "Login request cannot be null.");

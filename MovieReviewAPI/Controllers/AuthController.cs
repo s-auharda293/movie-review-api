@@ -80,5 +80,29 @@ namespace MovieReviewApi.Api.Controllers
 
             return Ok(result);
         }
+
+        [HttpPut("{id}")]
+        //[Authorize]
+        public async Task<IActionResult> UpdateUser(Guid id,  UpdateUserRequest request)
+        {
+            var result = await _mediator.Send(new UpdateUserCommand(id, request));
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result.Value);
+        }
+
+        [HttpDelete("{id}")]
+        //[Authorize]
+        public async Task<IActionResult> DeleteUser(Guid id)
+        {
+            var result = await _mediator.Send(new DeleteUserCommand(id));
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result.Value);
+        }
     }
 }

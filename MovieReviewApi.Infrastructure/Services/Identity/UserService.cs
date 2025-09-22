@@ -233,15 +233,54 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
 
         }
 
-        //public Task<UserResponse> UpdateAsync(Guid id, UpdateUserRequest request)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public async Task<Result<UserResponse>> UpdateAsync(Guid id, UpdateUserRequest request)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                _logger.LogError("User not found");
+                return Result<UserResponse>.Failure(IdentityErrors.UserNotFound);
+            }
 
-        //public Task DeleteAsync(Guid id)
-        //{
-        //    throw new NotImplementedException();
-        //}
+            user.UpdatedAt = DateTime.Now;
+            user.FirstName = request.FirstName!;
+            user.LastName = request.LastName!;
+            user.UserName = GenerateUserName(user.FirstName, user.LastName);
+            user.Email = request.Email;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                var errorDetails = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogError("Failed to create user: {errors}", errorDetails);
+
+                return Result<UserResponse>.Failure(IdentityErrors.UserCreationFailedWithDetails(errorDetails));
+            }
+
+            return Result<UserResponse>.Success(_mapper.Map<UserResponse>(user));
+        }
+
+        public async Task<Result<bool>> DeleteAsync(Guid id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                _logger.LogError("User not found");
+                return Result<bool>.Failure(IdentityErrors.UserNotFound);
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                var errorDetails = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogError("Failed to create user: {errors}", errorDetails);
+
+                return Result<bool>.Failure(IdentityErrors.UserDeletionFailed);
+            }
+
+            return Result<bool>.Success(true);
+        }
+
 
     }
 }

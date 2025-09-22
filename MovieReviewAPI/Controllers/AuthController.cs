@@ -18,9 +18,8 @@ namespace MovieReviewApi.Api.Controllers
             _mediator = mediator;
         }
 
-        // POST: api/auth/register
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserRegisterRequest request)
+        public async Task<IActionResult> Register( UserRegisterRequest request)
         {
             var result = await _mediator.Send(new RegisterUserCommand(request));
 
@@ -30,9 +29,17 @@ namespace MovieReviewApi.Api.Controllers
             return Ok(result);
         }
 
-        // POST: api/auth/login
+        [HttpGet("user/{id}")]
+        public async Task<IActionResult> GetUserById(Guid id){
+            var result = await _mediator.Send(new GetUserByIdQuery(id));
+            if (!result.IsSuccess)
+                return BadRequest(result);
+            return Ok(result);
+        }
+
+
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] UserLoginRequest request)
+        public async Task<IActionResult> Login(UserLoginRequest request)
         {
             var result = await _mediator.Send(new LoginUserCommand(request));
 
@@ -42,7 +49,6 @@ namespace MovieReviewApi.Api.Controllers
             return Ok(result);
         }
 
-        // GET: api/auth/me
         [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetCurrentUser()

@@ -14,7 +14,7 @@
 
     public class UserResponse { 
         public Guid Id { get; set; }
-        public string? FirstName{get;}
+        public string? UserName{ get; set; }
 
         public string? Email { get; set; }
 
@@ -37,7 +37,7 @@
 
     public class CurrentUserResponse { 
     
-        public string? FirstName{get;}
+        public string? UserName{ get; set; }
 
         public string? Email { get; set; }
 
@@ -50,7 +50,7 @@
     }
 
     public class UpdateUserRequest {
-        public string? FirstName{get;}
+        public string? UserName{ get; set; }
 
         public string? Email { get; set; }
 

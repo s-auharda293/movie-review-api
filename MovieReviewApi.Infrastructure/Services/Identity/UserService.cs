@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces.Identity;
@@ -32,7 +33,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
         {
             _logger.LogInformation("Registering user");
 
-            var existingUser = await _userManager.FindByEmailAsync(request.Email);
+            var existingUser = await _userManager.FindByEmailAsync(request.Email!);
             if (existingUser != null)
             {
                 _logger.LogError("Email already exists");
@@ -40,9 +41,22 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             }
 
             var newUser = _mapper.Map<ApplicationUser>(request);
-            newUser.UserName = GenerateUserName(request?.FirstName,request?.LastName);
+            newUser.UserName = GenerateUserName(request.FirstName!,request.LastName!);
 
-            var result = await _userManager.CreateAsync(newUser, request?.Password!);
+            // Generate access token
+            var token = await _tokenService.GenerateToken(newUser);
+
+            // Generate refresh token
+            var refreshToken = _tokenService.GenerateRefreshToken();
+
+            // Hash the refresh token and store it in the database or override the existing refresh token
+            using var sha256 = SHA256.Create();
+            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(refreshToken));
+            newUser.RefreshToken = Convert.ToBase64String(refreshTokenHash);
+            newUser.RefreshTokenExpiryTime = DateTime.Now.AddDays(2);
+
+            // Store user information in database
+            var result = await _userManager.CreateAsync(newUser, request.Password!);
             if (!result.Succeeded)
             {
                 var errorDetails = string.Join(", ", result.Errors.Select(e => e.Description));
@@ -52,13 +66,18 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             }
 
             _logger.LogInformation("User created successfully");
-            await _tokenService.GenerateToken(newUser);
+
+            var userResponse = _mapper.Map<ApplicationUser, UserResponse>(newUser);
+            userResponse.AccessToken = token;
+            userResponse.RefreshToken = refreshToken;
 
             newUser.CreatedAt = DateTime.Now;
             newUser.UpdatedAt = DateTime.Now;
 
             var registeredUser = _mapper.Map<UserResponse>(newUser);
-            return Result<UserResponse>.Success(registeredUser);
+            
+
+            return Result<UserResponse>.Success(userResponse);
         }
 
 
@@ -103,6 +122,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             user.RefreshTokenExpiryTime = DateTime.Now.AddDays(2);
 
             user.CreatedAt = DateTime.Now;
+            user.UpdatedAt = DateTime.Now;
 
             // Update user information in database
             var result = await _userManager.UpdateAsync(user);
@@ -122,10 +142,17 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
         }
 
 
-        //public Task<UserResponse> GetByIdAsync(Guid id)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public async Task<Result<UserResponse>> GetByIdAsync(Guid id)
+        {
+            _logger.LogInformation("Getting user");
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null) {
+                return Result<UserResponse>.Failure(IdentityErrors.UserNotFound);
+            }
+            _logger.LogInformation("User found!");
+            var fetchedUser = _mapper.Map<UserResponse>(user);
+            return Result<UserResponse>.Success(fetchedUser);
+        }
 
 
 
@@ -141,17 +168,70 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
         }
 
 
-        //public Task<CurrentUserResponse> RefreshTokenAsync(RefreshTokenRequest request)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public async Task<Result<CurrentUserResponse>> GenerateNewAccessTokenAsync(RefreshTokenRequest request)
+        {
+            _logger.LogInformation("Generating new Access token");
+
+            using var sha256 = SHA256.Create();
+            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(request.RefreshToken));
+            var hashedRefreshToken = Convert.ToBase64String(refreshTokenHash);
+
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == hashedRefreshToken);
+
+            // Hash the incoming RefreshToken and compare it with the one stored in the database
+            if (user == null)
+            {
+                _logger.LogError("Invalid refresh token");
+                return Result<CurrentUserResponse>.Failure(IdentityErrors.InvalidRefreshToken);
+            }
+
+            // Validate the refresh token expiry time
+            if (user.RefreshTokenExpiryTime < DateTime.Now)
+            {
+                _logger.LogWarning("Refresh token expired for user ID: {UserId}", user.Id);
+                return Result<CurrentUserResponse>.Failure(IdentityErrors.RefreshTokenExpired);
+            }
+
+            var newAccessToken = await _tokenService.GenerateToken(user);
+            _logger.LogInformation("Access token generated successfully");
+            var currentUserResponse = _mapper.Map<CurrentUserResponse>(user);
+            currentUserResponse.AccessToken = newAccessToken;
+            return Result<CurrentUserResponse>.Success(currentUserResponse);
+        }
 
 
 
-        //public Task<RevokeRefreshTokenResponse> RevokeRefreshToken(RefreshTokenRequest refreshTokenRemoveRequest)
-        //{
-        //    throw new NotImplementedException();
-        //}
+        public async Task<Result<RevokeRefreshTokenResponse>> RevokeRefreshToken(RefreshTokenRequest refreshTokenRemoveRequest)
+        {
+            _logger.LogInformation("Revoking refresh token");
+            var sha256 = SHA256.Create();
+            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(refreshTokenRemoveRequest.RefreshToken));
+            var hashedRefreshToken = Convert.ToBase64String(refreshTokenHash);
+
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == hashedRefreshToken);
+            if (user == null) {
+                _logger.LogError("Invalid refresh token");
+                return Result<RevokeRefreshTokenResponse>.Failure(IdentityErrors.InvalidRefreshToken);
+            }
+
+            if (user.RefreshTokenExpiryTime < DateTime.Now) {
+                _logger.LogWarning("Refresh token expired for user Id: {UserId}", user.Id);
+                return Result<RevokeRefreshTokenResponse>.Failure(IdentityErrors.RefreshTokenExpired);
+            }
+
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded) {
+                _logger.LogError("Failed to update user while revoking refresh token");
+                return Result<RevokeRefreshTokenResponse>.Failure(IdentityErrors.RevokeRefreshTokenFailed);
+            }
+            _logger.LogInformation("Refresh token revoked successfully");
+            string message = "Refresh Token revoked Successfully";
+            return Result<RevokeRefreshTokenResponse>.Success(new RevokeRefreshTokenResponse { Message = message });
+
+        }
 
         //public Task<UserResponse> UpdateAsync(Guid id, UpdateUserRequest request)
         //{

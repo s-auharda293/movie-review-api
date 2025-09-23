@@ -2,7 +2,8 @@ using FluentValidation;
 using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.OpenApi.Models;
+using Microsoft.Data.SqlClient;
+using MovieReviewApi.Api.Extensions;
 using MovieReviewApi.Api.Middleware;
 using MovieReviewApi.Application.Behaviors;
 using MovieReviewApi.Application.Interfaces;
@@ -66,7 +67,7 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
 //builder.Services.AddFluentValidationAutoValidation();
 
-    builder.Services.AddControllers();
+builder.Services.AddControllers();
 
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -139,25 +140,27 @@ builder.Services.AddAutoMapper(cfg =>
 
 var app = builder.Build();
 
-    app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
         app.UseSwagger();
         app.UseSwaggerUI();
+    // for docker database
+        app.ApplyMigrations();
     }
 
     app.UseHttpsRedirection();
 
 
-    app.UseAuthorization();
+app.UseAuthorization();
 
     app.MapControllers();
 
     app.MapHangfireDashboard();
 
-    HangfireJobScheduler.ScheduleJobs();
+HangfireJobScheduler.ScheduleJobs();
 
 app.Run();
 

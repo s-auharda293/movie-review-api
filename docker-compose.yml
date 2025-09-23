@@ -1,0 +1,31 @@
+
+services:
+  moviereviewapi.api:
+    image: ${DOCKER_REGISTRY-}moviereviewapiapi
+    container_name: moviereviewapi.api
+    build:
+      context: .
+      dockerfile: MovieReviewAPI/Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - moviereviewapi.database
+    environment:
+      - ConnectionStrings__MovieReviewDb=Server=moviereviewapi.database,1433;Database=MovieReviewDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - ConnectionStrings__HangfireConnection=Server=moviereviewapi.database,1433;Database=HangfireDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+
+
+  moviereviewapi.database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: moviereviewapi.database
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong@Passw0rd"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+    ports:
+      - "1433:1433"
+volumes:
+  sql_data:

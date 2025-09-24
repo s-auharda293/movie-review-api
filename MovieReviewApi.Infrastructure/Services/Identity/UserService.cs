@@ -55,6 +55,9 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             newUser.RefreshToken = Convert.ToBase64String(refreshTokenHash);
             newUser.RefreshTokenExpiryTime = DateTime.Now.AddDays(2);
 
+            newUser.CreatedAt = DateTime.Now;
+            newUser.UpdatedAt = DateTime.Now;
+
             // Store user information in database
             var result = await _userManager.CreateAsync(newUser, request.Password!);
             if (!result.Succeeded)
@@ -65,14 +68,21 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
                 return Result<UserResponse>.Failure(IdentityErrors.UserCreationFailedWithDetails(errorDetails));
             }
 
+            //assign default role to user
+            var roleResult = await _userManager.AddToRoleAsync(newUser, UserRoles.User);
+            if (!roleResult.Succeeded)
+            {
+                var errorDetails = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+                _logger.LogError("Failed to assign default role: {errors}", errorDetails);
+                return Result<UserResponse>.Failure(IdentityErrors.RoleAssignmentFailed);
+            }
+
             _logger.LogInformation("User created successfully");
 
             var userResponse = _mapper.Map<ApplicationUser, UserResponse>(newUser);
             userResponse.AccessToken = token;
             userResponse.RefreshToken = refreshToken;
 
-            newUser.CreatedAt = DateTime.Now;
-            newUser.UpdatedAt = DateTime.Now;
 
             var registeredUser = _mapper.Map<UserResponse>(newUser);
             

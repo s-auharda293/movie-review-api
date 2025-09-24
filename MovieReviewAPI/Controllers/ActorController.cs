@@ -26,8 +26,8 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<IActionResult> GetActor([FromRoute] GetActorByIdQuery getActorByIdQuery) {
-            var actor = await _mediator.Send(getActorByIdQuery);
+        public async Task<IActionResult> GetActor(Guid id) {
+            var actor = await _mediator.Send(new GetActorByIdQuery(id));
             return actor.IsSuccess ? Ok(actor):NotFound(actor);
         }
 

@@ -6,14 +6,10 @@ using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces.Identity;
 using MovieReviewApi.Domain.Common.Identity;
 using MovieReviewApi.Domain.Entities;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace MovieReviewApi.Infrastructure.Services.Identity
 {
@@ -26,17 +22,28 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
         private readonly UserManager<ApplicationUser>? _userManager;
         private readonly ILogger<TokenService>? _logger;
 
-        public TokenService(IConfiguration configuration, UserManager<ApplicationUser> userManager, ILogger<TokenService> logger)
+        public TokenService(
+              IConfiguration configuration,
+              UserManager<ApplicationUser> userManager,
+              ILogger<TokenService> logger)
         {
-            _userManager = userManager;
-            _logger = logger;
-            var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettingsDto>();
-            if (jwtSettings == null || string.IsNullOrEmpty(jwtSettings.Key))
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // Fetch JWT settings from configuration
+            var jwtSettings = configuration
+                .GetSection("JwtSettings")
+                .Get<JwtSettingsDto>()
+                ?? throw new InvalidOperationException("JWT settings are not configured in appsettings.");
+
+            if (string.IsNullOrWhiteSpace(jwtSettings.Key))
             {
-                //return Result<string>.Failure(IdentityErrors.JWTSecretKeyNotConfigured);
-                Console.WriteLine("JwtSecretKeyNotConfigured");
+                _logger.LogCritical("JWT secret key is missing in appsettings.");
+                throw new InvalidOperationException("JWT secret key is not configured in appsettings.");
             }
-            _secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.Key!));
+
+            // Initialize fields
+            _secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
             _validIssuer = jwtSettings.ValidIssuer;
             _validAudience = jwtSettings.ValidAudience;
             _expires = jwtSettings.Expires;
@@ -48,7 +55,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
                 new Claim(ClaimTypes.NameIdentifier,user?.Id!),
                 new Claim(ClaimTypes.Email,user?.Email!)
             };
-            var roles = await _userManager?.GetRolesAsync(user)!;
+            var roles = await _userManager?.GetRolesAsync(user!)!;
             claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
             return claims;
         }

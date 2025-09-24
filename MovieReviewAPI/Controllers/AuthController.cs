@@ -3,8 +3,10 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.Commands.Auth;
+using MovieReviewApi.Application.Commands.Auth.MovieReviewApi.Application.Features.Roles.Commands.AssignRole;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Queries.Auth;
+using MovieReviewApi.Domain.Entities;
 
 namespace MovieReviewApi.Api.Controllers
 {
@@ -31,9 +33,9 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpGet("user/{id}")]
-        public async Task<IActionResult> GetUserById([FromRoute]GetUserByIdQuery getUserByIdQuery)
+        public async Task<IActionResult> GetUserById(Guid id)
         {
-            var result = await _mediator.Send(getUserByIdQuery);
+            var result = await _mediator.Send(new GetUserByIdQuery(id));
             if (!result.IsSuccess)
                 return BadRequest(result);
             return Ok(result);
@@ -117,6 +119,18 @@ namespace MovieReviewApi.Api.Controllers
                 return BadRequest(result);
 
             return Ok(result.Value);
+        }
+
+        [HttpPost("assign-role")]
+        [Authorize(Roles = UserRoles.Admin)]
+        public async Task<IActionResult> AssignRole([FromBody] AssignRoleCommand command)
+        {
+            var result = await _mediator.Send(command);
+
+            if (result.IsFailure)
+                return BadRequest(result.Errors);
+
+            return Ok("Role assigned successfully.");
         }
     }
 }

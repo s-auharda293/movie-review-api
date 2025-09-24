@@ -28,17 +28,17 @@ namespace MovieReviewApi.Api.Controllers
 
 
         [HttpGet("by-movie-id")]
-        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetByMovie(GetReviewsByMovieIdQuery getReviewsByMovieIdQuery) { 
-            var review = await _mediator.Send(getReviewsByMovieIdQuery);
+        public async Task<ActionResult<IEnumerable<ReviewDto>>> GetByMovie(Guid id) { 
+            var review = await _mediator.Send(new GetReviewsByMovieIdQuery(id));
             if (review.IsSuccess) return Ok(review);
             return NotFound(review);
         }
 
         [HttpGet]
         [Route("{id}")]
-        public async Task<ActionResult<ReviewDto>> GetReview ([FromRoute] GetReviewByIdQuery getReviewByIdQuery)
+        public async Task<ActionResult<ReviewDto>> GetReview (Guid id)
         {
-            var review = await _mediator.Send(getReviewByIdQuery);
+            var review = await _mediator.Send(new GetReviewByIdQuery(id));
             return review.IsSuccess ? Ok(review) : NotFound(review);
         }
 

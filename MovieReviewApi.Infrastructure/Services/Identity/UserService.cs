@@ -158,7 +158,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
 
         public async Task<Result<CurrentUserResponse>> GetCurrentUserAsync()
         {
-            var user = await _userManager.FindByIdAsync(_currentUserService.GetUserId());
+            var user = await _userManager.FindByIdAsync(_currentUserService.GetUserId()!);
             if (user == null) {
                 _logger.LogError("User not found");
                 return Result<CurrentUserResponse>.Failure(IdentityErrors.UserNotFound);
@@ -299,7 +299,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             }
 
             // 2. Check if current password is correct
-            var passwordCheck = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+            var passwordCheck = await _userManager.CheckPasswordAsync(user, request.CurrentPassword!);
             if (!passwordCheck)
             {
                 _logger.LogWarning("Incorrect current password for user ID: {UserId}", user.Id);
@@ -307,7 +307,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             }
 
             // 3. Change password
-            var changeResult = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+            var changeResult = await _userManager.ChangePasswordAsync(user, request.CurrentPassword!, request.NewPassword!);
             if (!changeResult.Succeeded)
             {
                 var errors = string.Join(", ", changeResult.Errors.Select(e => e.Description));

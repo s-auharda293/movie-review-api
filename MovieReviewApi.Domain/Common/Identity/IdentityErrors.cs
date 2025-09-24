@@ -1,4 +1,6 @@
 ﻿
+using MovieReviewApi.Domain.Entities;
+
 namespace MovieReviewApi.Domain.Common.Identity
 {
     public static class IdentityErrors
@@ -48,5 +50,9 @@ namespace MovieReviewApi.Domain.Common.Identity
         public static Error PasswordChangeFailedWithDetails(string details) =>
             new("Identity.PasswordChangeFailed", $"Failed to change password. Details: {details}");
 
+        public static Error RoleAssignmentFailed = new("Identity.RoleAssignmentFailed", "Role assignment failed.");
+        public static Error RoleAssignmentInputIncorrect = new("Identity.UserIdOrRoleInvalid", "UserId or Role cannot be null.");
+
+        public static Error InvalidRole = new("IdentityRoleAssignemntInvalid", $"Please assign a valid role: {string.Join(", ", UserRoles.AllRoles)}");
     }
 }

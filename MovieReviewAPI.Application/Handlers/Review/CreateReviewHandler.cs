@@ -1,21 +1,28 @@
 ﻿using Dapper;
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Review;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Entities;
 using System.Data;
+using System.Security.Claims;
 
 public class CreateReviewHandler : IRequestHandler<CreateReviewCommand, Result<ReviewDto>>
 {
     private readonly IApplicationDbContext _context;
     private readonly IDbConnectionFactory _connection;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public CreateReviewHandler(IApplicationDbContext context, IDbConnectionFactory connection)
+    public CreateReviewHandler(
+        IApplicationDbContext context,
+        IDbConnectionFactory connection,
+        IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
         _connection = connection;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<Result<ReviewDto>> Handle(CreateReviewCommand request, CancellationToken cancellationToken)
@@ -24,12 +31,19 @@ public class CreateReviewHandler : IRequestHandler<CreateReviewCommand, Result<R
         if (movie == null)
             return Result<ReviewDto>.Failure(ReviewErrors.MovieNotFound);
 
+        var httpUser = _httpContextAccessor.HttpContext?.User;
+        var userId = httpUser?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userName = httpUser?.FindFirst(ClaimTypes.Name)?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+            return Result<ReviewDto>.Failure(ReviewErrors.UserNotAuthenticated);
+
         var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
-        // Prepare parameters for stored procedure
         var parameters = new DynamicParameters();
         parameters.Add("@MovieId", request.dto.MovieId, DbType.Guid);
-        parameters.Add("@UserName", request.dto.UserName, DbType.String);
+        parameters.Add("@UserId", Guid.Parse(userId), DbType.Guid); 
+        parameters.Add("@UserName", userName, DbType.String);
         parameters.Add("@Comment", request.dto.Comment, DbType.String);
         parameters.Add("@Rating", request.dto.Rating, DbType.Decimal);
 
@@ -39,12 +53,12 @@ public class CreateReviewHandler : IRequestHandler<CreateReviewCommand, Result<R
             commandType: CommandType.StoredProcedure
         );
 
-        // Map to DTO
         var reviewDto = new ReviewDto
         {
             Id = review.Id,
             MovieId = review.MovieId,
-            UserName = review.UserName,
+            UserId = review.UserId,
+            UserName = userName,
             Comment = review.Comment,
             Rating = review.Rating
         };

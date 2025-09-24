@@ -14,10 +14,6 @@ namespace MovieReviewApi.Application.Validators.ReviewValidator
     {
         public CreateReviewValidator()
         {
-            RuleFor(x => x.dto.UserName)
-                .MinimumLength(5).WithMessage("Username must be at least 5 characters")
-              .MaximumLength(100).WithMessage("UserName can't exceed 100 characters")
-              .When(x => (x.dto.UserName)!=null);
 
             RuleFor(x => x.dto.Comment)
                 .NotEmpty().WithMessage("Comment is required")

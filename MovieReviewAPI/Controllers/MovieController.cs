@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
@@ -29,11 +30,12 @@ namespace MovieReviewApi.Api.Controllers
         [Route("{id}")]
         public async Task<IActionResult> GetMovie(Guid id)
         {
-            var movie = await _mediator.Send(new GetActorByIdQuery(id));
+            var movie = await _mediator.Send(new GetMovieByIdQuery(id));
             return movie.IsSuccess? Ok(movie) : NotFound(movie);
         }
 
         [HttpPost]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> PostMovie(CreateMovieCommand createMovieCommand)
         {
                 var movie = await _mediator.Send(createMovieCommand);
@@ -43,6 +45,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> PutMovie(UpdateMovieCommand updateMovieCommand)
         {
 
@@ -51,6 +54,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPatch]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> PatchMovie(PatchMovieCommand patchMovieCommand)
         {
             var patched = await _mediator.Send(patchMovieCommand);
@@ -58,6 +62,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpDelete]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> DeleteMovie(DeleteMovieCommand deleteMovieCommand)
         {
             var deleted = await _mediator.Send(deleteMovieCommand);

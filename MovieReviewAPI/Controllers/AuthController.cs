@@ -33,6 +33,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpGet("user/{id}")]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> GetUserById(Guid id)
         {
             var result = await _mediator.Send(new GetUserByIdQuery(id));
@@ -54,7 +55,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPost("generate-access-token")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> RefreshToken(GenerateTokenCommand generateTokenCommand)
         {
             var response = await _mediator.Send(generateTokenCommand);
@@ -62,7 +63,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPost("revoke-refresh-token")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> RevokeRefreshToken(RevokeRefreshTokenCommand revokeRefreshTokenCommand)
         {
             var response = await _mediator.Send(revokeRefreshTokenCommand);
@@ -73,8 +74,8 @@ namespace MovieReviewApi.Api.Controllers
             return BadRequest(response);
         }
 
-        [Authorize]
         [HttpGet("me")]
+        [Authorize]
         public async Task<IActionResult> GetCurrentUser()
         {
             var result = await _mediator.Send(new GetCurrentUserQuery());
@@ -86,7 +87,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPut]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> UpdateUser(UpdateUserCommand updateUserCommand)
         {
             var result = await _mediator.Send(updateUserCommand);
@@ -98,7 +99,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpDelete]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> DeleteUser(DeleteUserCommand deleteUserCommand)
         {
             var result = await _mediator.Send(deleteUserCommand);

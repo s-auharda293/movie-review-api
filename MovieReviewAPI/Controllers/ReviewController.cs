@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileSystemGlobbing;
 using MovieReviewApi.Application.Commands.Review;
@@ -43,6 +44,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = UserRoles.Admin+", "+UserRoles.User)]
         public async Task<ActionResult<ReviewDto>> Create(CreateReviewCommand createReviewCommand)
         {
                 var review = await _mediator.Send(createReviewCommand);
@@ -51,7 +53,21 @@ namespace MovieReviewApi.Api.Controllers
                                                review) : BadRequest(review);
         }
 
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<ReviewDto>> GetReviewsByUser(string userId)
+        {
+            var query = new GetReviewsByUserQuery(userId);
+            var result = await _mediator.Send(query);
+
+            if (!result.IsSuccess)
+                return NotFound(result.Errors);
+
+            return Ok(result.Value);
+        }
+
         [HttpPut]
+
+        [Authorize(Roles = UserRoles.Admin + ", " + UserRoles.User)]
         public async Task<IActionResult> Update(UpdateReviewCommand updateReviewCommand)
         {
             var updated = await _mediator.Send(updateReviewCommand);
@@ -59,6 +75,8 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPatch]
+
+        [Authorize(Roles = UserRoles.Admin + ", " + UserRoles.User)]
         public async Task<IActionResult> Patch(PatchReviewCommand patchReviewCommand)
         {
             var patched = await _mediator.Send(patchReviewCommand);
@@ -66,6 +84,8 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpDelete]
+
+        [Authorize(Roles = UserRoles.Admin + "," + UserRoles.User)]
         public async Task<IActionResult> Delete( DeleteReviewCommand deleteReviewCommand)
         {
             var deleted = await _mediator.Send(deleteReviewCommand);

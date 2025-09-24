@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
@@ -32,6 +33,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles=UserRoles.Admin)]
         public async Task<ActionResult<ActorDto>> PostActor(CreateActorCommand createActorCommand)
         {
             var actor = await _mediator.Send(createActorCommand);
@@ -41,6 +43,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<ActionResult<Actor>> PutActor(UpdateActorCommand updateActorCommand) {
 
             var updated = await _mediator.Send(updateActorCommand);
@@ -49,6 +52,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPatch]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<ActionResult<Actor>> PatchActor( PatchActorCommand patchActorCommand) {
             
             var patched = await _mediator.Send(patchActorCommand);
@@ -56,6 +60,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpDelete]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> DeleteActor(DeleteActorCommand deleteActorCommand) {    
             var deleted = await _mediator.Send(deleteActorCommand);
             return deleted.IsSuccess ? NoContent() : NotFound(deleted);

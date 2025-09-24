@@ -5,6 +5,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Scripts\DeleteReviewForUserStoredProcedure.sql" />
+  </ItemGroup>
 	
 	
 	<!-- SQL scripts as embedded resources -->
@@ -14,6 +18,7 @@
 		<EmbeddedResource Include="Scripts\CreateReviewStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\DeleteActorStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\DeleteMovieStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\DeleteReviewForUserStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\DeleteReviewStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\GetMoviesStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\PatchActorStoredProcedure.sql" />

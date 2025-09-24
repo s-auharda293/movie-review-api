@@ -382,12 +382,14 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<string>("UserName")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MovieId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Reviews", (string)null);
                 });
@@ -466,7 +468,13 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("MovieReviewApi.Domain.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
                     b.Navigation("Movie");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("MovieReviewApi.Domain.Entities.Movie", b =>

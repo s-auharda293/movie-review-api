@@ -74,40 +74,40 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
     builder.Services.AddSwaggerGen();
 
-    // Adding Swagger
-    //builder.Services.AddSwaggerGen(c =>
-    //{
-    //    c.SwaggerDoc("v1", new OpenApiInfo { Title = "MovieReviewApi", Version = "v1" });
+// Adding Swagger
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "MovieReviewApi", Version = "v1" });
 
+    //configuring swagger to use security
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Please enter a valid token in the following format: {your token here} do not add the word 'Bearer' before it."
+    });
 
-    //    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    //    {
-    //        Name = "Authorization",
-    //        Type = SecuritySchemeType.Http,
-    //        Scheme = "Bearer",
-    //        BearerFormat = "JWT",
-    //        In = ParameterLocation.Header,
-    //        Description = "Please enter a valid token in the following format: {your token here} do not add the word 'Bearer' before it."
-    //    });
-
-    //    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    //    {
-    //        {
-    //            new OpenApiSecurityScheme
-    //            {
-    //                Reference = new OpenApiReference
-    //                {
-    //                    Type = ReferenceType.SecurityScheme,
-    //                    Id = "Bearer"
-    //                },
-    //                Scheme = "oauth2",
-    //                Name = "Bearer",
-    //                In = ParameterLocation.Header,
-    //            },
-    //            new List<string>()
-    //        }
-    //    });
-    //});
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    },
+                    Scheme = "oauth2",
+                    Name = "Bearer",
+                    In = ParameterLocation.Header,
+                },
+                new List<string>()
+            }
+    });
+});
 
 // Adding Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -158,6 +158,17 @@ var app = builder.Build();
     app.MapHangfireDashboard();
 
     HangfireJobScheduler.ScheduleJobs();
+
+    using (var scope = app.Services.CreateScope())
+{
+        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        await IdentityRoleSeeder.SeedRolesAsync(roleManager);
+        await IdentityRoleSeeder.SeedAdminUserAsync(userManager,mediator);
+    }
+
 
 app.Run();
 

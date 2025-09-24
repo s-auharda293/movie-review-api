@@ -16,13 +16,14 @@ namespace MovieReviewApi.Application.Handlers.Review
         public async Task<Result<IEnumerable<ReviewDto>>> Handle(GetReviewsQuery request, CancellationToken cancellationToken)
         {
             {
-                var reviews = await _context.Reviews.Include(r => r.Movie).ToListAsync(cancellationToken);
+                var reviews = await _context.Reviews.Include(r => r.Movie).Include(r=>r.User).ToListAsync(cancellationToken);
 
                 var reviewDtos = reviews.Select(r => new ReviewDto
                 {
                     Id = r.Id,
                     MovieId = r.MovieId,
-                    UserName = r.UserName,
+                    UserId = Guid.Parse(r.User!.Id),
+                    UserName = r.User!.UserName,
                     Comment = r.Comment,
                     Rating = r.Rating
                 }).ToList();

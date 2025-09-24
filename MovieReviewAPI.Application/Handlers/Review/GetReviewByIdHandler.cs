@@ -17,18 +17,20 @@ namespace MovieReviewApi.Application.Handlers.Review
 
         public async Task<Result<ReviewDto>> Handle(GetReviewByIdQuery request, CancellationToken cancellationToken)
         {
-            var r = await _context.Reviews
+            var review = await _context.Reviews
+                          .Include(r => r.User)
                           .Include(r => r.Movie)
                           .FirstOrDefaultAsync(r => r.Id == request.Id,cancellationToken);
-            if (r == null) return Result<ReviewDto>.Failure(ReviewErrors.NotFound);
+            if (review == null) return Result<ReviewDto>.Failure(ReviewErrors.NotFound);
 
             var reviewDto = new ReviewDto
             {
-                Id = r.Id,
-                MovieId = r.MovieId,
-                UserName = r.UserName,
-                Comment = r.Comment,
-                Rating = r.Rating
+                Id = review.Id,
+                MovieId = review.MovieId,
+                UserId = Guid.Parse(review.User!.Id), //when we fetch review and include user from db, UserId is stored as string but dto is guid so parse into guid
+                UserName = review.User?.UserName,
+                Comment = review.Comment,
+                Rating = review.Rating
             };
 
             return Result<ReviewDto>.Success(reviewDto);

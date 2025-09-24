@@ -1,5 +1,6 @@
 ﻿CREATE PROCEDURE CreateReview
     @MovieId UNIQUEIDENTIFIER,
+    @UserId UNIQUEIDENTIFIER,
     @UserName NVARCHAR(4000),
     @Comment NVARCHAR(4000) = NULL,
     @Rating DECIMAL(3,2) = NULL
@@ -11,15 +12,16 @@ BEGIN
     DECLARE @CreatedAt DATETIME2 = SYSUTCDATETIME();
     DECLARE @UpdatedAt DATETIME2 = SYSUTCDATETIME();
 
-    INSERT INTO Reviews (Id, MovieId, UserName, Comment, Rating, CreatedAt, UpdatedAt)
-    VALUES (@ReviewId, @MovieId, @UserName, @Comment, @Rating, @CreatedAt, @UpdatedAt);
+    INSERT INTO Reviews (Id, MovieId, UserId, Comment, Rating, CreatedAt, UpdatedAt)
+    VALUES (@ReviewId, @MovieId, @UserId, @Comment, @Rating, @CreatedAt, @UpdatedAt);
 
     -- Return inserted review
-    SELECT @ReviewId AS Id,
-           @MovieId AS MovieId,
-           @UserName AS UserName,
-           @Comment AS Comment,
-           @Rating AS Rating,
-           @CreatedAt AS CreatedAt,
-           @UpdatedAt AS UpdatedAt;
+    SELECT 
+        @ReviewId AS Id,
+        @MovieId AS MovieId,
+        @UserId AS UserId,
+        @Comment AS Comment,
+        @Rating AS Rating,
+        @CreatedAt AS CreatedAt,
+        @UpdatedAt AS UpdatedAt;
 END

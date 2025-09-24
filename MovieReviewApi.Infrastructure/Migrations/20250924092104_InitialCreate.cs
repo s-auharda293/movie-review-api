@@ -226,15 +226,20 @@ namespace MovieReviewApi.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     MovieId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Rating = table.Column<decimal>(type: "decimal(3,1)", precision: 3, scale: 1, nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Reviews", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Reviews_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Reviews_Movies_MovieId",
                         column: x => x.MovieId,
@@ -291,6 +296,11 @@ namespace MovieReviewApi.Infrastructure.Migrations
                 name: "IX_Reviews_MovieId",
                 table: "Reviews",
                 column: "MovieId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_UserId",
+                table: "Reviews",
+                column: "UserId");
         }
 
         /// <inheritdoc />

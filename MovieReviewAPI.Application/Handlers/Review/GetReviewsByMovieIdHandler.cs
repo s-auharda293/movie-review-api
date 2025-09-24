@@ -17,12 +17,14 @@ public class GetReviewsByMovieIdHandler : IRequestHandler<GetReviewsByMovieIdQue
     public async Task<Result<IEnumerable<ReviewDto>>> Handle(GetReviewsByMovieIdQuery request, CancellationToken cancellationToken)
     {
         var reviewDtos = await _context.Reviews
+            .Include(r=>r.User)
             .Where(r => r.MovieId == request.Id)
             .Select(r => new ReviewDto
             {
                 Id = r.Id,
                 MovieId = r.MovieId,
-                UserName = r.UserName,
+                UserId = Guid.Parse(r.User!.Id),
+                UserName = r.User!.UserName,
                 Comment = r.Comment,
                 Rating = r.Rating
             })

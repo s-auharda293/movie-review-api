@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.DTOs;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,6 @@ using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Commands.Movie
 {
-    public record PatchMovieCommand(Guid Id, PatchMovieDto dto):IRequest<Result<MovieDto>>;
+    public record PatchMovieCommand(Guid Id,PatchMovieDto dto):IRequest<Result<MovieDto>>;
 
 }

@@ -55,6 +55,9 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             newUser.RefreshToken = Convert.ToBase64String(refreshTokenHash);
             newUser.RefreshTokenExpiryTime = DateTime.Now.AddDays(2);
 
+            newUser.CreatedAt = DateTime.Now;
+            newUser.UpdatedAt = DateTime.Now;
+
             // Store user information in database
             var result = await _userManager.CreateAsync(newUser, request.Password!);
             if (!result.Succeeded)
@@ -65,14 +68,21 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
                 return Result<UserResponse>.Failure(IdentityErrors.UserCreationFailedWithDetails(errorDetails));
             }
 
+            //assign default role to user
+            var roleResult = await _userManager.AddToRoleAsync(newUser, UserRoles.User);
+            if (!roleResult.Succeeded)
+            {
+                var errorDetails = string.Join(", ", roleResult.Errors.Select(e => e.Description));
+                _logger.LogError("Failed to assign default role: {errors}", errorDetails);
+                return Result<UserResponse>.Failure(IdentityErrors.RoleAssignmentFailed);
+            }
+
             _logger.LogInformation("User created successfully");
 
             var userResponse = _mapper.Map<ApplicationUser, UserResponse>(newUser);
             userResponse.AccessToken = token;
             userResponse.RefreshToken = refreshToken;
 
-            newUser.CreatedAt = DateTime.Now;
-            newUser.UpdatedAt = DateTime.Now;
 
             var registeredUser = _mapper.Map<UserResponse>(newUser);
             
@@ -158,7 +168,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
 
         public async Task<Result<CurrentUserResponse>> GetCurrentUserAsync()
         {
-            var user = await _userManager.FindByIdAsync(_currentUserService.GetUserId());
+            var user = await _userManager.FindByIdAsync(_currentUserService.GetUserId()!);
             if (user == null) {
                 _logger.LogError("User not found");
                 return Result<CurrentUserResponse>.Failure(IdentityErrors.UserNotFound);
@@ -299,7 +309,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             }
 
             // 2. Check if current password is correct
-            var passwordCheck = await _userManager.CheckPasswordAsync(user, request.CurrentPassword);
+            var passwordCheck = await _userManager.CheckPasswordAsync(user, request.CurrentPassword!);
             if (!passwordCheck)
             {
                 _logger.LogWarning("Incorrect current password for user ID: {UserId}", user.Id);
@@ -307,7 +317,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             }
 
             // 3. Change password
-            var changeResult = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+            var changeResult = await _userManager.ChangePasswordAsync(user, request.CurrentPassword!, request.NewPassword!);
             if (!changeResult.Succeeded)
             {
                 var errors = string.Join(", ", changeResult.Errors.Select(e => e.Description));

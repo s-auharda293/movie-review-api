@@ -256,7 +256,6 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             user.FirstName = request.FirstName!;
             user.LastName = request.LastName!;
             user.UserName = GenerateUserName(user.FirstName, user.LastName);
-            user.Email = request.Email;
 
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)

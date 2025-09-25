@@ -31,9 +31,15 @@ public class CreateReviewHandler : IRequestHandler<CreateReviewCommand, Result<R
         if (movie == null)
             return Result<ReviewDto>.Failure(ReviewErrors.MovieNotFound);
 
+
         var httpUser = _httpContextAccessor.HttpContext?.User;
         var userId = httpUser?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var userName = httpUser?.FindFirst(ClaimTypes.Name)?.Value;
+
+        var alreadyReviewed = await _context.Reviews.FirstOrDefaultAsync(r => r.UserId == userId && r.MovieId == request.dto.MovieId);
+        if (alreadyReviewed!=null) {
+            return Result<ReviewDto>.Failure(ReviewErrors.AlreadyReviewed);
+        }
 
         if (string.IsNullOrEmpty(userId))
             return Result<ReviewDto>.Failure(ReviewErrors.UserNotAuthenticated);

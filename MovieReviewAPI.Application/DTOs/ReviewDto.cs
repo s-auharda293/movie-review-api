@@ -4,7 +4,7 @@ namespace MovieReviewApi.Application.DTOs
 {
     public abstract class ReviewBaseDto
     {
-        public string Comment { get; set; } = null!;
+        public string? Comment { get; set; } = null!;
         public decimal Rating { get; set; }
     }
 
@@ -14,7 +14,7 @@ namespace MovieReviewApi.Application.DTOs
         public Guid MovieId { get; set; }
         public Guid UserId { get; set; }
         public string? UserName { get; set; }
-        public string Comment { get; set; } = null!;
+        public string? Comment { get; set; } = null!;
         public decimal Rating { get; set; }
     }
 

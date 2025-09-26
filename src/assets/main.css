@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "primeicons/primeicons.css";
+
+:root {
+  --font-sans: "Poppins", sans-serif;
+  --grid-cols-70-30: 70% 28%;
+  --color-primary: #1da1f2;
+  --color-secondary: #ffed4a;
+}

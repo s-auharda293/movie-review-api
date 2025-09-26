@@ -1,17 +1,23 @@
 ﻿using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
+using MovieReviewApi.Application.Interfaces;
 
 namespace MovieReviewApi.Application.Validators.MovieValidator
 {
     public class CreateMovieValidator: AbstractValidator<CreateMovieCommand>
     {
-        public CreateMovieValidator() { 
-        
-            RuleFor(x=>x.dto.Title)
+        private readonly IApplicationDbContext _context;
+        public CreateMovieValidator(IApplicationDbContext context) {
+
+            _context = context;
+
+            RuleFor(x => x.dto.Title)
                 .NotEmpty().WithMessage("Movie title is required")
                 .MinimumLength(5).WithMessage("Movie title must be at least 5 characters")
-                .MaximumLength(300).WithMessage("Movie title can't exceed 300 characters");
+                .MaximumLength(300).WithMessage("Movie title can't exceed 300 characters")
+                .MustAsync(async (title, ct) => !await _context.Movies.AnyAsync(m => m.Title.ToLower().Trim() == title.ToLower().Trim())).WithMessage((command, title) => $"Movie with title '{title}' already exists");
 
             RuleFor(x=>x.dto.Description)
                 .NotEmpty().WithMessage("Description is required")

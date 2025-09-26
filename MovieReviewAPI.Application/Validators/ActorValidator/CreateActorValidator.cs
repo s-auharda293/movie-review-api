@@ -1,18 +1,28 @@
 ﻿
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
+using MovieReviewApi.Application.Interfaces;
 
 
 namespace MovieReviewApi.Application.Validators.ActorValidator;
 public class CreateActorValidator : AbstractValidator<CreateActorCommand>
 {
-    public CreateActorValidator()
+    private readonly IApplicationDbContext _context;
+    public CreateActorValidator(IApplicationDbContext context)
     {
+        _context = context;
+
         RuleFor(x => x.dto.Name)
             .NotEmpty().WithMessage("Actor name is required")
             .MinimumLength(2).WithMessage("Name must be at least 2 characters long")
-            .MaximumLength(100).WithMessage("Name can't exceed 100 characters");
+            .MaximumLength(100).WithMessage("Name can't exceed 100 characters")
+           //ct -> cancellation token
+            .MustAsync(async (name, ct) =>
+            !await _context.Actors
+            .AnyAsync(a => a.Name.ToLower().Trim() == name.ToLower().Trim(), ct))
+            .WithMessage((command, name) => $"Actor with the name '{name}' already exists");
 
         RuleFor(x => x.dto.DateOfBirth)
             .Must(BeInThePast)

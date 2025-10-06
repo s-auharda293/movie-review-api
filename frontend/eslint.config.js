@@ -16,6 +16,9 @@ export default defineConfig([
       globals: {
         ...globals.browser,
       },
+       rules: {
+      'vue/multi-word-component-names': 'off', // ✅ disable multi-word requirement
+    },
     },
   },
 

@@ -2,6 +2,9 @@ import { createRouter,createWebHistory } from "vue-router"
 import HomeView from "@/views/HomeView.vue"
 import LoginView from "@/views/LoginView.vue";
 import RegisterView from "@/views/RegisterView.vue";
+import ReviewView from "@/views/ReviewView.vue";
+import MovieView from "@/views/MovieView.vue";
+import ActorView from "@/views/ActorView.vue";
 
   const router = createRouter({
     history:createWebHistory(),
@@ -20,8 +23,23 @@ import RegisterView from "@/views/RegisterView.vue";
         path:'/register',
         name:'register',
         component:RegisterView
+      },
+      {
+        path:'/reviews',
+        name:'reviews',
+        component:ReviewView
+      },
+      {
+        path:'/movies',
+        name:'movies',
+        component:MovieView
+      },
+      {
+        path:'/actors',
+        name:'actors',
+        component:ActorView
       }
-    ]
+    ],
   })
 
   export default router;

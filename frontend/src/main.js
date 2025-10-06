@@ -1,12 +1,14 @@
 import './assets/style.css'
+import 'primeicons/primeicons.css';
 
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 
-// Import Bootstrap + BootstrapVueNext styles
-import 'bootstrap/dist/css/bootstrap.css'
-import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
+// Import Bootstrap
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
+
+
 
 const app = createApp(App)
 app.use(router);

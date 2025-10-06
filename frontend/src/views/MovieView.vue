@@ -1,7 +1,10 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
-import { getMovies } from "../services/movieService";
+import { deleteMovie, getMovies, createMovie, updateMovie } from "../services/movieService";
 import Pagination from "@/components/Pagination.vue";
+import ViewModal from "@/components/ViewModal.vue";
+import DeleteModal from "@/components/DeleteModal.vue";
+import CreateEditMovieModal from "@/components/CreateEditMovieModal.vue";
 
 const movies = ref([]);
 const totalCount = ref(0);
@@ -13,6 +16,74 @@ const sortColumns = ref([]);
 
 const searchColumn = ref("title"); // column to search
 const searchTerm = ref("");        // search text
+
+//view
+const showViewModal = ref(false);
+const movieToView = ref(null);
+
+//create or edit
+const showMovieModal = ref(false);
+const selectedMovie = ref(null);
+const formMode = ref("create");
+const formErrors = ref({});
+
+function addMovie() {
+  formMode.value = "create";
+  selectedMovie.value = null;
+  showMovieModal.value = true;
+  formErrors.value = {};
+}
+
+function editMovie(movie) {
+  console.log("Selected movie to edit: ",movie);
+  formMode.value = "edit";
+  selectedMovie.value = movie;
+  showMovieModal.value = true;
+  formErrors.value = {};
+}
+
+function closeMovieModal() {
+  showMovieModal.value = false;
+}
+
+async function handleMovieSubmit(movieData) {
+  try{
+    formErrors.value = {};
+    let data;
+    if (formMode.value === "create") {
+    // console.log(movieData);
+
+    // call API to create movie
+    data = await createMovie(movieData);
+
+    //  console.log(data);
+
+    }else if(formMode.value==="edit") {
+    // call API to update movie
+    data = await updateMovie(movieData);
+    }
+
+    if(data.isSuccess){
+      await fetchMovies(); // refresh movie list
+      showMovieModal.value = false; // close modal
+    }
+  }catch(err){
+     if (err.response?.data?.errors) {
+      // convert backend error format to key:value
+      const errorMap = {};
+      err.response.data.errors.forEach((e) => {
+        const field = e.code.split(".")[1].toLowerCase();
+        errorMap[field] = e.description;
+      });
+      formErrors.value = errorMap; // send to modal
+    }
+  }
+}
+
+
+// delete
+const showDeleteModal = ref(false);
+const movieToDelete = ref(null);
 
 async function fetchMovies() {
   const data = await getMovies({
@@ -31,7 +102,6 @@ async function fetchMovies() {
   }
 }
 
-
 // Fetch on mount
 onMounted(fetchMovies);
 
@@ -41,20 +111,56 @@ watch([currentPage, pageSize, searchColumn, searchTerm], fetchMovies);
 watch(sortColumns, fetchMovies, { deep: true });
 
 function sortColumn(column) {
-  const col = sortColumns.value.find(c => c.sortKey === column);
-  if (col) {
+  const col = sortColumns.value[0]; // only one column for now
+  if (col?.sortKey === column) {
     col.sortAsc = !col.sortAsc; // toggle
   } else {
-    sortColumns.value.push({ sortKey: column, sortAsc: true });
+    sortColumns.value = [{ sortKey: column, sortAsc: true }]; // replace old sort
   }
+  fetchMovies(); // fetch immediately with new sort
 }
 
 function getSortArrow(column) {
-  const col = sortColumns.value.find(c => c.sortKey === column);
-  if (!col) return '';
+  const col = sortColumns.value[0];
+  if (!col || col.sortKey !== column) return '';
   return col.sortAsc ? '▲' : '▼';
 }
 
+// view modal setup
+function openViewModal(movie){
+  movieToView.value = movie;
+  showViewModal.value = true;
+}
+
+function closeViewModal(){
+  movieToView.value = null;
+  showViewModal.value = false;
+}
+
+// delete modal setup
+function openDeleteModal(movie) {
+  movieToDelete.value = movie;
+  showDeleteModal.value = true;
+}
+
+function closeDeleteModal() {
+  movieToDelete.value = null;
+  showDeleteModal.value = false;
+}
+
+async function confirmDelete() {
+  if (!movieToDelete.value) return;
+
+  try {
+    const data = await deleteMovie(movieToDelete.value);
+    console.log("Deleted movie response:", data);
+
+    await fetchMovies(); // refresh the movie list
+    closeDeleteModal();   // close the modal
+  } catch (err) {
+    console.error("Failed to delete movie:", err);
+  }
+}
 
 </script>
 
@@ -63,27 +169,37 @@ function getSortArrow(column) {
   <h1 class="text-gray-500 text-xl mb-4 mt-2">Movies</h1>
 
   <!-- Search box -->
-  <div class="mb-4 flex gap-4">
-    <!-- Column filter -->
-    <select
-  v-model="searchColumn"
-  class=" border-gray-200 rounded-full px-3 py-2 border"
->
-  <option value="id">Movie Id</option>
-  <option value="title">Title</option>
-  <option value="description">Description</option>
-  <option value="releaseDate">Release Date</option>
-  <option value="durationMinutes">Duration</option>
-  <option value="rating">Rating</option>
-</select>
-
+  <div class="mb-4 flex justify-between">
+    <div class="flex gap-2">
+      <!-- Column filter -->
+      <select
+      v-model="searchColumn"
+      class=" border-gray-200 rounded-full px-3 py-2 border"
+      >
+      <option value="id">Movie Id</option>
+      <option value="title">Title</option>
+      <option value="description">Description</option>
+      <option value="releaseDate">Release Date</option>
+      <option value="durationMinutes">Duration</option>
+      <option value="rating">Rating</option>
+    </select>
 
     <input
-      type="text"
-      v-model="searchTerm"
-      placeholder="Search movies..."
-      class="form-control border p-2 w-72 rounded-full border-gray-300"
+    type="text"
+    v-model="searchTerm"
+    placeholder="Search movies..."
+    class="form-control border p-2 w-72 rounded-full border-gray-300"
     />
+  </div>
+
+  <button
+    class="mt-3 px-3 py-1 rounded-md bg-blue-600 text-white text-md hover:bg-blue-700 mr-10 cursor-pointer"
+    @click="addMovie"
+  >
+    Add Movie
+  </button>
+
+
   </div>
 
   <div class="bootstrap-table">
@@ -134,9 +250,25 @@ function getSortArrow(column) {
             <td>{{ movie.rating }}</td>
             <td>
               <div class="d-flex gap-1 flex-wrap">
-                <button class="btn btn-success btn-sm flex justify-center items-center hover:bg-opacity hover:bg-[#031b0d] transition-colors" style="border-radius:12px"><span class="pi pi-eye"></span></button>
-                <button class="btn btn-primary btn-sm flex justify-center items-center hover:bg-[#0a143a] transition-colors" style="border-radius:12px"><span class="pi pi-pencil"></span></button>
-                <button class="btn btn-danger btn-sm flex justify-center items-center hover:bg-[#3f0000] transition-colors" style="border-radius:12px"><span class="pi pi-trash"></span></button>
+                <button
+                @click="openViewModal(movie)"
+                class="btn btn-success btn-sm flex justify-center items-center hover:bg-opacity hover:bg-[#031b0d] transition-colors"
+                style="border-radius:12px"
+              >
+                <span class="pi pi-eye"></span>
+              </button>
+                <button
+                @click="editMovie(movie)"
+                 class="btn btn-primary btn-sm flex justify-center items-center hover:bg-[#0a143a] transition-colors"
+                 style="border-radius:12px">
+                 <span class="pi pi-pencil"></span>
+                </button>
+                <button
+                      @click="openDeleteModal(movie)"
+                      class="btn btn-danger btn-sm flex justify-center items-center hover:bg-[#3f0000] transition-colors"
+                      style="border-radius:12px">
+                      <span class="pi pi-trash"></span>
+                </button>
               </div>
             </td>
           </tr>
@@ -147,6 +279,32 @@ function getSortArrow(column) {
     <!-- Pagination -->
     <Pagination v-model:currentPage="currentPage" v-model:pageSize="pageSize" v-bind:totalCount="totalCount"/>
   </div>
+
+  <!-- View Modal -->
+   <ViewModal
+      v-bind:show="showViewModal"
+      v-bind:movie = "movieToView"
+      @close="closeViewModal"
+   />
+
+   <CreateEditMovieModal
+      v-if="showMovieModal"
+      :movie="selectedMovie"
+      :mode="formMode"
+      :errors="formErrors"
+      @submit="handleMovieSubmit"
+      @cancel="closeMovieModal"
+    />
+
+
+    <!-- Delete Confirmation Modal -->
+    <DeleteModal
+      v-bind:show="showDeleteModal"
+      v-bind:movie="movieToDelete"
+      @close="closeDeleteModal"
+      @confirm="confirmDelete"
+    />
+
 </template>
 
 

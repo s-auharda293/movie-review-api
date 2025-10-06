@@ -5,6 +5,8 @@ import RegisterView from "@/views/RegisterView.vue";
 import ReviewView from "@/views/ReviewView.vue";
 import MovieView from "@/views/MovieView.vue";
 import ActorView from "@/views/ActorView.vue";
+import NotFoundView from "@/views/NotFoundView.vue";
+import CreateMovieView from "@/components/CreateEditMovieModal.vue";
 
   const router = createRouter({
     history:createWebHistory(),
@@ -38,7 +40,12 @@ import ActorView from "@/views/ActorView.vue";
         path:'/actors',
         name:'actors',
         component:ActorView
-      }
+      },
+      {
+        path:'/:catchAll(.*)',
+        name:'not-found',
+        component:NotFoundView
+      },
     ],
   })
 

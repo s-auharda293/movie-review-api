@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
-using MovieReviewApi.Application.Queries.Actor;
+using MovieReviewApi.Application.Queries.Movie;
 using MovieReviewApi.Domain.Common.Movies;
 
 namespace MovieReviewApi.Application.Handlers.Movie

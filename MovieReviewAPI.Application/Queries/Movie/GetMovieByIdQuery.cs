@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MovieReviewApi.Application.Queries.Actor
+namespace MovieReviewApi.Application.Queries.Movie
 {
     public record GetMovieByIdQuery(Guid Id) : IRequest<Result<MovieDto>>;
 }

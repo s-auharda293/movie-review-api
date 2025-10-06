@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieReviewApi.Infrastructu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MovieReviewApi.IntegrationTests", "MovieReviewApi.IntegrationTests\MovieReviewApi.IntegrationTests.csproj", "{915A7B86-1FE3-4CA6-B2FF-CBE24B9DF56C}"
 EndProject
+Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "client", "client\client.esproj", "{5DC3FCCF-9129-207D-CAD8-1B96C9FA47E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,12 @@ Global
 		{915A7B86-1FE3-4CA6-B2FF-CBE24B9DF56C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{915A7B86-1FE3-4CA6-B2FF-CBE24B9DF56C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{915A7B86-1FE3-4CA6-B2FF-CBE24B9DF56C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DC3FCCF-9129-207D-CAD8-1B96C9FA47E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DC3FCCF-9129-207D-CAD8-1B96C9FA47E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DC3FCCF-9129-207D-CAD8-1B96C9FA47E2}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{5DC3FCCF-9129-207D-CAD8-1B96C9FA47E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DC3FCCF-9129-207D-CAD8-1B96C9FA47E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DC3FCCF-9129-207D-CAD8-1B96C9FA47E2}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

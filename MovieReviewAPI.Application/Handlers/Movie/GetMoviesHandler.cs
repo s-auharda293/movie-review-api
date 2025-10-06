@@ -1,9 +1,9 @@
 ﻿using MediatR;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
-using MovieReviewApi.Application.Queries.Actor;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.KeylessEntities;
+using MovieReviewApi.Application.Queries.Movie;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
@@ -21,6 +21,8 @@ namespace MovieReviewApi.Application.Handlers.Actor
             var movies = await _context.GetMoviesResult
                 .FromSqlRaw("EXEC GetMovies")
                 .ToListAsync(cancellationToken);
+
+
 
             // Map the results to DTOs
             var movieDtos = movies.Select(m => new MovieDto

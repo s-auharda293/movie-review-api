@@ -38,4 +38,20 @@
         public new string? Bio { get; set; }
 
     }
+
+    public class ActorRequestDto
+    {
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 5;
+        public string? Sort { get; set; } // JSON string or a list of objects
+        public string? SearchColumn { get; set; }
+        public string? SearchTerm { get; set; }
+    }
+
+    public class ActorResponseDto
+    {
+        public IEnumerable<ActorDto> Actors { get; set; } = new List<ActorDto>();
+        public int TotalCount { get; set; }
+    }
+
 }

@@ -282,8 +282,9 @@ async function confirmDelete() {
 
   <!-- View Modal -->
    <ViewModal
-      v-bind:show="showViewModal"
-      v-bind:movie = "movieToView"
+      v-bind:show ="showViewModal"
+      v-bind:item = "movieToView"
+      mode = "movie"
       @close="closeViewModal"
    />
 
@@ -300,7 +301,8 @@ async function confirmDelete() {
     <!-- Delete Confirmation Modal -->
     <DeleteModal
       v-bind:show="showDeleteModal"
-      v-bind:movie="movieToDelete"
+      v-bind:item="movieToDelete"
+      mode="movie"
       @close="closeDeleteModal"
       @confirm="confirmDelete"
     />

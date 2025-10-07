@@ -1,8 +1,9 @@
 <script setup>
 
 defineProps({
-  movie: Object,
-  show: Boolean
+  item: Object,
+  show: Boolean,
+  mode: String
 });
 
 const emit = defineEmits(["close", "confirm"]);
@@ -41,7 +42,12 @@ function handleConfirm() {
                 </svg>
               </div>
 
-              <h3 class="text-lg font-semibold mt-4">Are you sure you want to delete the movie {{movie?.title}}?</h3>
+              <h3 class="text-lg font-semibold mt-4">Are you sure you want to delete the {{mode}}
+                <span>
+                  {{ mode === 'movie' ? item?.title : mode=== 'actor' ? actor?.name : '' }}
+                </span>
+                ?
+              </h3>
               <p class="text-sm text-slate-600 mt-2">This action cannot be undone.</p>
 
               <div class="flex gap-4 mt-8">

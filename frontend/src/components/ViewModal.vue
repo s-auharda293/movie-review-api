@@ -1,9 +1,9 @@
 <script setup>
-import { defineProps, defineEmits } from "vue";
 
 const props = defineProps({
   show: Boolean,
-  movie: Object
+  item: Object,
+  mode: String
 });
 
 const emit = defineEmits(["close"]);
@@ -25,7 +25,7 @@ function handleClose() {
     <div class="relative w-full max-w-lg bg-white shadow-lg rounded-lg p-6 z-10">
       <!-- Header -->
       <div class="flex items-center pb-3 border-b border-gray-300">
-        <h3 class="text-slate-900 text-xl font-semibold flex-1">{{ movie?.title || 'Movie Details' }}</h3>
+        <h3 class="text-slate-900 text-xl font-semibold flex-1">{{ mode==="movie" ? (item?.title || 'Movie Details'): mode==="actor"?(item?.name || 'Actor') : "Details" }}</h3>
         <svg
           @click="handleClose"
           xmlns="http://www.w3.org/2000/svg"
@@ -37,14 +37,22 @@ function handleClose() {
         </svg>
       </div>
 
-      <!-- Body -->
-      <div class="my-6 text-slate-600 text-sm leading-relaxed">
-        <p><strong>Id:</strong> {{ movie?.id }}</p>
-        <p  class="mt-2"><strong>Title:</strong> {{ movie?.title }}</p>
-        <p class="mt-2"><strong>Description:</strong> {{ movie?.description }}</p>
-        <p class="mt-2"><strong>Release Date:</strong> {{ movie?.releaseDate ? new Date(movie.releaseDate).toLocaleDateString() : '-' }}</p>
-        <p class="mt-2"><strong>Duration:</strong> {{ movie?.durationMinutes }} min</p>
-        <p class="mt-2"><strong>Rating:</strong> {{ movie?.rating }}</p>
+      <!-- Body for movie-->
+      <div v-if="mode==='movie'" class="my-6 text-slate-600 text-sm leading-relaxed">
+        <p><strong>Id:</strong> {{ item?.id }}</p>
+        <p  class="mt-2"><strong>Title:</strong> {{ item?.title }}</p>
+        <p class="mt-2"><strong>Description:</strong> {{ item?.description }}</p>
+        <p class="mt-2"><strong>Release Date:</strong> {{ item?.releaseDate ? new Date(item.releaseDate).toLocaleDateString() : '-' }}</p>
+        <p class="mt-2"><strong>Duration:</strong> {{ item?.durationMinutes }} min</p>
+        <p class="mt-2"><strong>Rating:</strong> {{ item?.rating }}</p>
+      </div>
+
+      <!-- Body for actor-->
+      <div v-if="mode==='actor'" class="my-6 text-slate-600 text-sm leading-relaxed">
+        <p  class="mt-2"><strong>Id:</strong> {{ item?.id }}</p>
+        <p class="mt-2"><strong>Name:</strong> {{ item?.name }}</p>
+        <p class="mt-2"><strong>Date of Birth:</strong> {{ item?.dateOfBirth ? new Date(item.dateOfBirth).toLocaleDateString() : '-' }}</p>
+        <p class="mt-2"><strong>Bio:</strong> {{ item?.bio }}</p>
       </div>
 
       <!-- Footer -->

@@ -35,7 +35,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
                                 movies = movies.Where(m => m.Title.Contains(request.request.SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
                                 break;
                             case "description":
-                                movies = movies.Where(m => m.Description.Contains(request.request.SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+                                movies = movies.Where(m => m.Description!.Contains(request.request.SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
                                 break;
                             case "releasedate":
                                 movies = movies.Where(m => m.ReleaseDate.ToString("yyyy-MM-dd").Contains(request.request.SearchTerm)).ToList();

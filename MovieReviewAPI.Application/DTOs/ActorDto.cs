@@ -20,7 +20,12 @@
         public DateTime? DateOfBirth { get; set; }
         public string? Bio { get; set; }
 
-        public List<string>? Movies { get; set; } = new();
+        public List<ActorMovieDto> Movies { get; set; } = new();
+    }
+
+    public class ActorMovieDto { 
+        public Guid Id { get; set; }
+        public String Title { get; set; } = null!;
     }
 
     public class CreateActorDto: ActorBaseDto

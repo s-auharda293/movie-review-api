@@ -267,7 +267,7 @@ function getRandomColor() {
             <td>{{ movie.rating }}</td>
             <td>
               <div class="flex flex-wrap w-28 gap-1">
-                <span v-for="(actor,index) in movie.actors" :key="index" :class="`border px-2 ${getRandomColor()} rounded-full italic text-gray-500`">{{ actor }}</span>
+                <span v-for="(actor,index) in movie.actors" :key="index" :class="`border px-2 ${getRandomColor()} rounded-full italic text-gray-500`">{{ actor.name }}</span>
               </div>
             </td>
             <td>

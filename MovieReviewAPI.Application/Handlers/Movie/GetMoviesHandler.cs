@@ -1,7 +1,7 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.KeylessEntities;
 using MovieReviewApi.Application.Queries.Movie;
 
@@ -17,26 +17,39 @@ namespace MovieReviewApi.Application.Handlers.Actor
 
         public async Task<Result<IEnumerable<MovieDto>>> Handle(GetMoviesQuery request, CancellationToken cancellationToken)
         {
-            // Call the stored procedure into your keyless entity
             var movies = await _context.GetMoviesResult
                 .FromSqlRaw("EXEC GetMovies")
                 .ToListAsync(cancellationToken);
 
+            var movieDtos = new List<MovieDto>();
 
-
-            // Map the results to DTOs
-            var movieDtos = movies.Select(m => new MovieDto
+            foreach (var movie in movies)
             {
-                Id = m.Id,
-                Title = m.Title,
-                Description = m.Description ?? "",
-                ReleaseDate = m.ReleaseDate,
-                DurationMinutes = m.DurationMinutes,
-                Rating = m.Rating,
-                Actors = string.IsNullOrWhiteSpace(m.ActorNames)
-                ? new List<string>()
-                : m.ActorNames.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList()
-            }).ToList();
+                var actorIds = movie.ActorIds
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(id => Guid.Parse(id.Trim()))
+                    .ToList();
+
+                var actors = await _context.Actors
+                    .Where(a => actorIds.Contains(a.Id))
+                    .Select(a => new MovieActorDto
+                    {
+                        Id = a.Id,
+                        Name = a.Name
+                    })
+                    .ToListAsync(cancellationToken);
+
+                movieDtos.Add(new MovieDto
+                {
+                    Id = movie.Id,
+                    Title = movie.Title,
+                    Description = movie.Description ?? "",
+                    ReleaseDate = movie.ReleaseDate,
+                    DurationMinutes = movie.DurationMinutes,
+                    Rating = movie.Rating,
+                    Actors = actors
+                });
+            }
 
             return Result<IEnumerable<MovieDto>>.Success(movieDtos);
         }

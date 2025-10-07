@@ -143,6 +143,14 @@ function handleCancel() {
           </p>
         </div>
 
+        <div class="relative">
+
+          <!-- show actor error -->
+          <p v-if="errors.rating" class="absolute -bottom-5 px-2 text-xs text-red-500">
+            {{ errors.rating }}
+          </p>
+        </div>
+
       </form>
 
       <!-- Buttons -->

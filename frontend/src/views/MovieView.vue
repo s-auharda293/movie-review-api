@@ -162,6 +162,20 @@ async function confirmDelete() {
   }
 }
 
+const colors = [
+  "bg-green-100",
+  "bg-blue-100",
+  "bg-red-100",
+  "bg-yellow-100",
+  "bg-purple-100",
+  "bg-pink-100",
+  "bg-indigo-100"
+];
+
+function getRandomColor() {
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
 </script>
 
 
@@ -235,6 +249,9 @@ async function confirmDelete() {
             Rating
             <span>{{ getSortArrow('rating') }}</span>
           </th>
+          <th>
+            Actors
+          </th>
           <th>Actions</th>
 
           </tr>
@@ -248,6 +265,11 @@ async function confirmDelete() {
             <td>{{ new Date(movie.releaseDate).toLocaleDateString() }}</td>
             <td>{{ movie.durationMinutes }}</td>
             <td>{{ movie.rating }}</td>
+            <td>
+              <div class="flex flex-wrap w-28 gap-1">
+                <span v-for="(actor,index) in movie.actors" :key="index" :class="`border px-2 ${getRandomColor()} rounded-full italic text-gray-500`">{{ actor }}</span>
+              </div>
+            </td>
             <td>
               <div class="d-flex gap-1 flex-wrap">
                 <button

@@ -23,7 +23,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
 
         public async Task<Result<MovieDto>> Handle(PatchMovieCommand request, CancellationToken cancellationToken) {
             string? actorIdsCsv = null;
-            List<string> actorNames = new List<string>();
+            List<MovieActorDto> actorEntities = new();
             var movie = await _context.Movies.Include(m=>m.Actors).FirstOrDefaultAsync(m=>m.Id==request.Id);
             if (movie == null) return Result<MovieDto>.Failure(MovieErrors.NotFound);
 
@@ -36,10 +36,13 @@ namespace MovieReviewApi.Application.Handlers.Movie
                     return Result<MovieDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
                 }
                 actorIdsCsv = string.Join(",", request.dto.ActorIds);
-               
+                actorEntities = actors.Select(a => new MovieActorDto
+                {
+                    Id = a.Id,
+                    Name = a.Name
+                }).ToList();
             }
 
-            actorNames = movie.Actors.Select(a => a.Name).ToList();
 
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
@@ -67,7 +70,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 ReleaseDate = patchMovie.ReleaseDate,
                 DurationMinutes = patchMovie.DurationMinutes,
                 Rating = patchMovie.Rating,
-                Actors = actorNames,
+                Actors = actorEntities,
             };
 
             return Result<MovieDto>.Success(dto);

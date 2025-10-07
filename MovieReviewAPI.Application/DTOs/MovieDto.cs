@@ -25,7 +25,12 @@ public class MovieDto
     public DateTime ReleaseDate { get; set; }
     public int DurationMinutes { get; set; }
     public decimal Rating { get; set; }
-    public List<string> Actors { get; set; } = new();
+    public List<MovieActorDto> Actors { get; set; } = new();
+}
+
+public class MovieActorDto {
+    public Guid Id { get; set; }
+    public string Name { get; set; } = null!;
 }
 
 public class CreateMovieDto: MovieBaseDto

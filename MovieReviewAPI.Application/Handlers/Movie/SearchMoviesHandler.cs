@@ -140,9 +140,25 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 .Skip((request.request.Page - 1) * request.request.PageSize)
                 .Take(request.request.PageSize)
                 .ToList();
+            var movieDtos = new List<MovieDto>();
 
-            // Map the results to DTOs
-            var movieDtos = pagedMovies.Select(m => new MovieDto
+            foreach (var m in pagedMovies)
+            {
+                var actorIds = string.IsNullOrWhiteSpace(m.ActorIds)
+                    ? new List<Guid>()
+                    : m.ActorIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                .Select(id => Guid.Parse(id.Trim()))
+                                .ToList();
+
+                var actors = await _context.Actors
+                    .Where(a => actorIds.Contains(a.Id))
+                    .Select(a => new MovieActorDto
+                    {
+                        Id = a.Id,
+                        Name = a.Name
+                    }).ToListAsync(cancellationToken);
+
+                movieDtos.Add(new MovieDto
                 {
                     Id = m.Id,
                     Title = m.Title,
@@ -150,10 +166,10 @@ namespace MovieReviewApi.Application.Handlers.Movie
                     ReleaseDate = m.ReleaseDate,
                     DurationMinutes = m.DurationMinutes,
                     Rating = m.Rating,
-                    Actors = string.IsNullOrWhiteSpace(m.ActorNames)
-                    ? new List<string>()
-                    : m.ActorNames.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).ToList()
-                }).ToList();
+                    Actors = actors
+                });
+            }
+
 
             var response = new MovieResponseDto
             {

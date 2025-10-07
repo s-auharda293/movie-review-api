@@ -20,6 +20,12 @@ namespace MovieReviewApi.Application.Handlers.Movie
         {
             var movie = await _context.Movies.Include(m => m.Actors).FirstOrDefaultAsync(m => m.Id == request.Id,cancellationToken);
             if (movie == null) return Result<MovieDto>.Failure(MovieErrors.NotFound);
+            var actors = movie.Actors.Select(a => new MovieActorDto
+            {
+                Id = a.Id,
+                Name = a.Name
+            }).ToList();
+
             var dto = new MovieDto
             {
                 Id = movie.Id,
@@ -28,7 +34,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 ReleaseDate = movie.ReleaseDate,
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
-                Actors = movie.Actors.Select(a => a.Name).ToList(),
+                Actors = actors
             };
 
             return Result<MovieDto>.Success(dto);

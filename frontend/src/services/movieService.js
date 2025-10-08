@@ -29,6 +29,16 @@ export async function getMovies({ page = 1, pageSize = 5, sort = [], search = {}
   }
 }
 
+export async function getAllMovies() {
+  try {
+    const res = await axios.get(API_URL);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to fetch movies", err);
+    return [];
+  }
+}
+
 
 export async function deleteMovie(movie) {
   try {

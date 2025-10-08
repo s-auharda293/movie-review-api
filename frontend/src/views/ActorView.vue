@@ -162,6 +162,21 @@ async function confirmDelete() {
   }
 }
 
+
+const colors = [
+  "bg-green-100",
+  "bg-blue-100",
+  "bg-red-100",
+  "bg-yellow-100",
+  "bg-purple-100",
+  "bg-pink-100",
+  "bg-indigo-100"
+];
+
+function getRandomColor() {
+  return colors[Math.floor(Math.random() * colors.length)];
+}
+
 </script>
 
 
@@ -224,6 +239,9 @@ async function confirmDelete() {
                   Date Of Birth
                 <span>{{ getSortArrow('dateOfBirth') }}</span>
             </th>
+          <th>
+            Movies
+          </th>
           <th>Actions</th>
 
           </tr>
@@ -235,6 +253,11 @@ async function confirmDelete() {
             <td  class="text-truncate" style="max-width: 150px;">{{ actor.name }}</td>
             <td  class="text-truncate" style="max-width: 150px;" :title="actor.description">{{ actor.bio }}</td>
             <td>{{ new Date(actor.dateOfBirth).toLocaleDateString() }}</td>
+            <td>
+              <div class="flex flex-wrap w-28 gap-1">
+                <span v-for="(actor,index) in actor.movies" :key="index" :class="`border px-2 ${getRandomColor()} rounded-full italic text-gray-500`">{{ actor.title }}</span>
+              </div>
+            </td>
             <td>
               <div class="d-flex gap-1 flex-wrap">
                 <button

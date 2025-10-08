@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch, defineProps, defineEmits } from "vue";
+import { ref, watch} from "vue";
+import MovieMultiSelect from "./MovieMultiSelect.vue";
 
 const props = defineProps({
   actor: Object, // existing actor for edit
@@ -14,6 +15,9 @@ const form = ref({
   bio: "",
   dateOfBirth: ""
 });
+
+const selectedMovies = ref([]);
+const editSelectedMovies = ref([]);
 
 const errors = ref({});
 
@@ -36,6 +40,10 @@ watch(
         bio: newActor.bio,
         dateOfBirth: formatDateForInput(newActor.dateOfBirth)
       };
+
+       if(props.mode==="edit" && newActor?.movies){
+         editSelectedMovies.value = newActor.movies;
+      }
     }
   },
   { immediate: true }
@@ -52,7 +60,8 @@ function formatDateForInput(isoString) {
 
 
 function handleSubmit() {
-  emit("submit", { ...form.value, id: props.mode==="edit"? props.actor?.id:""});
+  const formValue = { ...form.value, movieIds: selectedMovies.value.map((movie)=>movie.id), id: props.mode==="edit"? props.actor?.id:""}
+  emit("submit", formValue );
 }
 
 function handleCancel() {
@@ -102,13 +111,24 @@ function handleCancel() {
           <input
             type="date"
             v-model="form.dateOfBirth"
-            class="px-2 py-3 bg-white text-slate-900 w-full text-sm border-b-2 border-gray-200 focus:border-[#007bff] outline-none"
+            class="px-2 py-3 bg-white text-slate-900 w-full text-sm border-b-2 border-gray-200 focus:border-[#007bff] outline-none mt-9"
           />
           <!-- show dateOfBirth error -->
           <p v-if="errors.dateofbirth" class="absolute -bottom-5 px-2 text-xs text-red-500">
             {{ errors.dateofbirth }}
           </p>
         </div>
+
+         <!-- Movie Selection -->
+      <div class="relative mb-5">
+        <MovieMultiSelect v-model:selectedMovies="selectedMovies" v-if="mode==='create'"/>
+        <MovieMultiSelect v-model:selectedMovies="selectedMovies" :editSelectedMovies="editSelectedMovies" v-if="mode==='edit'" :mode="mode"/>
+
+        <!-- show movie error -->
+        <p v-if="errors.actorIds" class="absolute -bottom-5 px-2 text-xs text-red-500">
+          {{ errors.movieIds }}
+        </p>
+      </div>
 
       </form>
 

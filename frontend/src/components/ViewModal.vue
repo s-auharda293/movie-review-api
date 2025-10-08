@@ -61,7 +61,16 @@ function handleClose() {
         <p  class="mt-2"><strong>Id:</strong> {{ item?.id }}</p>
         <p class="mt-2"><strong>Name:</strong> {{ item?.name }}</p>
         <p class="mt-2"><strong>Date of Birth:</strong> {{ item?.dateOfBirth ? new Date(item.dateOfBirth).toLocaleDateString() : '-' }}</p>
-        <p class="mt-2"><strong>Bio:</strong> {{ item?.bio }}</p>
+        <p class="mt-2 mb-2"><strong>Bio:</strong> {{ item?.bio }}</p>
+        <strong>Movies:</strong>
+        <div class="h-30 overflow-auto">
+          <div v-for="(movie) in item?.movies" :key="movie.id">
+            <div class="flex flex-col gap-1 mb-3 bg-amber-100 rounded-md p-2" >
+              <span>Movie id: {{ movie.id }}</span>
+              <span>Movie name: {{ movie.title }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Footer -->

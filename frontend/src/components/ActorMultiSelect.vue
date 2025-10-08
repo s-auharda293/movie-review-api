@@ -1,13 +1,30 @@
 <script setup>
-import { onMounted, ref,computed } from 'vue'
+import { onMounted, ref,computed, watch } from 'vue'
 import Multiselect from 'vue-multiselect'
 import { getAllActors } from '@/services/actorService';
 
 const props = defineProps({
-  selectedActors: {type: Array, default:[]}
+  selectedActors: {type: Array, default:[]},
+  editSelectedActors:{type:Array, default:[]},
+  mode:{type:String,default:"create"}
 })
 
 const emit = defineEmits(['update:selectedActors']);
+
+const localActors = ref([]);
+
+watch(
+  ()=>props.mode,
+  ()=>{
+    if(props.mode === 'edit'){
+      localActors.value = [...props.editSelectedActors];
+    }
+    if(props.mode === 'create'){
+      localActors.value = [...props.selectedActors];
+    }
+  },
+ {immediate:true}
+)
 
 let options = ref([]);
 
@@ -24,10 +41,12 @@ onMounted(async () => {
 
 
 const internalValue = computed({
-  get: ()=>props.selectedActors,
-  set:(val)=>emit('update:selectedActors',val)
+  get: ()=>localActors.value,
+  set:(val)=>{
+    localActors.value=val;
+    emit('update:selectedActors',val)
+  }
 })
-
 
 
 </script>

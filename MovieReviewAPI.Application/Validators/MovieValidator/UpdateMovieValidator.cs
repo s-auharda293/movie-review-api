@@ -16,7 +16,7 @@ namespace MovieReviewApi.Application.Validators.MovieValidator
                 .NotEmpty().WithMessage("Movie title is required")
                 .MinimumLength(5).WithMessage("Movie title must be at least 5 characters")
                 .MaximumLength(300).WithMessage("Movie title can't exceed 300 characters")
-                .MustAsync(async (title, ct) => !await _context.Movies.AnyAsync(m => m.Title.ToLower().Trim() == title.ToLower().Trim())).WithMessage((command, title) => $"Movie with title '{title}' already exists");
+                .MustAsync(async (command, title, ct) => !await _context.Movies.AnyAsync(m => m.Title.ToLower().Trim() == title.ToLower().Trim() && m.Id != command.Id )).WithMessage((command, title) => $"Movie with title '{title}' already exists");
 
             RuleFor(x => x.dto.Description)
                 .NotEmpty().WithMessage("Description is required")

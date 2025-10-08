@@ -19,6 +19,7 @@ const form = ref({
 });
 
 const selectedActors = ref([]);
+const editSelectedActors = ref([]);
 
 const errors = ref({});
 
@@ -43,6 +44,10 @@ watch(
         durationMinutes: newMovie.durationMinutes,
         rating: newMovie.rating
       };
+
+       if(props.mode==="edit" && newMovie?.actors){
+         editSelectedActors.value = newMovie.actors;
+      }
     }
   },
   { immediate: true }
@@ -149,7 +154,8 @@ function handleCancel() {
 
             <!-- Actor Selection -->
       <div class="relative">
-        <ActorMultiSelect v-model:selectedActors="selectedActors"/>
+        <ActorMultiSelect v-model:selectedActors="selectedActors" v-if="mode==='create'"/>
+        <ActorMultiSelect v-model:selectedActors="selectedActors" :editSelectedActors="editSelectedActors" v-if="mode==='edit'" :mode="mode"/>
 
         <!-- show actor error -->
         <p v-if="errors.actorIds" class="absolute -bottom-5 px-2 text-xs text-red-500">

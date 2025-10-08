@@ -29,7 +29,7 @@ namespace MovieReviewApi.Application.Validators.MovieValidator
 
                     return !await _context.Movies
                         .AnyAsync(m => !string.IsNullOrEmpty(m.Title) &&
-                                       m.Title.ToLower().Trim() == title.ToLower().Trim(), ct);
+                                       m.Title.ToLower().Trim() == title.ToLower().Trim() && m.Id != command.Id, ct);
                 })
                 .WithMessage((command, title) => $"Movie with title '{title}' already exists");
 

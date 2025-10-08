@@ -29,7 +29,7 @@ public class PatchActorValidator : AbstractValidator<PatchActorCommand>
 
                 return !await _context.Actors
                     .AnyAsync(a => !string.IsNullOrEmpty(a.Name) &&
-                                   a.Name.ToLower().Trim() == name.ToLower().Trim(), ct);
+                                   a.Name.ToLower().Trim() == name.ToLower().Trim() && a.Id != command.Id, ct);
             })
             .WithMessage((command, name) => $"Actor with the name '{name}' already exists");
 

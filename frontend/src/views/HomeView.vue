@@ -7,7 +7,7 @@ import review from "@/assets/review.jpg";
 </script>
 
 <template>
-  <h1 class="text-gray-500 text-xl mb-10 mt-2">Home</h1>
+  <h1 class="text-gray-500 text-xl mb-5 mt-2">Home</h1>
   <div class="grid grid-cols-3 gap-x-48 h-88 m-l-16 w-[70%]">
     <Card title="Movie" v-bind:image="movie" description="Explore movies, trailers, and reviews."
       logo="🎥"/>

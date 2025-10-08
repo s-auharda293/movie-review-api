@@ -44,9 +44,18 @@ function handleClose() {
         <p class="mt-2"><strong>Description:</strong> {{ item?.description }}</p>
         <p class="mt-2"><strong>Release Date:</strong> {{ item?.releaseDate ? new Date(item.releaseDate).toLocaleDateString() : '-' }}</p>
         <p class="mt-2"><strong>Duration:</strong> {{ item?.durationMinutes }} min</p>
-        <p class="mt-2"><strong>Rating:</strong> {{ item?.rating }}</p>
-      </div>
+        <p class="mt-2 mb-2"><strong>Rating:</strong> {{ item?.rating }}</p>
+        <strong>Actors:</strong>
+        <div class="mt-2 h-30 overflow-auto">
+          <div v-for="(actor) in item?.actors" :key="actor.id">
+            <div class="flex flex-col gap-1 mb-3 bg-amber-100 rounded-md p-2" >
+              <span>Actor id: {{ actor.id }}</span>
+              <span>Actor name: {{ actor.name }}</span>
+            </div>
+          </div>
+        </div>
 
+      </div>
       <!-- Body for actor-->
       <div v-if="mode==='actor'" class="my-6 text-slate-600 text-sm leading-relaxed">
         <p  class="mt-2"><strong>Id:</strong> {{ item?.id }}</p>

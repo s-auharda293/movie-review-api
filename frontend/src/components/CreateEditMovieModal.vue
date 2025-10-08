@@ -1,5 +1,6 @@
 <script setup>
-import { ref, watch, defineProps, defineEmits } from "vue";
+import { ref, watch, defineProps, defineEmits, onMounted } from "vue";
+import ActorMultiSelect from "./ActorMultiSelect.vue";
 
 const props = defineProps({
   movie: Object, // existing movie for edit
@@ -16,6 +17,8 @@ const form = ref({
   durationMinutes: "",
   rating: ""
 });
+
+const selectedActors = ref([]);
 
 const errors = ref({});
 
@@ -56,7 +59,8 @@ function formatDateForInput(isoString) {
 
 
 function handleSubmit() {
-  emit("submit", { ...form.value, id: props.mode==="edit"? props.movie?.id:""});
+  const formValue = { ...form.value, actorIds: selectedActors.value.map((actor)=>actor.id), id: props.mode==="edit"? props.movie?.id:""}
+  emit("submit", formValue);
 }
 
 function handleCancel() {
@@ -135,7 +139,7 @@ function handleCancel() {
             step="0.1"
             placeholder="Rating"
             v-model="form.rating"
-            class="px-2 py-3 bg-white text-slate-900 w-full text-sm border-b-2 border-gray-200 focus:border-[#007bff] outline-none"
+            class="px-2 py-3 bg-white text-slate-900 w-full text-sm border-b-2 border-gray-200 focus:border-[#007bff] outline-none mt-9"
           />
           <!-- show rating error -->
           <p v-if="errors.rating" class="absolute -bottom-5 px-2 text-xs text-red-500">
@@ -143,13 +147,16 @@ function handleCancel() {
           </p>
         </div>
 
-        <div class="relative">
+            <!-- Actor Selection -->
+      <div class="relative">
+        <ActorMultiSelect v-model:selectedActors="selectedActors"/>
 
-          <!-- show actor error -->
-          <p v-if="errors.rating" class="absolute -bottom-5 px-2 text-xs text-red-500">
-            {{ errors.rating }}
-          </p>
-        </div>
+        <!-- show actor error -->
+        <p v-if="errors.actorIds" class="absolute -bottom-5 px-2 text-xs text-red-500">
+          {{ errors.actorIds }}
+        </p>
+      </div>
+
 
       </form>
 
@@ -173,3 +180,7 @@ function handleCancel() {
     </div>
   </div>
 </template>
+
+<style scoped>
+  @import "vue-multiselect/dist/vue-multiselect.min.css";
+</style>

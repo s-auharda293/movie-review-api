@@ -5,7 +5,6 @@ const API_URL = "https://localhost:7289/api/Actors";
 
 export async function getActors({ page = 1, pageSize = 5, sort = [], search = {} } = {}) {
   try {
-
        // Convert boolean sortAsc to "asc"/"desc"
     const sortDto = sort.map(s => ({
       Field: s.sortKey,
@@ -26,6 +25,16 @@ export async function getActors({ page = 1, pageSize = 5, sort = [], search = {}
   } catch (err) {
     console.error("Failed to fetch actors", err);
     return { isSuccess: false, value: [], errors: err };
+  }
+}
+
+export async function getAllActors() {
+  try {
+    const res = await axios.get(API_URL);
+    return res.data;
+  } catch (err) {
+    console.error("Failed to fetch actors", err);
+    return [];
   }
 }
 

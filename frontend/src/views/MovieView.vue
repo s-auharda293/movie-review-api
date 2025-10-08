@@ -35,7 +35,6 @@ function addMovie() {
 }
 
 function editMovie(movie) {
-  console.log("Selected movie to edit: ",movie);
   formMode.value = "edit";
   selectedMovie.value = movie;
   showMovieModal.value = true;

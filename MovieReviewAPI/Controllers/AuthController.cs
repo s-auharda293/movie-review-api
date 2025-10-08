@@ -56,17 +56,17 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPost("generate-access-token")]
         [Authorize]
-        public async Task<IActionResult> RefreshToken(GenerateTokenCommand generateTokenCommand)
+        public async Task<IActionResult> RefreshToken()
         {
-            var response = await _mediator.Send(generateTokenCommand);
+            var response = await _mediator.Send(new GenerateTokenCommand());
             return Ok(response);
         }
 
         [HttpPost("revoke-refresh-token")]
         [Authorize]
-        public async Task<IActionResult> RevokeRefreshToken(RevokeRefreshTokenCommand revokeRefreshTokenCommand)
+        public async Task<IActionResult> RevokeRefreshToken()
         {
-            var response = await _mediator.Send(revokeRefreshTokenCommand);
+            var response = await _mediator.Send(new RevokeRefreshTokenCommand());
             if (response != null && response?.Value?.Message == "Refresh token revoked successfully")
             {
                 return Ok(response);

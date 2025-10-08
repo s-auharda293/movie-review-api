@@ -21,10 +21,7 @@ namespace MovieReviewApi.Application.Handlers.Auth
 
         public async Task<Result<RevokeRefreshTokenResponse>> Handle(RevokeRefreshTokenCommand request, CancellationToken cancellationToken)
         {
-            return await _userService.RevokeRefreshToken(new RevokeRefreshToken
-            {
-                RefreshToken = request.RefreshToken
-            });
+            return await _userService.RevokeRefreshToken();
         }
     }
 }

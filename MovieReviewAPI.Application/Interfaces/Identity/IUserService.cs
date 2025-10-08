@@ -12,8 +12,8 @@ namespace MovieReviewApi.Application.Interfaces.Identity
         Task<Result<UserResponse>> GetByIdAsync(Guid id);
         Task<Result<UserResponse>> UpdateAsync(Guid id, UpdateUserRequest request);
         Task<Result<bool>> DeleteAsync(Guid id);
-        Task<Result<RevokeRefreshTokenResponse>> RevokeRefreshToken(RevokeRefreshToken refreshTokenRemoveRequest);
-        Task<Result<CurrentUserResponse>> GenerateNewAccessTokenAsync(GenerateTokenRequest request);
+        Task<Result<RevokeRefreshTokenResponse>> RevokeRefreshToken();
+        Task<Result<CurrentUserResponse>> GenerateNewAccessTokenAsync();
         Task<Result<ChangePasswordResponse>> ChangePasswordAsync(ChangePasswordRequest request);
 
     }

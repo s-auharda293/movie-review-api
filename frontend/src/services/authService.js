@@ -1,9 +1,10 @@
 import api from "@/api";
+import { useAuth } from "@/composables/useAuth";
 
 export const loginUser = async(email,password)=>{
 
+  const {setUser, user} = useAuth();
   try{
-
     const res = await api.post('/Auth/login',{
       request:{
         email:email,
@@ -13,16 +14,9 @@ export const loginUser = async(email,password)=>{
     {withCredentials:true} //stores cookie
   )
 
-  const user = {
-  id: res.data.value.id,
-  userName: res.data.value.userName,
-  email: res.data.value.email
-};
+  setUser(res.data.value.accessToken);
 
-sessionStorage.setItem("user", JSON.stringify(user));
-sessionStorage.setItem("accessToken",res.data.value.accessToken);
-
-return user;
+  return user;
 }catch(error){
   console.error(error);
   throw error;

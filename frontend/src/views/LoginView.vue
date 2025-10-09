@@ -59,9 +59,7 @@ const login = async() => {
     const loggedInUser = await loginUser(email.value, password.value);
 
     // Only redirect if login succeeds
-    if (loggedInUser) {
-      const currentUser = JSON.parse(sessionStorage.getItem("user"));
-      user.value = currentUser;
+    if (!!loggedInUser) {
       router.push("/");
     }
   } catch (err) {

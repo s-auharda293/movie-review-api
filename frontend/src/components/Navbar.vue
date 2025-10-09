@@ -178,7 +178,7 @@ const {user,isLoggedIn} = useAuth();
 
             <div class="ml-4">
               <p class="text-sm font-medium text-slate-900">{{ user?.userName || 'Guest' }}</p>
-              <p class="text-xs text-slate-500 mt-0.5">{{ user?.email || 'Not Logged In' }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">{{ user?.emailAddress || 'Not Logged In' }}</p>
             </div>
           </div>
 

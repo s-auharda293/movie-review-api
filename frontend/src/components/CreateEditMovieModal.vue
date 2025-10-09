@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, defineProps, defineEmits, onMounted } from "vue";
+import { ref, watch, onMounted } from "vue";
 import ActorMultiSelect from "./ActorMultiSelect.vue";
 
 const props = defineProps({

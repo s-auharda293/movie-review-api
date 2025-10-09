@@ -1,7 +1,4 @@
-
-import axios from "axios";
-
-const API_URL = "https://localhost:7289/api/Actors";
+import api from "@/api";
 
 export async function getActors({ page = 1, pageSize = 5, sort = [], search = {} } = {}) {
   try {
@@ -11,7 +8,7 @@ export async function getActors({ page = 1, pageSize = 5, sort = [], search = {}
       Dir: s.sortAsc ? "asc" : "desc"
     }));
 
-    const res = await axios.post(`${API_URL}/query`, {
+    const res = await api.post(`/Actors/query`, {
       request: {
         page,
         pageSize,
@@ -30,7 +27,7 @@ export async function getActors({ page = 1, pageSize = 5, sort = [], search = {}
 
 export async function getAllActors() {
   try {
-    const res = await axios.get(API_URL);
+    const res = await api.get('/Actors');
     return res.data;
   } catch (err) {
     console.error("Failed to fetch actors", err);
@@ -43,7 +40,7 @@ export async function deleteActor(actor) {
   try {
     // console.log(Actor);
 
-    const res = await axios.delete(API_URL, {
+    const res = await api.delete('/Actors', {
       data: { id: actor.id }
     });
 
@@ -55,7 +52,7 @@ export async function deleteActor(actor) {
 
 export async function createActor(actor){
   try{
-    const res = await axios.post(API_URL, {
+    const res = await api.post('/Actors', {
         dto: actor
     });
     return res.data;
@@ -67,7 +64,7 @@ export async function createActor(actor){
 
 export async function updateActor(actor) {
   try {
-    const res = await axios.put(`${API_URL}`, {
+    const res = await api.put('/Actors', {
       id: actor.id,
       dto: actor
     });

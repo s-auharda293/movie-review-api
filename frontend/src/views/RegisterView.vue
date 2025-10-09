@@ -149,7 +149,7 @@ const register = () => {
         <!-- Submit -->
         <button
           type="submit"
-          class="w-full py-3 rounded-full text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md transition-all duration-900"
+          class="w-full py-3 rounded-full text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md transition-all duration-900 hover:cursor-pointer"
         >
           Register
         </button>

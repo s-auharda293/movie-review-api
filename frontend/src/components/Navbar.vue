@@ -1,5 +1,10 @@
 <script setup>
+import { logoutUser } from "@/services/authService";
 import logo from "../assets/logo.png"
+import { useAuth } from "@/composables/useAuth";
+
+const {user,isLoggedIn} = useAuth();
+
 </script>
 <template>
   <!-- <aside class="mt-10">
@@ -117,7 +122,7 @@ import logo from "../assets/logo.png"
           </li>
 
           <!-- Login -->
-          <li>
+          <li v-if="!isLoggedIn">
             <RouterLink
               to="/login"
               class="text-[15px] font-medium flex items-center gap-3 px-8 py-3.5 transition-all"
@@ -131,7 +136,7 @@ import logo from "../assets/logo.png"
           </li>
 
           <!-- Register -->
-          <li>
+          <li v-if="!isLoggedIn">
             <RouterLink
               to="/register"
               class="text-[15px] font-medium flex items-center gap-3 px-8 py-3.5 transition-all"
@@ -143,15 +148,40 @@ import logo from "../assets/logo.png"
               <span>Register</span>
             </RouterLink>
           </li>
+
+          <!-- Logout -->
+          <li v-if="isLoggedIn">
+            <button
+              @click="logoutUser"
+              class="text-[15px] font-medium flex items-center gap-3 px-8 py-3.5 transition-all cursor-pointer"
+            >
+              <div class="flex items-center justify-center w-8 h-8 border p-5 text-gray-500 rounded-full">
+                <i class="pi pi-sign-out text-2xl text-gray-500"></i>
+              </div>
+              <span class="text-gray-500">Logout</span>
+            </button>
+          </li>
         </ul>
 
-        <div class="flex flex-wrap items-center cursor-pointer border-t border-gray-300 px-4 py-3.5">
-          <img src='https://readymadeui.com/profile.webp' class="w-9 h-9 rounded-full border-white" />
-          <div class="ml-4">
-            <p class="text-sm font-medium text-slate-900">John Doe</p>
-            <p class="text-xs text-slate-500 mt-0.5">Active free account</p>
+       <div class="flex flex-wrap items-center border-t border-gray-300 px-4 py-3.5">
+            <!-- User avatar -->
+            <img
+              v-if="isLoggedIn && user?.userName"
+              :src="`https://api.dicebear.com/9.x/avataaars/svg?seed=${user.userName}&eyes=happy`"
+              class="w-9 h-9 rounded-full border-white"
+            />
+            <!-- Default guest avatar -->
+            <span
+              v-else
+              class="pi pi-user"
+            ></span>
+
+            <div class="ml-4">
+              <p class="text-sm font-medium text-slate-900">{{ user?.userName || 'Guest' }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">{{ user?.email || 'Not Logged In' }}</p>
+            </div>
           </div>
-        </div>
+
       </div>
   </nav>
 </template>

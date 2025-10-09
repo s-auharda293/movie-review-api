@@ -91,7 +91,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             {
                 HttpOnly = true, //js can't acccess the cookie
                 Secure = false, //set to true in production
-                SameSite = SameSiteMode.Strict, //cookie is only sent when navigating within the site
+                SameSite = SameSiteMode.Lax, //cookie is only sent when navigating within the site
                 Expires = DateTime.UtcNow.AddDays(7)
             };
 
@@ -166,7 +166,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             {
                 HttpOnly = true, //js can't acccess the cookie
                 Secure = false, //set to true in production
-                SameSite = SameSiteMode.Strict, //cookie is only sent when navigating within the site
+                SameSite = SameSiteMode.Lax, //cookie is only sent when navigating within the site
                 Expires = DateTime.UtcNow.AddDays(7)
             };
 

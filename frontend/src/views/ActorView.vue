@@ -255,7 +255,7 @@ function getRandomColor() {
             <td>{{ new Date(actor.dateOfBirth).toLocaleDateString() }}</td>
             <td>
               <div class="flex flex-wrap w-28 gap-1">
-                <span v-for="(actor,index) in actor.movies" :key="index" :class="`border px-2 ${getRandomColor()} rounded-full italic text-gray-500`">{{ actor.title }}</span>
+                <span v-for="(actor,index) in actor.movies" :key="index" :class="`border px-3 ${getRandomColor()} rounded-full italic text-gray-500`">{{ actor.title }}</span>
               </div>
             </td>
             <td>

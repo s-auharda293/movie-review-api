@@ -1,7 +1,5 @@
 // services/movieService.js
-import axios from "axios";
-
-const API_URL = "https://localhost:7289/api/Movies";
+import api from "@/api";
 
 export async function getMovies({ page = 1, pageSize = 5, sort = [], search = {} } = {}) {
   try {
@@ -12,7 +10,7 @@ export async function getMovies({ page = 1, pageSize = 5, sort = [], search = {}
       Dir: s.sortAsc ? "asc" : "desc"
     }));
 
-    const res = await axios.post(`${API_URL}/query`, {
+    const res = await api.post('/Movies/query', {
       request: {
         page,
         pageSize,
@@ -31,7 +29,7 @@ export async function getMovies({ page = 1, pageSize = 5, sort = [], search = {}
 
 export async function getAllMovies() {
   try {
-    const res = await axios.get(API_URL);
+    const res = await api.get('/Movies');
     return res.data;
   } catch (err) {
     console.error("Failed to fetch movies", err);
@@ -44,7 +42,7 @@ export async function deleteMovie(movie) {
   try {
     // console.log(movie);
 
-    const res = await axios.delete(API_URL, {
+    const res = await api.delete('/Movies', {
       data: { id: movie.id }
     });
 
@@ -56,7 +54,7 @@ export async function deleteMovie(movie) {
 
 export async function createMovie(movie){
   try{
-    const res = await axios.post(API_URL, {
+    const res = await api.post('/Movies', {
         dto: movie
     });
     return res.data;
@@ -68,7 +66,7 @@ export async function createMovie(movie){
 
 export async function updateMovie(movie) {
   try {
-    const res = await axios.put(`${API_URL}`, {
+    const res = await api.put('/Movies', {
       id:movie.id,
       dto: movie
     });

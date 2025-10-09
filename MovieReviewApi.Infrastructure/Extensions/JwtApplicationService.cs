@@ -21,8 +21,11 @@ namespace MovieReviewApi.Infrastructure.Extensions
             {
                 options.AddPolicy("CorsPolicy", builder =>
                 {
-                    builder.AllowAnyOrigin()
+                    builder
+                        //.AllowAnyOrigin()
+                        .WithOrigins("http://localhost:3000", "http://localhost:7289")
                         .AllowAnyMethod()
+                        .AllowCredentials()
                         .AllowAnyHeader();
                 });
             });

@@ -67,8 +67,7 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<IActionResult> RevokeRefreshToken()
         {
             var response = await _mediator.Send(new RevokeRefreshTokenCommand());
-            if (response != null && response?.Value?.Message == "Refresh token revoked successfully")
-            {
+            if (response?.IsSuccess == true) {
                 return Ok(response);
             }
             return BadRequest(response);

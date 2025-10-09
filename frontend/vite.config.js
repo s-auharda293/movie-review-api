@@ -15,6 +15,13 @@ export default defineConfig({
     ],
     server: {
         port: 3000,
+         proxy: {
+          '/api': {
+            target: 'https://localhost:7289', // replace with your .NET backend URL
+            changeOrigin: true,
+            secure: false
+      },
+    },
     },
      resolve: {
     alias: {

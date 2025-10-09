@@ -1,6 +1,12 @@
 <script setup>
 import logo from "../assets/logo.png";
 import { ref } from "vue";
+import { loginUser } from "@/services/authService";
+import { useRouter } from 'vue-router';
+import { useAuth } from "@/composables/useAuth";
+
+const {user} = useAuth();
+const router = useRouter();
 
 // form state
 const email = ref("");
@@ -18,7 +24,7 @@ const togglePassword = () => {
 };
 
 // validate form and submit
-const login = () => {
+const login = async() => {
   let valid = true;
 
   // reset errors
@@ -47,11 +53,21 @@ const login = () => {
 
   if (!valid) return;
 
-  // If valid, simulate API request
-  console.log("Logging in with:", email.value, password.value);
 
-  // Example: show general error if login fails
-  // generalError.value = "Invalid email or password";
+  try {
+    // Wait for login to complete
+    const loggedInUser = await loginUser(email.value, password.value);
+
+    // Only redirect if login succeeds
+    if (loggedInUser) {
+      const currentUser = JSON.parse(sessionStorage.getItem("user"));
+      user.value = currentUser;
+      router.push("/");
+    }
+  } catch (err) {
+    console.error(err);
+    generalError.value = err.value;
+  }
 };
 </script>
 
@@ -94,7 +110,7 @@ const login = () => {
             <button
               type="button"
               @click="togglePassword"
-              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer hover:text-blue-500"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-blue-500 hover:cursor-pointer"
             >
               <i :class="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
             </button>
@@ -110,7 +126,7 @@ const login = () => {
         <!-- Submit -->
         <button
           type="submit"
-          class="w-full py-3 rounded-full text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md transition-all duration-900"
+          class="w-full py-3 rounded-full text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-md transition-all duration-900 hover:cursor-pointer"
         >
           Login
         </button>

@@ -67,7 +67,8 @@ public class MovieReviewDbContext: IdentityDbContext<ApplicationUser>, IApplicat
         .HasOne(r => r.Movie)
         .WithMany(m => m.Reviews)
         .HasForeignKey(r => r.MovieId)
-        .OnDelete(DeleteBehavior.Restrict);
+        //.OnDelete(DeleteBehavior.Restrict);
+        .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Movie>()
             .Property(m => m.Rating)

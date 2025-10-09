@@ -11,6 +11,5 @@ public class GetMoviesResult
     public DateTime ReleaseDate { get; set; }
     public int DurationMinutes { get; set; }
     public decimal Rating { get; set; }
-
-    public string? ActorNames { get; set; }
+    public string ActorIds { get; set; } = string.Empty;
 }

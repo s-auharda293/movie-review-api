@@ -27,7 +27,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
         {
 
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
-            List<string> movieTitles = new List<string>();
+            List<ActorMovieDto> movieEntities = new List<ActorMovieDto>();
             string? movieIdsCsv = null;
 
             if (request.dto.MovieIds != null && request.dto.MovieIds.Any())
@@ -57,9 +57,12 @@ namespace MovieReviewApi.Application.Handlers.Actor
 
             if (request.dto.MovieIds != null && request.dto.MovieIds.Any())
             {
-                movieTitles = await _context.Movies
+                movieEntities = await _context.Movies
                     .Where(m => request.dto.MovieIds.Contains(m.Id))
-                    .Select(m => m.Title)
+                    .Select(m => new ActorMovieDto { 
+                        Id = m.Id,
+                        Title = m.Title,
+                    })
                     .ToListAsync(cancellationToken);
             }
 
@@ -70,7 +73,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 Name = actor.Name,
                 Bio = actor.Bio,
                 DateOfBirth = actor.DateOfBirth,
-                Movies = movieTitles
+                Movies = movieEntities
             };
 
             return Result<ActorDto>.Success(actorDto);

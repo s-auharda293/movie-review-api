@@ -17,9 +17,9 @@ public class UpdateActorValidator : AbstractValidator<UpdateActorCommand>
             .NotEmpty().WithMessage("Actor name is required")
             .MinimumLength(2).WithMessage("Name must be at least 2 characters long")
             .MaximumLength(100).WithMessage("Name can't exceed 100 characters")
-            .MustAsync(async (name, ct) =>
+            .MustAsync(async (command,name, ct) =>
             !await _context.Actors
-            .AnyAsync(a => a.Name.ToLower().Trim() == name.ToLower().Trim(), ct))
+            .AnyAsync(a => a.Name.ToLower().Trim() == name.ToLower().Trim() && a.Id != command.Id, ct))
             .WithMessage((command, name) => $"Actor with the name '{name}' already exists");
 
         RuleFor(x => x.dto.DateOfBirth)

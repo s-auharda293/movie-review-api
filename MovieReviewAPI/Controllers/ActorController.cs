@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Queries.Actor;
+using MovieReviewApi.Application.Queries.Movie;
 using MovieReviewApi.Domain.Entities;
 
 namespace MovieReviewApi.Api.Controllers
@@ -40,6 +41,14 @@ namespace MovieReviewApi.Api.Controllers
             return actor.IsSuccess ? CreatedAtAction(nameof(GetActor),
                                                      new { id = actor?.Value?.Id },
                                                      actor) : BadRequest(actor);
+        }
+
+        [HttpPost]
+        [Route("query")]
+        public async Task<IActionResult> SearchActors(SearchActorsQuery searchActorsQuery)
+        {
+            var actors = await _mediator.Send(searchActorsQuery);
+            return Ok(actors);
         }
 
         [HttpPut]

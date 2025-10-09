@@ -3,5 +3,5 @@ using MovieReviewApi.Application.DTOs;
 
 namespace MovieReviewApi.Application.Commands.Auth
 {
-    public record RevokeRefreshTokenCommand(string RefreshToken) : IRequest<Result<RevokeRefreshTokenResponse>>;
+    public record RevokeRefreshTokenCommand() : IRequest<Result<RevokeRefreshTokenResponse>>;
 }

@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+a.router-link-active,
+a.router-link-exact-active,
+a{
+  text-decoration: none !important;
+  color:#646e7a !important;
+}
+
+a.router-link-active,
+a.router-link-exact-active{
+  color:#5f5a5f !important;
+}
+
+.bootstrap-table {
+  @import 'bootstrap/dist/css/bootstrap.min.css';
+}
+
+.bg-ant{
+  background-color: #faf8f8; /* Ant Design's default layout background */
+}
+

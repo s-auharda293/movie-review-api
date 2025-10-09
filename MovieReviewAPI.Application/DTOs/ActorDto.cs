@@ -20,7 +20,12 @@
         public DateTime? DateOfBirth { get; set; }
         public string? Bio { get; set; }
 
-        public List<string>? Movies { get; set; } = new();
+        public List<ActorMovieDto> Movies { get; set; } = new();
+    }
+
+    public class ActorMovieDto { 
+        public Guid Id { get; set; }
+        public String Title { get; set; } = null!;
     }
 
     public class CreateActorDto: ActorBaseDto
@@ -38,4 +43,20 @@
         public new string? Bio { get; set; }
 
     }
+
+    public class ActorRequestDto
+    {
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 5;
+        public string? Sort { get; set; } // JSON string or a list of objects
+        public string? SearchColumn { get; set; }
+        public string? SearchTerm { get; set; }
+    }
+
+    public class ActorResponseDto
+    {
+        public IEnumerable<ActorDto> Actors { get; set; } = new List<ActorDto>();
+        public int TotalCount { get; set; }
+    }
+
 }

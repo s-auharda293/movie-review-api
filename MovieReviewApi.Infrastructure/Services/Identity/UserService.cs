@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -13,14 +14,16 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
 {
     public class UserService:IUserService
     {
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ITokenService _tokenService;
         private readonly ICurrentUserService _currentUserService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<UserService> _logger;
 
-        public UserService(ITokenService tokenService, ICurrentUserService currentUserService, UserManager<ApplicationUser> userManager, IMapper mapper, ILogger<UserService> logger)
+        public UserService(IHttpContextAccessor httpContextAccessor,ITokenService tokenService, ICurrentUserService currentUserService, UserManager<ApplicationUser> userManager, IMapper mapper, ILogger<UserService> logger)
         {
+            _httpContextAccessor = httpContextAccessor;
             _tokenService = tokenService;
             _currentUserService = currentUserService;
             _userManager = userManager;
@@ -81,7 +84,19 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
 
             var userResponse = _mapper.Map<ApplicationUser, UserResponse>(newUser);
             userResponse.AccessToken = token;
-            userResponse.RefreshToken = refreshToken;
+            //userResponse.RefreshToken = refreshToken;
+
+            //set the refresh token in HttpOnly cookie
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true, //js can't acccess the cookie
+                Secure = false, //set to true in production
+                SameSite = SameSiteMode.Lax, //cookie is only sent when navigating within the site
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+
+            _httpContextAccessor?.HttpContext?.Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+
 
 
             var registeredUser = _mapper.Map<UserResponse>(newUser);
@@ -129,7 +144,7 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             using var sha256 = SHA256.Create();
             var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(refreshToken));
             user.RefreshToken = Convert.ToBase64String(refreshTokenHash);
-            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(2);
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
 
             user.CreatedAt = DateTime.Now;
             user.UpdatedAt = DateTime.Now;
@@ -144,9 +159,22 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
                 return Result<UserResponse>.Failure(IdentityErrors.UserCreationFailedWithDetails(errorDetails));
             }
 
+            //userResponse.RefreshToken = refreshToken;
+
+            //set the refresh token in HttpOnly cookie
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true, //js can't acccess the cookie
+                Secure = false, //set to true in production
+                SameSite = SameSiteMode.Lax, //cookie is only sent when navigating within the site
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+
+            _httpContextAccessor?.HttpContext?.Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+
+
             var userResponse = _mapper.Map<ApplicationUser, UserResponse>(user);
             userResponse.AccessToken = token;
-            userResponse.RefreshToken = refreshToken;
 
             return Result<UserResponse>.Success(userResponse);
         }
@@ -178,12 +206,13 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
         }
 
 
-        public async Task<Result<CurrentUserResponse>> GenerateNewAccessTokenAsync(GenerateTokenRequest request)
+        public async Task<Result<CurrentUserResponse>> GenerateNewAccessTokenAsync()
         {
+            var refreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
             _logger.LogInformation("Generating new Access token");
 
             using var sha256 = SHA256.Create();
-            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(request.RefreshToken!));
+            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(refreshToken!));
             var hashedRefreshToken = Convert.ToBase64String(refreshTokenHash);
 
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == hashedRefreshToken);
@@ -211,11 +240,19 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
 
 
 
-        public async Task<Result<RevokeRefreshTokenResponse>> RevokeRefreshToken(RevokeRefreshToken refreshTokenRemoveRequest)
+        public async Task<Result<RevokeRefreshTokenResponse>> RevokeRefreshToken()
         {
+            var refreshToken = _httpContextAccessor.HttpContext?.Request.Cookies["refreshToken"];
+
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                _logger.LogError("No refresh token found in cookies");
+                return Result<RevokeRefreshTokenResponse>.Failure(IdentityErrors.InvalidRefreshToken);
+            }
+
             _logger.LogInformation("Revoking refresh token");
             var sha256 = SHA256.Create();
-            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(refreshTokenRemoveRequest.RefreshToken!));
+            var refreshTokenHash = sha256.ComputeHash(Encoding.UTF8.GetBytes(refreshToken!));
             var hashedRefreshToken = Convert.ToBase64String(refreshTokenHash);
 
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.RefreshToken == hashedRefreshToken);
@@ -237,6 +274,10 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
                 _logger.LogError("Failed to update user while revoking refresh token");
                 return Result<RevokeRefreshTokenResponse>.Failure(IdentityErrors.RevokeRefreshTokenFailed);
             }
+
+            // Remove refresh token from cookie
+            _httpContextAccessor.HttpContext?.Response.Cookies.Delete("refreshToken");
+
             _logger.LogInformation("Refresh token revoked successfully");
             string message = "Refresh Token revoked Successfully";
             return Result<RevokeRefreshTokenResponse>.Success(new RevokeRefreshTokenResponse { Message = message });

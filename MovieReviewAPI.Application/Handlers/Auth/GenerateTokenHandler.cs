@@ -16,10 +16,7 @@ namespace MovieReviewApi.Application.Handlers.Auth
 
         public async Task<Result<CurrentUserResponse>> Handle(GenerateTokenCommand request, CancellationToken cancellationToken)
         {
-            return await _userService.GenerateNewAccessTokenAsync(new GenerateTokenRequest
-            {
-                RefreshToken = request.RefreshToken
-            });
+            return await _userService.GenerateNewAccessTokenAsync();
         }
     }
 

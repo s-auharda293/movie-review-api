@@ -20,13 +20,16 @@ namespace MovieReviewApi.Application.Handlers.Actor
 
             if (actor == null) return Result<ActorDto>.Failure(ActorErrors.NotFound);
 
+
             var dto =  new ActorDto
             {
                 Id = actor.Id,
                 Name = actor.Name,
                 Bio = actor.Bio,
                 DateOfBirth = actor.DateOfBirth,
-                Movies = actor.Movies?.Select(m=>m.Title).ToList()??new List<string>()
+                Movies = actor.Movies?
+                .Select(m => new ActorMovieDto { Id = m.Id, Title = m.Title })
+                .ToList() ?? new List<ActorMovieDto>()
             };
 
             return Result<ActorDto>.Success(dto);

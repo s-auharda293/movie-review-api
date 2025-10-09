@@ -464,7 +464,7 @@ namespace MovieReviewApi.Infrastructure.Migrations
                     b.HasOne("MovieReviewApi.Domain.Entities.Movie", "Movie")
                         .WithMany("Reviews")
                         .HasForeignKey("MovieId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MovieReviewApi.Domain.Entities.ApplicationUser", "User")

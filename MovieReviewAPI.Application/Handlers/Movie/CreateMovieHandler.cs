@@ -24,7 +24,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
         public async Task<Result<MovieDto>> Handle(CreateMovieCommand request, CancellationToken cancellationToken)
         {
             string? actorIdsCsv = null;
-            List<string> actorNames = new List<string>();
+            List<MovieActorDto> actorEntities = new();
 
             if (request.dto.ActorIds != null && request.dto.ActorIds.Any())
             {
@@ -39,10 +39,14 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 }
 
                 actorIdsCsv = string.Join(",", request.dto.ActorIds);
-                actorNames = await _context.Actors
-               .Where(a => request.dto.ActorIds.Contains(a.Id))
-               .Select(a => a.Name)
-               .ToListAsync(cancellationToken);
+                actorEntities = await _context.Actors
+                    .Where(a => request.dto.ActorIds.Contains(a.Id))
+                    .Select(a => new MovieActorDto
+                    {
+                        Id = a.Id,
+                        Name = a.Name
+                    })
+                    .ToListAsync(cancellationToken);
             }
 
            var connection = await _connection.CreateConnectionAsync(cancellationToken);
@@ -70,7 +74,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 ReleaseDate = movie.ReleaseDate,
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
-                Actors = actorNames ?? new List<string>() 
+                Actors = actorEntities ?? new List<MovieActorDto>()
             };
 
             return Result<MovieDto>.Success(movieDto);

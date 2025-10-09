@@ -24,6 +24,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
         public async Task<Result<ActorDto>> Handle(PatchActorCommand request, CancellationToken cancellationToken)
         {
             string? movieIdsCsv = null;
+            List<ActorMovieDto> movieEntities = new List<ActorMovieDto>();
 
             var actor = await _context.Actors.FirstOrDefaultAsync(a=>a.Id == request.Id);
             if (actor == null) return Result<ActorDto>.Failure(ActorErrors.NotFound);
@@ -37,6 +38,15 @@ namespace MovieReviewApi.Application.Handlers.Actor
                     return Result<ActorDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
                 }
                 movieIdsCsv = string.Join(",", request.dto.MovieIds);
+
+                movieEntities = await _context.Movies
+                    .Where(m => request.dto.MovieIds.Contains(m.Id))
+                    .Select(m => new ActorMovieDto
+                    {
+                        Id = m.Id,
+                        Title = m.Title,
+                    })
+                    .ToListAsync(cancellationToken);
             }
             using var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
@@ -57,12 +67,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
             if (updatedActor == null)
                 return Result<ActorDto>.Failure(ActorErrors.NotFound);
 
-            updatedActor.Movies = await _context.Movies
-             .Where(m => request.dto.MovieIds == null
-                      ? m.Actors.Any(a => a.Id == request.Id)
-                      : request.dto.MovieIds.Contains(m.Id))
-             .Select(m => m.Title)
-             .ToListAsync(cancellationToken);
+            updatedActor.Movies = movieEntities;
 
             return Result<ActorDto>.Success(updatedActor);
         }

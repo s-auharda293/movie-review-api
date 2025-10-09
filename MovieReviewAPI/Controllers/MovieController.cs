@@ -1,10 +1,7 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.Commands.Movie;
-using MovieReviewApi.Application.DTOs;
-using MovieReviewApi.Application.Queries.Actor;
-using MovieReviewApi.Domain.Entities;
+using MovieReviewApi.Application.Queries.Movie;
 
 namespace MovieReviewApi.Api.Controllers
 {
@@ -23,6 +20,13 @@ namespace MovieReviewApi.Api.Controllers
         public async Task<IActionResult> GetMovies()
         {
             var movies = await _mediator.Send(new GetMoviesQuery());
+            return Ok(movies);
+        }
+
+        [HttpPost]
+        [Route("query")]
+        public async Task<IActionResult> SearchMovies(SearchMoviesQuery searchMoviesQuery) {
+            var movies = await _mediator.Send(searchMoviesQuery);
             return Ok(movies);
         }
 

@@ -25,7 +25,7 @@
         public DateTime UpdatedAt { get; set; }
 
         public string? AccessToken { get; set; }
-        public string? RefreshToken{ get; set; }
+        //public string? RefreshToken{ get; set; }
     }
 
     public class UserLoginRequest { 
@@ -66,14 +66,14 @@
         public string? Message { get; set; }
     }
 
-    public class RevokeRefreshToken {
-        public string? RefreshToken { get; set; }
-    }
+    //public class RevokeRefreshToken {
+    //    public string? RefreshToken { get; set; }
+    //}
 
-    public class GenerateTokenRequest
-    {
-        public string? RefreshToken { get; set; }
-    }
+    //public class GenerateTokenRequest
+    //{
+    //    public string? RefreshToken { get; set; }
+    //}
 
     public class ChangePasswordRequest { 
         public string? Email { get; set; }

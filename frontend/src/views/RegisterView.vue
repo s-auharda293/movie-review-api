@@ -1,6 +1,11 @@
 <script setup>
 import logo from "../assets/logo.png";
 import { ref } from "vue";
+import { registerUser } from "@/services/authService";
+import { useRouter } from "vue-router";
+
+
+const router = useRouter();
 
 // form state
 const firstName = ref("");
@@ -22,7 +27,7 @@ const togglePassword = () => {
 };
 
 // validate form and submit
-const register = () => {
+const register = async () => {
   let valid = true;
 
   // reset errors
@@ -63,10 +68,19 @@ const register = () => {
     valid = false;
   }
 
-  if (!valid) return;
 
-  // Simulate API request
-  console.log("Registering user:", { firstName: firstName.value, lastName: lastName.value, email: email.value, password: password.value });
+  try {
+    // Wait for regitser to complete
+    const registeredUser = await registerUser(firstName.value, lastName.value,email.value, password.value);
+
+    // Only redirect if regitser succeeds
+    if (!!registeredUser) {
+      router.push("/");
+    }
+  } catch (err) {
+    console.error(err);
+    generalError.value = err.value;
+  }
 
   // Example: general error if registration fails
   // generalError.value = "Email already exists";

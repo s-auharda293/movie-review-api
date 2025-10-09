@@ -23,6 +23,30 @@ export const loginUser = async(email,password)=>{
 }
 }
 
+export async function registerUser(firstName, lastName, email, password){
+   const {setUser, user} = useAuth();
+  try{
+    const res = await api.post('/Auth/register',{
+      request:{
+        firstName:firstName,
+        lastName:lastName,
+        email:email,
+        password:password
+      }
+    },
+    {withCredentials:true} //stores cookie
+  )
+
+  setUser(res.data.value.accessToken);
+
+  return user;
+}catch(error){
+  console.error(error);
+  throw error;
+}
+
+}
+
 export async function logoutUser() {
   try {
     // we add a custom config property to skip the interceptor

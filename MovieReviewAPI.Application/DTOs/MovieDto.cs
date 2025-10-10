@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 namespace MovieReviewApi.Application.DTOs;
 
 
@@ -74,4 +76,17 @@ public class SortDto
 {
     public string Field { get; set; } = ""; // Column name
     public string Dir { get; set; } = "asc"; // "asc" or "desc"
+}
+
+    public class FileUploadRequest
+    {
+        public IFormFile? File { get; set; }
+    }
+
+public class FileUpdateRequest {
+
+    public IFormFile? File { get; set; }
+
+    public string? oldFileUrl{ get; set; }
+
 }

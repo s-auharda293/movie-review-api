@@ -2,7 +2,9 @@ using FluentValidation;
 using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Models;
+using Minio;
 using MovieReviewApi.Api.Middleware;
 using MovieReviewApi.Application.Behaviors;
 using MovieReviewApi.Application.Interfaces;
@@ -16,6 +18,7 @@ using MovieReviewApi.Infrastructure.Jobs;
 using MovieReviewApi.Infrastructure.Mapping;
 using MovieReviewApi.Infrastructure.Services;
 using MovieReviewApi.Infrastructure.Services.Identity;
+using MovieReviewApi.Infrastructure.Storage;
 using Serilog;
 
     Log.Logger = new LoggerConfiguration()
@@ -54,8 +57,28 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
     //access http context while using mediatr logging pipeline
     builder.Services.AddHttpContextAccessor();
 
-    //register the IPipelineBehavior and it's implementation LoggingPipelineBehavior
-    builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingPipelineBehavior<,>));
+//file storage services 
+/////////////////////////////////////////////////
+// Register Minio client
+//builder.Services.AddSingleton(x =>
+//{
+//    return new MinioClient()
+//        .WithEndpoint("localhost:9000")   // your MinIO endpoint
+//        .WithCredentials("minio-access-key", "minio-secret-key")
+//        .Build();
+//});
+
+builder.Services.AddSingleton<LocalFileStorageService>();
+//builder.Services.AddSingleton<MinioFileStorageService>();
+
+//unified file storage service
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+
+////////////////////////////////////////////////////
+
+
+//register the IPipelineBehavior and it's implementation LoggingPipelineBehavior
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingPipelineBehavior<,>));
 
     builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
 
@@ -89,6 +112,7 @@ builder.Services.AddSwaggerGen(c =>
         In = ParameterLocation.Header,
         Description = "Please enter a valid token in the following format: {your token here} do not add the word 'Bearer' before it."
     });
+
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -156,7 +180,20 @@ var app = builder.Build();
 
     app.MapControllers();
 
-    app.MapHangfireDashboard();
+    var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+    if (!Directory.Exists(uploadsPath))
+    {
+        Directory.CreateDirectory(uploadsPath);
+    }
+
+    app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "uploads")),
+            RequestPath = "/uploads"
+        });
+
+
+app.MapHangfireDashboard();
 
     HangfireJobScheduler.ScheduleJobs();
 

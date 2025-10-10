@@ -65,6 +65,14 @@ namespace MovieReviewApi.Api.Controllers
             return Ok(result.Value);
         }
 
+        [HttpPost]
+        [Route("query")]
+        public async Task<IActionResult> SearchReviews(SearchReviewsQuery searchReviewsQuery)
+        {
+            var movies = await _mediator.Send(searchReviewsQuery);
+            return Ok(movies);
+        }
+
         [HttpPut]
         //[Authorize(Roles = UserRoles.Admin + ", " + UserRoles.User)]
         public async Task<IActionResult> Update(UpdateReviewCommand updateReviewCommand)

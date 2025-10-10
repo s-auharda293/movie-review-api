@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <None Remove="Scripts\DeleteReviewForUserStoredProcedure.sql" />
+    <None Remove="Scripts\SearchReviewsStoredProcedure.sql" />
   </ItemGroup>
 	
 	
@@ -24,6 +25,7 @@
 		<EmbeddedResource Include="Scripts\PatchActorStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\PatchMovieStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\PatchReviewStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\SearchReviewsStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\UpdateActorStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\UpdateMovieStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\UpdateReviewStoredProcedure.sql" />

@@ -1,14 +1,18 @@
-﻿using System.IO;
+﻿using Microsoft.EntityFrameworkCore;
+using MovieReviewApi.Application.Interfaces;
+using System.IO;
 
 namespace MovieReviewApi.Infrastructure.Storage
 {
 
     public class LocalFileStorageService
     {
+        private readonly IApplicationDbContext _context;
         private readonly string _basePath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
 
-        public LocalFileStorageService()
+        public LocalFileStorageService( IApplicationDbContext context)
         {
+            _context = context;
             if (!Directory.Exists(_basePath))
                 Directory.CreateDirectory(_basePath);
         }
@@ -23,16 +27,22 @@ namespace MovieReviewApi.Infrastructure.Storage
                 await stream.CopyToAsync(fileStream, cancellationToken);
             }
 
-            return $"/uploads/{uniqueFileName}";
+            return $"https://localhost:7289/uploads/{uniqueFileName}";
         }
 
-        public Task DeleteFileAsync(string fileUrl, CancellationToken cancellationToken = default)
+        public async Task DeleteFileAsync(Guid movieId,  CancellationToken cancellationToken = default)
         {
+            var movie = await _context.Movies.SingleOrDefaultAsync(m => m.Id == movieId,cancellationToken);
+
+
+            if (movie == null || string.IsNullOrEmpty(movie.Url))
+                return;
+
+            var fileUrl = movie.Url;
             var filePath = Path.Combine(_basePath, Path.GetFileName(fileUrl));
+
             if (File.Exists(filePath))
                 File.Delete(filePath);
-
-            return Task.CompletedTask;
         }
     }
 

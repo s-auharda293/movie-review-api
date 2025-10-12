@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 namespace MovieReviewApi.Application.DTOs;
 
 
@@ -28,6 +26,8 @@ public class MovieDto
     public int DurationMinutes { get; set; }
     public decimal Rating { get; set; }
     public List<MovieActorDto> Actors { get; set; } = new();
+
+    public string? FileUrl { get; set; }
 }
 
 public class MovieActorDto {
@@ -37,10 +37,13 @@ public class MovieActorDto {
 
 public class CreateMovieDto: MovieBaseDto
 {
+    public IFormFile? File { get; set; }
 }
 
 public class UpdateMovieDto: MovieBaseDto
 {
+    public IFormFile? File { get; set; }
+
 }
 
 public class PatchMovieDto
@@ -56,6 +59,10 @@ public class PatchMovieDto
     public decimal? Rating { get; set; }
 
     public List<Guid>? ActorIds { get; set; }
+
+
+    public IFormFile? File { get; set; }
+
 }
 
 public class MovieRequestDto
@@ -84,9 +91,5 @@ public class SortDto
     }
 
 public class FileUpdateRequest {
-
-    public IFormFile? File { get; set; }
-
-    public string? oldFileUrl{ get; set; }
 
 }

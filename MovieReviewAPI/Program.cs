@@ -68,8 +68,8 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 //        .Build();
 //});
 
-builder.Services.AddSingleton<LocalFileStorageService>();
-//builder.Services.AddSingleton<MinioFileStorageService>();
+builder.Services.AddScoped<LocalFileStorageService>();
+//builder.Services.AddScoped<MinioFileStorageService>();
 
 //unified file storage service
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();

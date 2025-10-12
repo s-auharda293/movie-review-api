@@ -12,7 +12,7 @@ using MovieReviewApi.Infrastructure.Data;
 namespace MovieReviewApi.Infrastructure.Migrations
 {
     [DbContext(typeof(MovieReviewDbContext))]
-    [Migration("20250925054103_InitialCreate")]
+    [Migration("20251012153432_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -175,7 +175,8 @@ namespace MovieReviewApi.Infrastructure.Migrations
 
             modelBuilder.Entity("MovieReviewApi.Application.KeylessEntities.GetMoviesResult", b =>
                 {
-                    b.Property<string>("ActorNames")
+                    b.Property<string>("ActorIds")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
@@ -353,6 +354,9 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
+                    b.Property<string>("Url")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.ToTable("Movies", (string)null);
@@ -467,7 +471,7 @@ namespace MovieReviewApi.Infrastructure.Migrations
                     b.HasOne("MovieReviewApi.Domain.Entities.Movie", "Movie")
                         .WithMany("Reviews")
                         .HasForeignKey("MovieId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("MovieReviewApi.Domain.Entities.ApplicationUser", "User")

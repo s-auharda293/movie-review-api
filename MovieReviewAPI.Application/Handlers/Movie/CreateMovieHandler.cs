@@ -5,7 +5,6 @@ using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Common.Movies;
-using MovieReviewApi.Domain.Entities;
 using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Movie
@@ -14,17 +13,20 @@ namespace MovieReviewApi.Application.Handlers.Movie
     {
         private readonly IApplicationDbContext _context;
         private readonly IDbConnectionFactory _connection;
+        private readonly IFileStorageService _fileStorageService;
 
-        public CreateMovieHandler(IApplicationDbContext context, IDbConnectionFactory connection)
+        public CreateMovieHandler(IApplicationDbContext context, IDbConnectionFactory connection, IFileStorageService fileStorageService)
         {
             _context = context;
             _connection = connection;
+            _fileStorageService = fileStorageService;
         }
 
         public async Task<Result<MovieDto>> Handle(CreateMovieCommand request, CancellationToken cancellationToken)
         {
             string? actorIdsCsv = null;
             List<MovieActorDto> actorEntities = new();
+            string? url = null;
 
             if (request.dto.ActorIds != null && request.dto.ActorIds.Any())
             {
@@ -59,6 +61,13 @@ namespace MovieReviewApi.Application.Handlers.Movie
             parameters.Add("@Rating", request.dto.Rating, DbType.Decimal);
             parameters.Add("@ActorIds", actorIdsCsv, DbType.String);
 
+            if (request.dto.File != null && request.dto.File.Length != 0) {
+                using var stream = request.dto.File!.OpenReadStream();
+                url = await _fileStorageService.UploadFileAsync(stream, request.dto.File.FileName, "local");
+            }
+
+            parameters.Add("@Url", url, DbType.String);
+
             var movie = await connection.QueryFirstAsync<dynamic>(
                 "CreateMovie",
                 parameters,
@@ -74,7 +83,8 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 ReleaseDate = movie.ReleaseDate,
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
-                Actors = actorEntities ?? new List<MovieActorDto>()
+                Actors = actorEntities ?? new List<MovieActorDto>(),
+                FileUrl = url
             };
 
             return Result<MovieDto>.Success(movieDto);

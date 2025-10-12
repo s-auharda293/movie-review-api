@@ -1,7 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MovieReviewApi.Application.Commands.Movie;
-using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Movie;
 
@@ -45,7 +44,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPost]
         //[Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> PostMovie(CreateMovieCommand createMovieCommand)
+        public async Task<IActionResult> PostMovie([FromForm] CreateMovieCommand createMovieCommand)
         {
             var movie = await _mediator.Send(createMovieCommand);
             return movie.IsSuccess ? CreatedAtAction(nameof(GetMovie),
@@ -55,7 +54,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPut]
         //[Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> PutMovie(UpdateMovieCommand updateMovieCommand)
+        public async Task<IActionResult> PutMovie([FromForm] UpdateMovieCommand updateMovieCommand)
         {
 
             var updated = await _mediator.Send(updateMovieCommand);
@@ -64,7 +63,7 @@ namespace MovieReviewApi.Api.Controllers
 
         [HttpPatch]
         //[Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> PatchMovie(PatchMovieCommand patchMovieCommand)
+        public async Task<IActionResult> PatchMovie([FromForm] PatchMovieCommand patchMovieCommand)
         {
             var patched = await _mediator.Send(patchMovieCommand);
             return patched.IsSuccess ? Ok(patched) : BadRequest(patched);
@@ -80,43 +79,43 @@ namespace MovieReviewApi.Api.Controllers
 
 
 
-        [HttpPost("upload-file")]
-        public async Task<IActionResult> Upload(
-         [FromForm] FileUploadRequest request)
-        {
-            if (request.File == null || request.File.Length == 0)
-                return BadRequest("No file uploaded.");
+        //[HttpPost("upload-file")]
+        //public async Task<IActionResult> Upload(
+        // [FromForm] FileUploadRequest request)
+        //{
+        //    if (request.File == null || request.File.Length == 0)
+        //        return BadRequest("No file uploaded.");
 
-            using var stream = request.File.OpenReadStream();
-            var url = await _fileStorageService.UploadFileAsync(stream, request.File.FileName,"local");
-            return Ok(new { Url = url });
-        }
+        //    using var stream = request.File.OpenReadStream();
+        //    var url = await _fileStorageService.UploadFileAsync(stream, request.File.FileName,"local");
+        //    return Ok(new { Url = url });
+        //}
 
-        [HttpDelete("delete-file")]
-        public async Task<IActionResult> Delete([FromQuery] string fileUrl)
-        {
-            if (string.IsNullOrEmpty(fileUrl))
-                return BadRequest("File URL is required.");
+        //[HttpDelete("delete-file")]
+        //public async Task<IActionResult> Delete([FromQuery] string fileUrl)
+        //{
+        //    if (string.IsNullOrEmpty(fileUrl))
+        //        return BadRequest("File URL is required.");
 
-            await _fileStorageService.DeleteFileAsync(fileUrl);
-            return Ok(new { Message = "File deleted successfully." });
-        }
+        //    await _fileStorageService.DeleteFileAsync(fileUrl);
+        //    return Ok(new { Message = "File deleted successfully." });
+        //}
 
 
-        [HttpPut("update-file")]
-        public async Task<IActionResult> Update([FromForm] FileUpdateRequest request)
-        {
-            if (request.File == null || request.File.Length == 0)
-                return BadRequest("New file is required.");
+        //[HttpPut("update-file")]
+        //public async Task<IActionResult> Update([FromForm] FileUpdateRequest request)
+        //{
+        //    if (request.File == null || request.File.Length == 0)
+        //        return BadRequest("New file is required.");
 
-            if (string.IsNullOrEmpty(request.oldFileUrl))
-                return BadRequest("Old file URL is required.");
+        //    if (string.IsNullOrEmpty(request.oldFileUrl))
+        //        return BadRequest("Old file URL is required.");
 
-            using var stream = request.File.OpenReadStream();
-            var newUrl = await _fileStorageService.UpdateFileAsync(stream, request.oldFileUrl, request.File.FileName);
+        //    using var stream = request.File.OpenReadStream();
+        //    var newUrl = await _fileStorageService.UpdateFileAsync(stream, request.oldFileUrl, request.File.FileName);
 
-            return Ok(new { Url = newUrl });
-        }
+        //    return Ok(new { Url = newUrl });
+        //}
 
 
 

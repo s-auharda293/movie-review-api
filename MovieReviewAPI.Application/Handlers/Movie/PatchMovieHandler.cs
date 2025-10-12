@@ -5,6 +5,7 @@ using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Common.Movies;
+using System;
 using System.Data;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -14,17 +15,21 @@ namespace MovieReviewApi.Application.Handlers.Movie
     {
         private readonly IApplicationDbContext _context;
         private readonly IDbConnectionFactory _connection;
+        private readonly IFileStorageService _fileStorageService;
 
-        public PatchMovieHandler(IApplicationDbContext context, IDbConnectionFactory connection)
+        public PatchMovieHandler(IApplicationDbContext context, IDbConnectionFactory connection, IFileStorageService fileStorageService)
         {
             _context = context;
             _connection = connection;
+            _fileStorageService = fileStorageService;
         }
 
         public async Task<Result<MovieDto>> Handle(PatchMovieCommand request, CancellationToken cancellationToken) {
             string? actorIdsCsv = null;
             List<MovieActorDto> actorEntities = new();
-            var movie = await _context.Movies.Include(m=>m.Actors).FirstOrDefaultAsync(m=>m.Id==request.Id);
+            string? newUrl = null;
+
+           var movie = await _context.Movies.Include(m=>m.Actors).FirstOrDefaultAsync(m=>m.Id==request.Id);
             if (movie == null) return Result<MovieDto>.Failure(MovieErrors.NotFound);
 
             if (request.dto.ActorIds != null && request.dto.ActorIds.Any())
@@ -55,6 +60,13 @@ namespace MovieReviewApi.Application.Handlers.Movie
             parameters.Add("@Rating", request.dto.Rating, DbType.Decimal);
             parameters.Add("@ActorIds", actorIdsCsv, DbType.String);
 
+            if (request.dto.File != null && request.dto.File.Length != 0)
+            {
+                using var stream = request.dto.File.OpenReadStream();
+                newUrl = await _fileStorageService.UpdateFileAsync(stream, request.Id, request.dto.File.FileName);
+            }
+
+            parameters.Add("@Url", newUrl, DbType.String);
 
             var patchMovie = await connection.QueryFirstAsync<dynamic>(
                 "PatchMovie",
@@ -71,6 +83,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 DurationMinutes = patchMovie.DurationMinutes,
                 Rating = patchMovie.Rating,
                 Actors = actorEntities,
+                FileUrl = newUrl,
             };
 
             return Result<MovieDto>.Success(dto);

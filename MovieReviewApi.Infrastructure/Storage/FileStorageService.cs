@@ -52,15 +52,15 @@ namespace MovieReviewApi.Infrastructure.Storage
             return await _localStorage.UploadFileAsync(stream, fileName, cancellationToken);
         }
 
-        public async Task DeleteFileAsync(string fileUrl, string storageProvider = "local", CancellationToken cancellationToken = default)
+        public async Task DeleteFileAsync(Guid movieId, string storageProvider = "local", CancellationToken cancellationToken = default)
         {
-            await _localStorage.DeleteFileAsync(fileUrl, cancellationToken);
+            await _localStorage.DeleteFileAsync(movieId, cancellationToken);
         }
 
 
-        public async Task<string> UpdateFileAsync(Stream newStream, string oldFileUrl, string fileName, string storageProvider = "local", CancellationToken cancellationToken = default)
+        public async Task<string> UpdateFileAsync(Stream newStream, Guid movieId, string fileName, string storageProvider = "local", CancellationToken cancellationToken = default)
         {
-            await DeleteFileAsync(oldFileUrl, storageProvider, cancellationToken);
+            await DeleteFileAsync(movieId, storageProvider, cancellationToken);
 
             return await UploadFileAsync(newStream, fileName, storageProvider: storageProvider, cancellationToken: cancellationToken);
         }

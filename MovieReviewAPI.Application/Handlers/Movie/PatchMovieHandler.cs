@@ -63,7 +63,8 @@ namespace MovieReviewApi.Application.Handlers.Movie
             if (request.dto.File != null && request.dto.File.Length != 0)
             {
                 using var stream = request.dto.File.OpenReadStream();
-                newUrl = await _fileStorageService.UpdateFileAsync(stream, request.Id, request.dto.File.FileName);
+                newUrl = await _fileStorageService.UpdateFileAsync(stream, request.Id, request.dto.File.FileName, "local");
+                //newUrl = await _fileStorageService.UpdateFileAsync(stream, request.Id, request.dto.File.FileName, "minio");
             }
 
             parameters.Add("@Url", newUrl, DbType.String);

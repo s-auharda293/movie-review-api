@@ -60,16 +60,17 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 //file storage services 
 /////////////////////////////////////////////////
 // Register Minio client
-//builder.Services.AddSingleton(x =>
-//{
-//    return new MinioClient()
-//        .WithEndpoint("localhost:9000")   // your MinIO endpoint
-//        .WithCredentials("minio-access-key", "minio-secret-key")
-//        .Build();
-//});
+builder.Services.AddSingleton<IMinioClient>(x =>
+{
+    return new MinioClient()
+        .WithEndpoint("localhost:9000")   // your MinIO endpoint
+        .WithCredentials("admin", "admin123")
+        .WithSSL(false) // important! since you're running HTTP locally
+        .Build();
+});
 
 builder.Services.AddScoped<LocalFileStorageService>();
-//builder.Services.AddScoped<MinioFileStorageService>();
+builder.Services.AddScoped<MinioFileStorageService>();
 
 //unified file storage service
 builder.Services.AddScoped<IFileStorageService, FileStorageService>();

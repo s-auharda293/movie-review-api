@@ -63,6 +63,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
 
             if (request.dto.File != null && request.dto.File.Length != 0) {
                 using var stream = request.dto.File!.OpenReadStream();
+                //url = await _fileStorageService.UploadFileAsync(stream, request.dto.File.FileName, "minio");
                 url = await _fileStorageService.UploadFileAsync(stream, request.dto.File.FileName, "local");
             }
 

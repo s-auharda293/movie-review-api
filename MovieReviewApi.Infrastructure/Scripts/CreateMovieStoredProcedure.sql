@@ -4,7 +4,8 @@
     @ReleaseDate DATETIME2 = NULL,
     @DurationMinutes INT = NULL,
     @Rating DECIMAL(3,1) = NULL,
-    @ActorIds NVARCHAR(MAX) = NULL -- comma-separated actor GUIDs
+    @ActorIds NVARCHAR(MAX) = NULL, -- comma-separated actor GUIDs
+    @Url NVARCHAR(MAX) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -14,8 +15,8 @@ BEGIN
     DECLARE @UpdatedAt DATETIME2 = SYSUTCDATETIME();
 
     -- Insert movie
-    INSERT INTO Movies (Id, Title, Description, ReleaseDate, DurationMinutes, Rating, CreatedAt, UpdatedAt)
-    VALUES (@MovieId, @Title, @Description, COALESCE(@ReleaseDate, SYSUTCDATETIME()), @DurationMinutes, @Rating, @CreatedAt, @UpdatedAt);
+    INSERT INTO Movies (Id, Title, Description, ReleaseDate, DurationMinutes, Rating, CreatedAt, UpdatedAt, Url)
+    VALUES (@MovieId, @Title, @Description, COALESCE(@ReleaseDate, SYSUTCDATETIME()), @DurationMinutes, @Rating, @CreatedAt, @UpdatedAt, @Url);
 
     -- Insert movie-actor links if ActorIds provided
     IF @ActorIds IS NOT NULL AND LEN(@ActorIds) > 0
@@ -24,6 +25,7 @@ BEGIN
         SELECT @MovieId, CAST(value AS UNIQUEIDENTIFIER)
         FROM STRING_SPLIT(@ActorIds, ',');
     END
+
 
     -- Return the created movie row
     SELECT Id, Title, Description, ReleaseDate, DurationMinutes, Rating, CreatedAt, UpdatedAt

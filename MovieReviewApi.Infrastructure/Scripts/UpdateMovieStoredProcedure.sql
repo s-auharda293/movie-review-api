@@ -5,7 +5,8 @@
                 @ReleaseDate DATETIME2 = NULL,
                 @DurationMinutes INT = NULL,
                 @Rating DECIMAL(3,1) = NULL,
-                @ActorIds NVARCHAR(MAX) = NULL -- comma-separated actor GUIDs
+                @ActorIds NVARCHAR(MAX) = NULL, -- comma-separated actor GUIDs
+                @Url NVARCHAR(MAX) = NULL
             AS
             BEGIN
                 SET NOCOUNT ON;
@@ -20,7 +21,8 @@
                     ReleaseDate = COALESCE(@ReleaseDate, ReleaseDate),
                     DurationMinutes = @DurationMinutes,
                     Rating = @Rating,
-                    UpdatedAt = @UpdatedAt
+                    UpdatedAt = @UpdatedAt,
+                    Url = @Url
                 WHERE Id = @MovieId;
 
                 -- Refresh movie-actor links

@@ -14,15 +14,18 @@ namespace MovieReviewApi.Application.Handlers.Movie
     {
         private readonly IApplicationDbContext _context;
         private readonly IDbConnectionFactory _connection;
-        public UpdateMovieHandler(IApplicationDbContext context, IDbConnectionFactory connection)
+        private readonly IFileStorageService _fileStorageService;
+        public UpdateMovieHandler(IApplicationDbContext context, IDbConnectionFactory connection, IFileStorageService fileStorageService)
         {
             _context = context;   
             _connection = connection;
+            _fileStorageService = fileStorageService;
         }
 
         public async Task<Result<MovieDto>> Handle(UpdateMovieCommand request, CancellationToken cancellationToken) {
             string? actorIdsCsv = null;
             List<MovieActorDto> actorEntities = new();
+            string? newUrl = null;
 
             if (request.dto.ActorIds != null && request.dto.ActorIds.Any())
             {
@@ -55,6 +58,15 @@ namespace MovieReviewApi.Application.Handlers.Movie
             parameters.Add("@Rating", request.dto.Rating, DbType.Decimal);
             parameters.Add("@ActorIds", actorIdsCsv, DbType.String);
 
+            if (request.dto.File != null && request.dto.File.Length != 0)
+            {
+                using var stream = request.dto.File.OpenReadStream();
+                newUrl = await _fileStorageService.UpdateFileAsync(stream,request.Id, request.dto.File.FileName,"local");
+                //newUrl = await _fileStorageService.UpdateFileAsync(stream, request.Id, request.dto.File.FileName, "minio");
+            }
+
+            parameters.Add("@Url", newUrl, DbType.String);
+
             var movie = await connection.QueryFirstAsync<dynamic>(
                 "UpdateMovie",
                 parameters,
@@ -70,6 +82,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
                 Actors = actorEntities,
+                FileUrl = newUrl
             };
 
             return Result<MovieDto>.Success(movieDto);

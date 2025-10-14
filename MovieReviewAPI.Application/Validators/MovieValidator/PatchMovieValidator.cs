@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Domain.Common.Movies;
 
 namespace MovieReviewApi.Application.Validators.MovieValidator
 {
@@ -18,6 +19,11 @@ namespace MovieReviewApi.Application.Validators.MovieValidator
             RuleFor(x => x.dto)
                 .NotNull()
                 .WithMessage("Movie data (dto) is required");
+
+            RuleFor(x => x.Id)
+               .NotEmpty().WithMessage("Movie id is required")
+               .MustAsync(async (command, id, ct) => await _context.Movies.AnyAsync(m => m.Id == id, ct)).WithMessage(MovieErrors.NotFound.Description);
+
 
             // Title
             RuleFor(x => x.dto!.Title)

@@ -166,7 +166,8 @@ namespace MovieReviewApi.Application.Handlers.Movie
                     ReleaseDate = m.ReleaseDate,
                     DurationMinutes = m.DurationMinutes,
                     Rating = m.Rating,
-                    Actors = actors
+                    Actors = actors,
+                    FileUrl = m.Url
                 });
             }
 

@@ -34,7 +34,8 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 ReleaseDate = movie.ReleaseDate,
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
-                Actors = actors
+                Actors = actors,
+                FileUrl = movie.Url
             };
 
             return Result<MovieDto>.Success(dto);

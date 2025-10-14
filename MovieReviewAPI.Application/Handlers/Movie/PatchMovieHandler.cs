@@ -46,8 +46,14 @@ namespace MovieReviewApi.Application.Handlers.Movie
                     Id = a.Id,
                     Name = a.Name
                 }).ToList();
+
             }
 
+
+            if (actorEntities.Count == 0)
+            {
+                actorEntities = movie.Actors.Select(a => new MovieActorDto { Id = a.Id, Name = a.Name }).ToList();
+            }
 
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
@@ -74,6 +80,12 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 parameters,
                 commandType: CommandType.StoredProcedure
             );
+
+
+            if (patchMovie == null)
+            {
+                return Result<MovieDto>.Failure(MovieErrors.NotFound);
+            }
 
             var dto = new MovieDto
             {

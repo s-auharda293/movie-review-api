@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Domain.Common.Actors;
 
 
 namespace MovieReviewApi.Application.Validators.ActorValidator;
@@ -12,6 +13,10 @@ public class UpdateActorValidator : AbstractValidator<UpdateActorCommand>
     public UpdateActorValidator(IApplicationDbContext context)
     {
         _context = context;
+
+        RuleFor(x => x.Id)
+             .NotEmpty().WithMessage("Actor id is required")
+             .MustAsync(async (command, id, ct) => await _context.Actors.AnyAsync(a => a.Id == id, ct)).WithMessage(ActorErrors.NotFound.Description);
 
         RuleFor(x => x.dto.Name)
             .NotEmpty().WithMessage("Actor name is required")

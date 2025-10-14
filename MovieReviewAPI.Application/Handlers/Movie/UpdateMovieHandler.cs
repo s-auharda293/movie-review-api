@@ -73,6 +73,11 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 commandType: CommandType.StoredProcedure
             );
 
+            if (movie == null)
+            {
+                return Result<MovieDto>.Failure(MovieErrors.NotFound);
+            }
+
             var movieDto = new MovieDto
             {
                 Id = movie.Id,

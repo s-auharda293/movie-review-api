@@ -17,6 +17,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
         }
         public async Task<Result<bool>> Handle(DeleteMovieCommand request, CancellationToken cancellationToken)
         {
+
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
             var affectedRows = await connection.ExecuteAsync(
@@ -24,10 +25,6 @@ namespace MovieReviewApi.Application.Handlers.Movie
                  new { Id = request.Id },
                  commandType: CommandType.StoredProcedure         
              );
-
-            if (affectedRows == 0)
-                return Result<bool>.Failure(MovieErrors.NotFound);
-
             return Result<bool>.Success(true);
 
         }

@@ -18,6 +18,7 @@ using MovieReviewApi.Infrastructure.Jobs;
 using MovieReviewApi.Infrastructure.Mapping;
 using MovieReviewApi.Infrastructure.Services;
 using MovieReviewApi.Infrastructure.Services.Identity;
+using MovieReviewApi.Infrastructure.Settings;
 using MovieReviewApi.Infrastructure.Storage;
 using Serilog;
 
@@ -155,6 +156,11 @@ builder.Services.AddInfrastructure(builder.Configuration);
 //{
 //    options.Filters.Add<ValidationFilter>();
 //});
+
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddTransient<IEmailService, EmailService>();
+
 
 builder.Services.AddAutoMapper(cfg =>
 {

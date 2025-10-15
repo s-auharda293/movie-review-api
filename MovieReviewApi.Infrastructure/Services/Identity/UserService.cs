@@ -1,12 +1,15 @@
 ﻿using AutoMapper;
+using Hangfire;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MovieReviewApi.Application.DTOs;
+using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Interfaces.Identity;
 using MovieReviewApi.Domain.Common.Identity;
 using MovieReviewApi.Domain.Entities;
+using MovieReviewApi.Infrastructure.Jobs;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -35,6 +38,8 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
         public async Task<Result<UserResponse>> RegisterAsync(UserRegisterRequest request)
         {
             _logger.LogInformation("Registering user");
+           
+
 
             var existingUser = await _userManager.FindByEmailAsync(request.Email!);
             if (existingUser != null)
@@ -100,7 +105,8 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
 
 
             var registeredUser = _mapper.Map<UserResponse>(newUser);
-            
+
+            BackgroundJob.Enqueue<EmailJob>(x => x.SendWelcomeEmail(userResponse.Email!, newUser.UserName));
 
             return Result<UserResponse>.Success(userResponse);
         }

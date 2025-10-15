@@ -10,6 +10,7 @@ namespace MovieReviewApi.Infrastructure.Mapping
         {
             CreateMap<ApplicationUser, UserResponse>();
             CreateMap<ApplicationUser, CurrentUserResponse>();
+            CreateMap<ApplicationUser, CurrentUserDto>();
             CreateMap<UserRegisterRequest, ApplicationUser>(); //when registering a user
         }
     }

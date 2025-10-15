@@ -13,6 +13,8 @@ public class Movie:BaseEntity
    public int DurationMinutes { get; set; }
 
    public decimal Rating { get; set; }
+
+    public string? Url { get; set; }
     
     //one movie multiple genres
     //public ICollection<Genre> Genres { get; set; } = new List<Genre>();

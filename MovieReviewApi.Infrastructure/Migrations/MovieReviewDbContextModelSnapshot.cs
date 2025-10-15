@@ -172,7 +172,8 @@ namespace MovieReviewApi.Infrastructure.Migrations
 
             modelBuilder.Entity("MovieReviewApi.Application.KeylessEntities.GetMoviesResult", b =>
                 {
-                    b.Property<string>("ActorNames")
+                    b.Property<string>("ActorIds")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Description")
@@ -349,6 +350,9 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Url")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

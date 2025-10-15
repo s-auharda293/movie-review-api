@@ -10,7 +10,8 @@ BEGIN
         m.ReleaseDate,
         m.DurationMinutes,
         m.Rating,
-        ISNULL(STRING_AGG(CAST(a.Id AS VARCHAR(36)), ','), '') AS ActorIds
+        ISNULL(STRING_AGG(CAST(a.Id AS VARCHAR(36)), ','), '') AS ActorIds,
+        m.Url
     FROM Movies m
     LEFT JOIN ActorMovie am on m.Id = am.MovieId
     LEFT JOIN Actors a on am.ActorId = a.Id
@@ -20,5 +21,6 @@ BEGIN
         m.Description,
         m.ReleaseDate,
         m.DurationMinutes,
-        m.Rating
+        m.Rating,
+        m.Url
 END

@@ -194,15 +194,15 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
 
 
 
-        public async Task<Result<CurrentUserResponse>> GetCurrentUserAsync()
+        public async Task<Result<CurrentUserDto>> GetCurrentUserAsync()
         {
             var user = await _userManager.FindByIdAsync(_currentUserService.GetUserId()!);
             if (user == null) {
                 _logger.LogError("User not found");
-                return Result<CurrentUserResponse>.Failure(IdentityErrors.UserNotFound);
+                return Result<CurrentUserDto>.Failure(IdentityErrors.UserNotFound);
             }
-            var currentUser = _mapper.Map<CurrentUserResponse>(user);
-            return Result<CurrentUserResponse>.Success(currentUser);
+            var currentUser = _mapper.Map<CurrentUserDto>(user);
+            return Result<CurrentUserDto>.Success(currentUser);
         }
 
 

@@ -1,7 +1,9 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.Interfaces;
+using MovieReviewApi.Domain.Common.Movies;
 
 namespace MovieReviewApi.Application.Validators.MovieValidator
 {
@@ -11,6 +13,10 @@ namespace MovieReviewApi.Application.Validators.MovieValidator
         public UpdateMovieValidator(IApplicationDbContext context)
         {
             _context = context;
+
+            RuleFor(x => x.Id)
+                .NotEmpty().WithMessage("Movie id is required")
+                .MustAsync(async(command,id,ct)=>await _context.Movies.AnyAsync(m=>m.Id==id,ct)).WithMessage(MovieErrors.NotFound.Description);
 
             RuleFor(x => x.dto.Title)
                 .NotEmpty().WithMessage("Movie title is required")
@@ -38,6 +44,10 @@ namespace MovieReviewApi.Application.Validators.MovieValidator
            .Must(HaveValidGuids)
            .WithMessage("All movie IDs must be valid GUIDs")
            .When(x => x.dto.ActorIds != null && x.dto.ActorIds.Any());
+
+            RuleFor(x => x.dto.File)
+            .SetValidator(new FileValidator() as IValidator<IFormFile?>).When(x => x.dto.File != null);
+
         }
 
         private static bool HaveValidGuids(List<Guid>? movieIds)

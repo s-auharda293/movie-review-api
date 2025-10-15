@@ -35,7 +35,7 @@ public class UpdateReviewHandler : IRequestHandler<UpdateReviewCommand, Result<R
             return Result<ReviewDto>.Failure(ReviewErrors.UserNotAuthenticated);
 
         // Only owner or admin can update
-        if (review.UserId!.ToString() != userId && userRole != "Admin")
+        if (Guid.Parse(review.UserId!) != Guid.Parse(userId) && userRole != "Admin")
             return Result<ReviewDto>.Failure(ReviewErrors.UserNotAuthorized);
 
         var connection = await _connection.CreateConnectionAsync(cancellationToken);
@@ -53,6 +53,7 @@ public class UpdateReviewHandler : IRequestHandler<UpdateReviewCommand, Result<R
         );
 
         updatedReview.UserName = userName;
+        updatedReview.UserId = Guid.Parse(userId);
 
         return Result<ReviewDto>.Success(updatedReview);
     }

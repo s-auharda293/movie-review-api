@@ -36,7 +36,7 @@ public class PatchReviewHandler : IRequestHandler<PatchReviewCommand, Result<Rev
         if (review == null)
             return Result<ReviewDto>.Failure(ReviewErrors.NotFound);
 
-        if (review.UserId!.ToString() != userId && userRole != "Admin") //using foreign key to directly access UserId
+        if (Guid.Parse(review.UserId!) != Guid.Parse(userId) && userRole != "Admin") //using foreign key to directly access UserId
             return Result<ReviewDto>.Failure(ReviewErrors.UserNotAuthorized);
 
         var connection = await _connection.CreateConnectionAsync(cancellationToken);
@@ -53,6 +53,7 @@ public class PatchReviewHandler : IRequestHandler<PatchReviewCommand, Result<Rev
         );
 
         updatedReview.UserName = userName;
+        updatedReview.UserId = Guid.Parse(userId);
 
         return Result<ReviewDto>.Success(updatedReview);
     }

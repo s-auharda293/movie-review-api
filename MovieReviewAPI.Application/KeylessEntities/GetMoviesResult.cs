@@ -13,5 +13,5 @@ public class GetMoviesResult
     public decimal Rating { get; set; }
     public string ActorIds { get; set; } = string.Empty;
 
-    public string Url { get; set; } = string.Empty;
+    public string? Url { get; set; } = string.Empty;
 }

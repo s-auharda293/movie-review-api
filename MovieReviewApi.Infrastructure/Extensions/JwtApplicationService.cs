@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Domain.Entities;
 using MovieReviewApi.Infrastructure.Data;
+using System.Security.Claims;
 using System.Text;
 
 namespace MovieReviewApi.Infrastructure.Extensions
@@ -74,7 +75,8 @@ namespace MovieReviewApi.Infrastructure.Extensions
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = jwtSettings.ValidIssuer,
                     ValidAudience = jwtSettings.ValidAudience,
-                    IssuerSigningKey = secretKey
+                    IssuerSigningKey = secretKey,
+                    RoleClaimType = ClaimTypes.Role
                 };
                 o.Events = new JwtBearerEvents
                 {

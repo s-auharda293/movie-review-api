@@ -12,7 +12,7 @@ public static class ServiceCollectionExtensions
 {
     public static void AddInfrastructure(this IServiceCollection services, IConfiguration configuration) {
         var connectionString = configuration.GetConnectionString("MovieReviewDb");
-        services.AddDbContext<MovieReviewDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddDbContext<MovieReviewDbContext>(options => options.UseSqlServer(connectionString,sqlOptions => sqlOptions.CommandTimeout(300)));
         services.AddScoped<IApplicationDbContext, MovieReviewDbContext>();
         services.AddScoped<IRoleService, RoleService>();
 

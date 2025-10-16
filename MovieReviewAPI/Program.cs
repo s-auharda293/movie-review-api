@@ -16,6 +16,7 @@ using MovieReviewApi.Infrastructure.Data;
 using MovieReviewApi.Infrastructure.Extensions;
 using MovieReviewApi.Infrastructure.Jobs;
 using MovieReviewApi.Infrastructure.Mapping;
+using MovieReviewApi.Infrastructure.Seeders;
 using MovieReviewApi.Infrastructure.Services;
 using MovieReviewApi.Infrastructure.Services.Identity;
 using MovieReviewApi.Infrastructure.Storage;
@@ -199,13 +200,16 @@ app.MapHangfireDashboard();
     HangfireJobScheduler.ScheduleJobs();
 
     using (var scope = app.Services.CreateScope())
-{
+    {
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
 
         await IdentityRoleSeeder.SeedRolesAsync(roleManager);
-        await IdentityRoleSeeder.SeedAdminUserAsync(userManager,mediator);
+        await IdentityRoleSeeder.SeedAdminUserAsync(userManager, mediator);
+
+        await MovieActorSeeder.SeedAsync(dbContext, CancellationToken.None);
     }
 
 

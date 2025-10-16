@@ -74,5 +74,25 @@ namespace MovieReviewApi.Api.Controllers
             var deleted = await _mediator.Send(deleteActorCommand);
             return deleted.IsSuccess ? NoContent() : NotFound(deleted);
         }
+
+        [HttpGet("report/{fileFormat}")]
+        //[Authorize(Roles = UserRoles.Admin)]
+        public async Task<IActionResult> GetActorsRating(string fileFormat)
+        {
+            var reportFormat = fileFormat.ToLower() == "pdf" ? ReportFormat.Pdf : ReportFormat.Excel;
+
+            var fileContents = await _mediator.Send(new GetActorReportQuery(reportFormat));
+
+            var fileName = $"ActorRatings_{DateTime.Now:yyyyMMddHHmmss}.{(reportFormat == ReportFormat.Excel ? "xlsx" : "pdf")}";
+
+            return File(
+                fileContents,
+                reportFormat == ReportFormat.Excel
+                    ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    : "application/pdf",
+                fileName
+            );
+        }
+
     }
 }

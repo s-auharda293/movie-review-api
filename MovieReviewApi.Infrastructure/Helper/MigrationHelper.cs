@@ -8,7 +8,7 @@ namespace MovieReviewApi.Infrastructure.Helper
         {
             var assembly = typeof(MigrationHelper).Assembly;
             using var stream = assembly.GetManifestResourceStream(resourceName);
-            using var reader = new StreamReader(stream);
+            using var reader = new StreamReader(stream!);
             var sql = reader.ReadToEnd();
             migrationBuilder.Sql(sql);
         }

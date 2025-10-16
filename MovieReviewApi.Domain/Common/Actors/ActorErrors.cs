@@ -15,5 +15,8 @@ namespace MovieReviewApi.Domain.Common.Actors
         {
             return new Error("Actor.MoviesNotFound", $"One or more movies with Ids {string.Join(", ", ids)} do not exist.");
         }
+
+        public static Error InvalidFileFormat =  new ("Actor.InvalidFileFormat", $"The file format you requested is not supported.");
+        
     }
 }

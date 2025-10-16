@@ -163,6 +163,9 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<MappingProfile>();
 });
 
+builder.Services.AddScoped<IActorReportService, ActorReportService>();
+
+
 var app = builder.Build();
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();

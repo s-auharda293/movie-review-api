@@ -59,4 +59,9 @@
         public int TotalCount { get; set; }
     }
 
+    public class ActorRatingDto {
+        public string ActorName { get; set; } = null!;
+        public decimal AverageRating { get; set; }
+    }
+
 }

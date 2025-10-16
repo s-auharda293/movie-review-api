@@ -21,6 +21,7 @@
 		<EmbeddedResource Include="Scripts\DeleteMovieStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\DeleteReviewForUserStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\DeleteReviewStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\GetActorsRatingStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\GetMoviesStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\PatchActorStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\PatchMovieStoredProcedure.sql" />
@@ -34,6 +35,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="15.0.1" />
     <PackageReference Include="Bogus" Version="35.6.4" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">

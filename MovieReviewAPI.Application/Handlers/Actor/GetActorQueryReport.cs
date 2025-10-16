@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Actor;
 using System;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class GetActorReportQueryHandler : IRequestHandler<GetActorReportQuery, byte[]>
+    public class GetActorReportQueryHandler : IRequestHandler<GetActorReportQuery, Result<ActorReportResultDto>>
     {
         private readonly IActorReportService _reportService;
 
@@ -18,7 +19,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
             _reportService = reportService;
         }
 
-        public async Task<byte[]> Handle(GetActorReportQuery request, CancellationToken cancellationToken)
+        public async Task<Result<ActorReportResultDto>> Handle(GetActorReportQuery request, CancellationToken cancellationToken)
         {
             return await _reportService.GenerateReportAsync(request.Format);
         }

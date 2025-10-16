@@ -24,11 +24,15 @@ namespace MovieReviewApi.Infrastructure.Services
             _connection = connection;
         }
 
-        public async Task<Result<byte[]>> GenerateReportAsync(ReportFormat format)
+        public async Task<Result<ActorReportResultDto>> GenerateReportAsync(String format)
         {
+            string fileName = String.Empty;
+            string contentType = String.Empty;
+            using var stream = new MemoryStream();
+
             var actorRatings = await GetActorRatingsAsync();
 
-            if (String.Equals(format.ToString(), ReportFormat.Excel.ToString(), StringComparison.OrdinalIgnoreCase))
+            if (String.Equals(format.ToString(), "excel", StringComparison.OrdinalIgnoreCase))
             {
                 using var workbook = new XLWorkbook();
                 var worksheet = workbook.Worksheets.Add("Actor Ratings");
@@ -42,20 +46,33 @@ namespace MovieReviewApi.Infrastructure.Services
                     worksheet.Cell(i + 2, 2).Value = actorRatings[i].AverageRating;
                 }
 
-                using var stream = new MemoryStream();
                 workbook.SaveAs(stream);
-                return Result<byte[]>.Success(stream.ToArray());
+
+                fileName = $"ActorRatings_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+                contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
             }
-            else if (String.Equals(format.ToString(), ReportFormat.Pdf.ToString(), StringComparison.OrdinalIgnoreCase))
+            else if (String.Equals(format.ToString(), "pdf", StringComparison.OrdinalIgnoreCase))
             {
                 // PDF generation logic will go here later
 
-                return Result<byte[]>.Failure(ActorErrors.InvalidFileFormat);
+                return Result<ActorReportResultDto>.Failure(ActorErrors.InvalidFileFormat);
 
             }
             else {
-                return Result<byte[]>.Failure(ActorErrors.InvalidFileFormat);
+                return Result<ActorReportResultDto>.Failure(ActorErrors.InvalidFileFormat);
             }
+
+            stream.Position = 0;
+
+            var resultDto = new ActorReportResultDto
+            {
+                Content = stream.ToArray(),
+                FileName = fileName,
+                ContentType = contentType
+            };
+
+            return Result<ActorReportResultDto>.Success(resultDto);
         }
 
         private async Task<List<ActorRatingDto>> GetActorRatingsAsync()

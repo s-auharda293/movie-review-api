@@ -64,4 +64,11 @@
         public decimal AverageRating { get; set; }
     }
 
+    public class ActorReportResultDto {
+        public byte[]? Content { get; set; }
+        public string? FileName { get; set; }
+        public string? ContentType { get; set; }
+
+    }
+
 }

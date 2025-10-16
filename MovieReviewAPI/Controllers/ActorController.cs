@@ -79,19 +79,18 @@ namespace MovieReviewApi.Api.Controllers
         //[Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> GetActorsRating(string fileFormat)
         {
-            var reportFormat = fileFormat.ToLower() == "pdf" ? ReportFormat.Pdf : ReportFormat.Excel;
+            var reportFormat = fileFormat.ToLower();
 
-            var fileContents = await _mediator.Send(new GetActorReportQuery(reportFormat));
 
-            var fileName = $"ActorRatings_{DateTime.Now:yyyyMMddHHmmss}.{(reportFormat == ReportFormat.Excel ? "xlsx" : "pdf")}";
+            var result = await _mediator.Send(new GetActorReportQuery(reportFormat));
 
-            return File(
-                fileContents,
-                reportFormat == ReportFormat.Excel
-                    ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                    : "application/pdf",
-                fileName
-            );
+            if (result.IsSuccess && result.Value != null)
+            {
+                return File(result.Value.Content!, result.Value.ContentType!, result.Value.FileName!);
+            }
+
+            return NotFound(result);
+
         }
 
     }

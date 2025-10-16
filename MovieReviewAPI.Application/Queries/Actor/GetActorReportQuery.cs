@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using MovieReviewApi.Application.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,11 +8,5 @@ using System.Threading.Tasks;
 
 namespace MovieReviewApi.Application.Queries.Actor
 {
-    public enum ReportFormat
-    {
-        Excel,
-        Pdf
-    }
-
-    public record GetActorReportQuery(ReportFormat Format): IRequest<byte[]>;
+    public record GetActorReportQuery(String Format): IRequest<Result<ActorReportResultDto>>;
 }

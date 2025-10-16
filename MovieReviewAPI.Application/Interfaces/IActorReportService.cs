@@ -10,6 +10,6 @@ namespace MovieReviewApi.Application.Interfaces
 {
     public interface IActorReportService
     {
-        Task<Result<byte[]>> GenerateReportAsync(ReportFormat format);
+        Task<Result<ActorReportResultDto>> GenerateReportAsync(String format);
     }
 }

@@ -74,5 +74,24 @@ namespace MovieReviewApi.Api.Controllers
             var deleted = await _mediator.Send(deleteActorCommand);
             return deleted.IsSuccess ? NoContent() : NotFound(deleted);
         }
+
+        [HttpGet("report/{fileFormat}")]
+        //[Authorize(Roles = UserRoles.Admin)]
+        public async Task<IActionResult> GetActorsRating(string fileFormat)
+        {
+            var reportFormat = fileFormat.ToLower();
+
+
+            var result = await _mediator.Send(new GetActorReportQuery(reportFormat));
+
+            if (result.IsSuccess && result.Value != null)
+            {
+                return File(result.Value.Content!, result.Value.ContentType!, result.Value.FileName!);
+            }
+
+            return NotFound(result);
+
+        }
+
     }
 }

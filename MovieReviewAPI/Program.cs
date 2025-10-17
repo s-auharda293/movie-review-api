@@ -21,8 +21,11 @@ using MovieReviewApi.Infrastructure.Services;
 using MovieReviewApi.Infrastructure.Services.Identity;
 using MovieReviewApi.Infrastructure.Storage;
 using Serilog;
+using System.Threading;
 
-    Log.Logger = new LoggerConfiguration()
+    var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+Log.Logger = new LoggerConfiguration()
       //.ReadFrom.Configuration(builder.Configuration)
       .MinimumLevel.Information()
       .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
@@ -212,7 +215,11 @@ app.MapHangfireDashboard();
         await IdentityRoleSeeder.SeedRolesAsync(roleManager);
         await IdentityRoleSeeder.SeedAdminUserAsync(userManager, mediator);
 
-        await MovieActorSeeder.SeedAsync(dbContext, CancellationToken.None);
+        if (String.Equals(env,"Development",StringComparison.OrdinalIgnoreCase))
+        {
+            await MovieActorSeeder.SeedAsync(dbContext, CancellationToken.None);
+        }
+
     }
 
 

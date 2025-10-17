@@ -8,8 +8,11 @@ using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Actor;
 using MovieReviewApi.Domain.Common.Actors;
+using PuppeteerSharp;
+using PuppeteerSharp.Media;
 using System.Data;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 namespace MovieReviewApi.Infrastructure.Services
@@ -54,10 +57,98 @@ namespace MovieReviewApi.Infrastructure.Services
             }
             else if (String.Equals(format.ToString(), "pdf", StringComparison.OrdinalIgnoreCase))
             {
-                // PDF generation logic will go here later
+                var htmlContent = @"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset='UTF-8'>
+                    <title>Actor Ratings</title>
+                    <style>
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            margin: 20px;
+                        }
 
-                return Result<ActorReportResultDto>.Failure(ActorErrors.InvalidFileFormat);
+                        h1 {
+                            text-align: center;
+                            color: #333;
+                        }
 
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                        }
+
+                        th, td {
+                            padding: 12px 15px;
+                            text-align: left;
+                        }
+
+                        th {
+                            background-color: #fafafa;
+                            border-bottom: 2px solid #f0f0f0;
+                            color: #555;
+                            font-weight: 600;
+                        }
+
+                        tr:nth-child(even) {
+                            background-color: #f9f9f9;
+                        }
+
+                        tr:hover {
+                            background-color: #f1f5f9;
+                        }
+
+                        td {
+                            border-bottom: 1px solid #f0f0f0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Actor Ratings Report</h1>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>S.N</th>
+                                <th>Actor Name</th>
+                                <th>Average Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>";
+
+                for (int i = 0; i < actorRatings.Count; i++)
+                {
+                    var actor = actorRatings[i];
+                    htmlContent += $@"
+                    <tr>
+                        <td>{i + 1}</td>
+                        <td>{actor.ActorName}</td>
+                        <td>{actor.AverageRating:F1}</td>
+                    </tr>";
+                }
+
+
+                // launch headless browser
+                var browserFetcher = new BrowserFetcher();
+                await browserFetcher.DownloadAsync();
+                await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = true });
+
+                await using var page = await browser.NewPageAsync();
+
+                await page.SetContentAsync(htmlContent.ToString());
+
+                var pdfStream = await page.PdfStreamAsync(new PdfOptions
+                {
+                    Format = PaperFormat.A4,
+                    MarginOptions = new MarginOptions { Top = "25px", Bottom = "25px" }
+                });
+
+                await pdfStream.CopyToAsync(stream);
+
+                fileName = $"ActorRatings_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                contentType = "application/pdf";
             }
             else {
                 return Result<ActorReportResultDto>.Failure(ActorErrors.InvalidFileFormat);

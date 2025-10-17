@@ -18,6 +18,8 @@ namespace MovieReviewApi.IntegrationTests
         {
             IConfiguration? configuration = null;
 
+            builder.UseEnvironment("Testing"); //to avoid seeding actor and movies 
+
             // Load test configuration
             builder.ConfigureAppConfiguration((context, config) =>
             {

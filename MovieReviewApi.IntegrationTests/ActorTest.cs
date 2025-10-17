@@ -1,9 +1,14 @@
-﻿using FluentAssertions;
+﻿using DocumentFormat.OpenXml.InkML;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
+using FluentAssertions;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
+using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Actor;
+using MovieReviewApi.Domain.Entities;
 using System.Text.Json;
 using Xunit;
 using Xunit.Abstractions;
@@ -12,7 +17,6 @@ namespace MovieReviewApi.IntegrationTests
 {
 
     public class ActorTestData {
-
 
         public static IEnumerable<object[]> CreateActors =>
             new List<object[]>
@@ -126,12 +130,15 @@ namespace MovieReviewApi.IntegrationTests
         private readonly IMediator _mediator;
         private readonly ITestOutputHelper _output;
 
+        private readonly IApplicationDbContext _context;
+
         public ActorTests(MovieReviewWebApplicationFactory factory, ITestOutputHelper output)
         {
             // Create a scope for services
             var scope = factory.Services.CreateScope();
             _mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             _output = output;
+            _context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
         }
 
         //happy path tests
@@ -377,6 +384,69 @@ namespace MovieReviewApi.IntegrationTests
 
             _output.WriteLine($"Invalid Creation: {JsonSerializer.Serialize(result)}");
         }
+
+        [Theory]
+        [InlineData("excel")]
+        [InlineData("pdf")]
+        public async Task GetActorsRating_ReturnsFile(string fileFormat)
+        {
+        var faker = new Bogus.Faker();
+        var cancellationToken = new CancellationToken();
+
+            var actors = new List<Actor>();
+            for (int i = 0; i < 5; i++)
+            {
+                var actor = new Actor
+                {
+                    Name = faker.Person.FullName,
+                    DateOfBirth = faker.Date.Past(30, DateTime.Now.AddYears(-20)),
+                    Bio = faker.Lorem.Paragraph()
+                };
+                actors.Add(actor);
+            }
+
+            var movies = new List<Movie>();
+            for (int i = 0; i < 10; i++)
+            {
+                var movie = new Movie
+                {
+                    Title = faker.Lorem.Sentence(3),
+                    Description = faker.Lorem.Paragraph(),
+                    ReleaseDate = faker.Date.Past(20),
+                    DurationMinutes = faker.Random.Int(80, 180),
+                    Rating = Math.Round((decimal)faker.Random.Double(0, 10), 1),
+                    Actors = actors.OrderBy(_ => Guid.NewGuid()).Take(faker.Random.Int(1, 3)).ToList()
+                };
+                movies.Add(movie);
+            }
+
+            // Save seeded data to your in-memory test DB
+            _context.Actors.AddRange(actors);
+            _context.Movies.AddRange(movies);
+            await _context.SaveChangesAsync(cancellationToken);
+
+
+            // Act
+            var result = await _mediator.Send(new GetActorReportQuery(fileFormat));
+
+            // Assert
+            Assert.True(result.IsSuccess);
+
+            Assert.NotNull(result.Value);
+            Assert.NotEmpty(result.Value.Content!);
+            Assert.NotNull(result.Value.FileName);
+            Assert.NotNull(result.Value.ContentType);
+
+            if (fileFormat.Equals("excel", StringComparison.OrdinalIgnoreCase))
+            {
+                Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", result.Value.ContentType);
+            }
+            else
+            {
+                Assert.Equal("application/pdf", result.Value.ContentType);
+            }
+        }
+
 
     }
 }

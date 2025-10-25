@@ -20,23 +20,18 @@
         public DateTime? DateOfBirth { get; set; }
         public string? Bio { get; set; }
 
-        public List<ActorMovieDto> Movies { get; set; } = new();
+        public string MovieTitlesCache { get; set; } = null!;
     }
 
-    public class ActorMovieDto { 
-        public Guid Id { get; set; }
-        public String Title { get; set; } = null!;
-    }
-
-    public class CreateActorDto: ActorBaseDto
+    public class CreateActorDto : ActorBaseDto
     {
     }
 
-    public class UpdateActorDto: ActorBaseDto 
+    public class UpdateActorDto : ActorBaseDto
     {
     }
 
-    public class PatchActorDto: ActorBaseDto
+    public class PatchActorDto : ActorBaseDto
     {
         public new string? Name { get; set; }
         public new DateTime? DateOfBirth { get; set; }
@@ -48,14 +43,27 @@
     {
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 5;
-        public string? Sort { get; set; } // JSON string or a list of objects
+        public string? SortColumn { get; set; }
+        public string? SortDirection { get; set; }
         public string? SearchColumn { get; set; }
         public string? SearchTerm { get; set; }
     }
 
+
+    public class ActorWithMoviesDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Bio { get; set; } = string.Empty;
+        public DateTime? DateOfBirth { get; set; }
+
+        public List<string> MovieTitles { get; set; } = new();
+    }
+
+
     public class ActorResponseDto
     {
-        public IEnumerable<ActorDto> Actors { get; set; } = new List<ActorDto>();
+        public IEnumerable<ActorWithMoviesDto> Actors { get; set; } = new List<ActorWithMoviesDto>();
         public int TotalCount { get; set; }
     }
 

@@ -48,63 +48,80 @@ public class MovieReviewDbContext: IdentityDbContext<ApplicationUser>, IApplicat
         modelBuilder.Entity<GetMoviesResult>().HasNoKey();
         modelBuilder.Entity<GetMoviesResult>().ToView(null);
 
-        modelBuilder.Entity<Actor>()
-        .HasMany(a => a.Movies)
-        .WithMany(m => m.Actors)
-        .UsingEntity<Dictionary<string, object>>(
-            "ActorMovie",
-            j => j.HasOne<Movie>()
-                  .WithMany()
-                  .HasForeignKey("MovieId")
-                  .OnDelete(DeleteBehavior.Restrict),  
-            j => j.HasOne<Actor>()
-                  .WithMany()
-                  .HasForeignKey("ActorId")
-                  .OnDelete(DeleteBehavior.Restrict)  
-        );
+        modelBuilder.Entity<Actor>(entity =>
+        {
+            entity.Property(a => a.Name)
+                  .HasMaxLength(100)
+                  .IsRequired(); //not null
 
-        modelBuilder.Entity<Review>()
-        .HasOne(r => r.Movie)
-        .WithMany(m => m.Reviews)
-        .HasForeignKey(r => r.MovieId)
-        //.OnDelete(DeleteBehavior.Restrict);
-        .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(a => a.Name).HasDatabaseName("IX_Actors_Name");
+            entity.HasIndex(a => a.DateOfBirth).HasDatabaseName("IX_Actors_DateOfBirth");
+            entity.HasIndex(a => a.CreatedAt).HasDatabaseName("IX_Actors_CreatedAt");
 
-        modelBuilder.Entity<Movie>()
-            .Property(m => m.Rating)
-            .HasPrecision(3, 1);
-
-        modelBuilder.Entity<Review>()
-            .Property(r => r.Rating)
-            .HasPrecision(3, 1);
-
-        modelBuilder.Entity<GetMoviesResult>()
-        .Property(g => g.Rating)
-        .HasPrecision(3, 1); // 3 digits total, 1 digit after decimal
+            // Many-to-many configuration with Movies
+            entity.HasMany(a => a.Movies)
+           .WithMany(m => m.Actors)
+           .UsingEntity<Dictionary<string, object>>(
+               "ActorMovie",
+               j => j.HasOne<Movie>()
+                     .WithMany()
+                     .HasForeignKey("MovieId")
+                     .OnDelete(DeleteBehavior.Restrict),
+               j => j.HasOne<Actor>()
+                     .WithMany()
+                     .HasForeignKey("ActorId")
+                     .OnDelete(DeleteBehavior.Restrict),
+               j =>
+               {
+                   j.HasKey("ActorId", "MovieId");
+                   j.HasIndex("ActorId").HasDatabaseName("IX_ActorMovie_ActorId");
+                   j.HasIndex("MovieId").HasDatabaseName("IX_ActorMovie_MovieId");
+               }
+               );
 
 
-        modelBuilder.Entity<Actor>()
-            .Property(a => a.CreatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
-        modelBuilder.Entity<Actor>()
-            .Property(a => a.UpdatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
 
-        modelBuilder.Entity<Movie>()
-            .Property(m => m.CreatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
-        modelBuilder.Entity<Movie>()
-            .Property(m => m.UpdatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
+            modelBuilder.Entity<Review>()
+           .HasOne(r => r.Movie)
+           .WithMany(m => m.Reviews)
+           .HasForeignKey(r => r.MovieId)
+           //.OnDelete(DeleteBehavior.Restrict);
+           .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Review>()
-            .Property(r => r.CreatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
-        modelBuilder.Entity<Review>()
-            .Property(r => r.UpdatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
+            modelBuilder.Entity<Movie>()
+                .Property(m => m.Rating)
+                .HasPrecision(3, 1);
 
+            modelBuilder.Entity<Review>()
+                .Property(r => r.Rating)
+                .HasPrecision(3, 1);
+
+            modelBuilder.Entity<GetMoviesResult>()
+            .Property(g => g.Rating)
+            .HasPrecision(3, 1); // 3 digits total, 1 digit after decimal
+
+
+            modelBuilder.Entity<Actor>()
+                .Property(a => a.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            modelBuilder.Entity<Actor>()
+                .Property(a => a.UpdatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            modelBuilder.Entity<Movie>()
+                .Property(m => m.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            modelBuilder.Entity<Movie>()
+                .Property(m => m.UpdatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            modelBuilder.Entity<Review>()
+                .Property(r => r.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+            modelBuilder.Entity<Review>()
+                .Property(r => r.UpdatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+        });
     }
-
-
 }

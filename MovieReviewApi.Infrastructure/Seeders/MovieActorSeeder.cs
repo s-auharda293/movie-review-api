@@ -1,6 +1,7 @@
 ﻿using Bogus;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Entities;
+using PuppeteerSharp.Input;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,15 +44,25 @@ namespace MovieReviewApi.Infrastructure.Seeders
                 {
                     var movie = new Movie
                     {
-                        Title = faker.Lorem.Sentence(10),
+                        Title = faker.Lorem.Sentence(10).TrimEnd('.'),
                         Description = faker.Lorem.Paragraph(),
                         ReleaseDate = faker.Date.Past(30),
                         DurationMinutes = faker.Random.Int(80, 180),
                         Rating = Math.Round((decimal)faker.Random.Double(0, 10), 1),
                         Actors = actors.OrderBy(x => Guid.NewGuid()).Take(faker.Random.Int(1, 10)).ToList()
                     };
+
+                    foreach (var actor in movie.Actors)
+                    {
+                        actor.MovieTitlesCache = string.Join(",", actor.Movies!.Append(movie).Select(m => m.Title));
+                    }
+
+
+                    movie.ActorNamesCache = string.Join(",", movie.Actors.Select(a => a.Name));
+
                     batch.Add(movie);
                 }
+
 
                 await context.Movies.AddRangeAsync(batch, cancellationToken);
                 await context.SaveChangesAsync(cancellationToken);

@@ -27,9 +27,9 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 Name = actor.Name,
                 Bio = actor.Bio,
                 DateOfBirth = actor.DateOfBirth,
-                Movies = actor.Movies?
-                .Select(m => new ActorMovieDto { Id = m.Id, Title = m.Title })
-                .ToList() ?? new List<ActorMovieDto>()
+                //Movies = actor.Movies?
+                //.Select(m => new ActorMovieDto {Title = m.Title })
+                //.ToList() ?? new List<ActorMovieDto>()
             };
 
             return Result<ActorDto>.Success(dto);

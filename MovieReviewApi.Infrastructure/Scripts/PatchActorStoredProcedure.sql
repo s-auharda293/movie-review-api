@@ -1,6 +1,6 @@
-﻿          CREATE PROCEDURE PatchActor
+﻿CREATE PROCEDURE PatchActor
     @Id UNIQUEIDENTIFIER, 
-    @Name NVARCHAR(4000) = NULL,
+    @Name NVARCHAR(100) = NULL,
     @Bio NVARCHAR(4000) = NULL,
     @DateOfBirth DATETIME2 = NULL,
     @MovieIds NVARCHAR(MAX) = NULL -- comma-separated movie GUIDs
@@ -10,7 +10,6 @@ BEGIN
 
     DECLARE @UpdatedAt DATETIME2 = SYSUTCDATETIME();
 
-    -- Update only the fields provided (PATCH behavior)
     UPDATE Actors
     SET 
         Name = COALESCE(@Name, Name),
@@ -25,18 +24,45 @@ BEGIN
         -- Clear existing links first
         DELETE FROM ActorMovie WHERE ActorId = @Id;
 
-        -- If @MovieIds is empty, it means remove all links
-        -- If not empty, insert the new links
+        -- Insert new links if any
         IF LEN(@MovieIds) > 0
         BEGIN
             INSERT INTO ActorMovie (ActorId, MovieId)
             SELECT @Id, CAST(value AS UNIQUEIDENTIFIER)
             FROM STRING_SPLIT(@MovieIds, ',');
         END
+
+        -- Update Actor.MovieTitlesCache
+        UPDATE a
+        SET a.MovieTitlesCache = agg.MovieTitles
+        FROM Actors a
+        JOIN (
+            SELECT am.ActorId,
+                   STRING_AGG(m.Title, ', ') AS MovieTitles
+            FROM ActorMovie am
+            JOIN Movies m ON m.Id = am.MovieId
+            WHERE am.ActorId = @Id
+            GROUP BY am.ActorId
+        ) agg ON a.Id = agg.ActorId;
+
+        -- Update Movies.ActorNamesCache for affected movies
+        UPDATE m
+        SET m.ActorNamesCache = agg.ActorNames
+        FROM Movies m
+        JOIN (
+            SELECT am.MovieId,
+                   STRING_AGG(a2.Name, ', ') AS ActorNames
+            FROM ActorMovie am
+            JOIN Actors a2 ON a2.Id = am.ActorId
+            WHERE am.MovieId IN (
+                SELECT CAST(value AS UNIQUEIDENTIFIER) 
+                FROM STRING_SPLIT(@MovieIds, ',')
+            )
+            GROUP BY am.MovieId
+        ) agg ON m.Id = agg.MovieId;
     END
 
-    -- Return the updated actor row
-    SELECT Id, Name, Bio, DateOfBirth, CreatedAt, UpdatedAt
+    SELECT Id, Name, Bio, DateOfBirth, CreatedAt, UpdatedAt, MovieTitlesCache
     FROM Actors
     WHERE Id = @Id;
 END

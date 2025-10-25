@@ -9,7 +9,7 @@ using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class PatchActorHandler : IRequestHandler<PatchActorCommand,Result<ActorDto>>
+    public class PatchActorHandler : IRequestHandler<PatchActorCommand,Result<ActorWithMoviesDto>>
     {
         private readonly IApplicationDbContext _context;
         private readonly IDbConnectionFactory _connection;
@@ -21,13 +21,13 @@ namespace MovieReviewApi.Application.Handlers.Actor
         }
 
 
-        public async Task<Result<ActorDto>> Handle(PatchActorCommand request, CancellationToken cancellationToken)
+        public async Task<Result<ActorWithMoviesDto>> Handle(PatchActorCommand request, CancellationToken cancellationToken)
         {
             string? movieIdsCsv = null;
-            List<ActorMovieDto> movieEntities = new List<ActorMovieDto>();
+            List<string> movieTitles = new();
 
             var actor = await _context.Actors.FirstOrDefaultAsync(a=>a.Id == request.Id);
-            if (actor == null) return Result<ActorDto>.Failure(ActorErrors.NotFound);
+            if (actor == null) return Result<ActorWithMoviesDto>.Failure(ActorErrors.NotFound);
 
             if (request.dto.MovieIds != null && request.dto.MovieIds.Any())
             {
@@ -35,17 +35,13 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 if (movies.Count != request.dto.MovieIds.Count)
                 {
                     var invalidIds = request.dto.MovieIds.Except(movies.Select(m => m.Id)).ToList();
-                    return Result<ActorDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
+                    return Result<ActorWithMoviesDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
                 }
                 movieIdsCsv = string.Join(",", request.dto.MovieIds);
 
-                movieEntities = await _context.Movies
+                movieTitles = await _context.Movies
                     .Where(m => request.dto.MovieIds.Contains(m.Id))
-                    .Select(m => new ActorMovieDto
-                    {
-                        Id = m.Id,
-                        Title = m.Title,
-                    })
+                    .Select(m => m.Title)
                     .ToListAsync(cancellationToken);
             }
             using var connection = await _connection.CreateConnectionAsync(cancellationToken);
@@ -58,18 +54,18 @@ namespace MovieReviewApi.Application.Handlers.Actor
             parameters.Add("@MovieIds", movieIdsCsv, DbType.String);
 
             // Call stored procedure
-            var updatedActor = await connection.QueryFirstOrDefaultAsync<ActorDto>(
+            var updatedActor = await connection.QueryFirstOrDefaultAsync<ActorWithMoviesDto>(
                 "PatchActor",
                 parameters,
                 commandType: CommandType.StoredProcedure
             );
 
             if (updatedActor == null)
-                return Result<ActorDto>.Failure(ActorErrors.NotFound);
+                return Result<ActorWithMoviesDto>.Failure(ActorErrors.NotFound);
 
-            updatedActor.Movies = movieEntities;
+            updatedActor.MovieTitles = movieTitles;
 
-            return Result<ActorDto>.Success(updatedActor);
+            return Result<ActorWithMoviesDto>.Success(updatedActor);
         }
     }
 }

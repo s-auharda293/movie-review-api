@@ -1,8 +1,19 @@
-﻿CREATE PROCEDURE GetMovies
+﻿USE MovieReviewDb;
+GO
+
+CREATE PROCEDURE GetMovies
 AS
 BEGIN
     SET NOCOUNT ON;
 
+    ;WITH ActorIdsPerMovie AS
+    (
+        SELECT 
+            am.MovieId,
+            STRING_AGG(CAST(am.ActorId AS VARCHAR(36)), ',') AS ActorIds
+        FROM ActorMovie am
+        GROUP BY am.MovieId
+    )
     SELECT  
         m.Id,
         m.Title,
@@ -10,17 +21,9 @@ BEGIN
         m.ReleaseDate,
         m.DurationMinutes,
         m.Rating,
-        ISNULL(STRING_AGG(CAST(a.Id AS VARCHAR(36)), ','), '') AS ActorIds,
+        ISNULL(a.ActorIds, '') AS ActorIds,
         m.Url
     FROM Movies m
-    LEFT JOIN ActorMovie am on m.Id = am.MovieId
-    LEFT JOIN Actors a on am.ActorId = a.Id
-    GROUP BY 
-        m.Id,
-        m.Title,
-        m.Description,
-        m.ReleaseDate,
-        m.DurationMinutes,
-        m.Rating,
-        m.Url
+    LEFT JOIN ActorIdsPerMovie a ON m.Id = a.MovieId;
 END
+GO

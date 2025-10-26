@@ -72,6 +72,11 @@
         public decimal AverageRating { get; set; }
     }
 
+    public class ActorReportRequestDto {
+        public List<Guid> ActorIds { get; set; } = new();
+        public string Format { get; set; } = "pdf";
+    }
+
     public class ActorReportResultDto {
         public byte[]? Content { get; set; }
         public string? FileName { get; set; }

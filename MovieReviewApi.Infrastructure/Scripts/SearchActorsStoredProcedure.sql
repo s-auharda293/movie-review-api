@@ -1,7 +1,4 @@
-﻿USE MovieReviewDb;
-GO
-
-CREATE PROCEDURE SearchActors
+﻿CREATE PROCEDURE SearchActors
     @SearchTerm NVARCHAR(200) = NULL,
     @SearchColumn NVARCHAR(50) = NULL,
     @Page INT = 1,

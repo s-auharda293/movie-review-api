@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
-import { deleteActor, getActors, createActor, updateActor } from "../services/actorService";
+import { deleteActor, getActors, createActor, updateActor, generateReport } from "../services/actorService";
 import Pagination from "@/components/Pagination.vue";
 import ViewModal from "@/components/ViewModal.vue";
 import DeleteModal from "@/components/DeleteModal.vue";
@@ -8,6 +8,9 @@ import CreateEditActorModal from "@/components/CreateEditActorModal.vue";
 
 const actors = ref([]);
 const totalCount = ref(0);
+const downloadingReport = ref(false);
+
+const fileFormat = ref("pdf");
 
 // Server-side parameters
 const currentPage = ref(1);
@@ -177,6 +180,22 @@ function getRandomColor() {
   return colors[Math.floor(Math.random() * colors.length)];
 }
 
+async function downloadReport() {
+  console.log("Downloading started")
+  downloadingReport.value = true;
+  const selectedActorIds = actors.value.map(actor=>actor.id);
+
+  if (!selectedActorIds.length) {
+    alert("Please select at least one actor.");
+    return;
+  }
+
+  await generateReport(selectedActorIds, fileFormat.value);
+
+  downloadingReport.value = false;
+}
+
+
 </script>
 
 
@@ -204,6 +223,26 @@ function getRandomColor() {
     />
   </div>
 
+  <div class="flex gap-2">
+  <select
+    v-model="fileFormat"
+    class="border-gray-200 rounded-full px-3 py-2 border"
+  >
+    <option value="pdf">Pdf</option>
+    <option value="excel">Excel</option>
+  </select>
+
+  <button
+    type="submit"
+    @click="downloadReport"
+    :disabled="actors.length === 0 || downloadingReport.value===true"
+    class="form-control border px-3 py-2 w-32 rounded-full border-gray-300 mt-2 cursor-pointer hover:bg-green-50"
+  >
+    Download
+  </button>
+  </div>
+
+
   <button
     class="mt-3 px-3 py-1 rounded-md bg-blue-600 text-white text-md hover:bg-blue-700 mr-10 cursor-pointer"
     @click="addActor"
@@ -220,13 +259,13 @@ function getRandomColor() {
         <thead>
           <tr>
             <th>S.N</th>
-            <th>
+            <!-- <th>
               <div>
                 <span>
                   Actor Id
                 </span>
               </div>
-            </th>
+            </th> -->
             <th @click="sortColumn('name')" style="cursor:pointer">
               Name
               <span>{{ getSortArrow('name') }}</span>
@@ -249,13 +288,13 @@ function getRandomColor() {
         <tbody>
           <tr v-for="(actor, index) in actors" :key="actor.id">
             <th>{{ index + 1 + (currentPage-1)*pageSize }}</th>
-            <td  class="text-truncate" style="max-width: 150px;">{{ actor.id }}</td>
+            <!-- <td  class="text-truncate" style="max-width: 150px;">{{ actor.id }}</td> -->
             <td  class="text-truncate" style="max-width: 150px;">{{ actor.name }}</td>
             <td  class="text-truncate" style="max-width: 150px;" :title="actor.description">{{ actor.bio }}</td>
             <td>{{ new Date(actor.dateOfBirth).toLocaleDateString() }}</td>
-            <td>
-              <div class="flex flex-wrap w-28 gap-1">
-                <span v-for="(actor,index) in actor.movies" :key="index" :class="`border px-3 ${getRandomColor()} rounded-full italic text-gray-500`">{{ actor.title }}</span>
+            <td  class="text-truncate" style="max-width: 400px;">
+              <div class="flex flex-wrap w-auto gap-1 max-h-20 overflow-auto">
+                <span v-for="(title,index) in actor.movieTitles" :key="index" :class="`border px-3 ${getRandomColor()} rounded-full italic text-gray-500`">{{ title }}</span>
               </div>
             </td>
             <td>

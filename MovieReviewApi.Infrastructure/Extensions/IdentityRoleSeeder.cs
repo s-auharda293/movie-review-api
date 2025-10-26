@@ -10,7 +10,7 @@ namespace MovieReviewApi.Infrastructure.Extensions
     public static class IdentityRoleSeeder
     {
         /// <summary>
-        /// Seed default roles if they don't exist.
+        /// Seed default roles if they don't exist.t
         /// </summary>
         public static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
         {

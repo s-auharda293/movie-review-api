@@ -75,5 +75,32 @@ export async function updateActor(actor) {
   }
 }
 
+export async function generateReport(selectedActorIds, fileFormat){
+ try {
+        const response = await api.post(
+          "/Actors/report",
+          {
+            dto:{
+              actorIds: selectedActorIds,
+              format: fileFormat,
+            }
+          },
+          { responseType: 'blob' }
+        );
+
+        // create a download link
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `actors_report.${fileFormat}`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error(err);
+        alert("Error downloading file");
+      }
+}
 
 

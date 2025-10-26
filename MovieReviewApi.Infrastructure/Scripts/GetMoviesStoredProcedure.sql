@@ -1,7 +1,4 @@
-﻿USE MovieReviewDb;
-GO
-
-CREATE PROCEDURE GetMovies
+﻿CREATE PROCEDURE GetMovies
 AS
 BEGIN
     SET NOCOUNT ON;

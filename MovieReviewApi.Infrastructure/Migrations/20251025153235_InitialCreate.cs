@@ -16,9 +16,10 @@ namespace MovieReviewApi.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Bio = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MovieTitlesCache = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
@@ -83,6 +84,7 @@ namespace MovieReviewApi.Infrastructure.Migrations
                     DurationMinutes = table.Column<int>(type: "int", nullable: false),
                     Rating = table.Column<decimal>(type: "decimal(3,1)", precision: 3, scale: 1, nullable: false),
                     Url = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ActorNamesCache = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
@@ -250,9 +252,29 @@ namespace MovieReviewApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_ActorMovie_ActorId",
+                table: "ActorMovie",
+                column: "ActorId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ActorMovie_MovieId",
                 table: "ActorMovie",
                 column: "MovieId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Actors_CreatedAt",
+                table: "Actors",
+                column: "CreatedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Actors_DateOfBirth",
+                table: "Actors",
+                column: "DateOfBirth");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Actors_Name",
+                table: "Actors",
+                column: "Name");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

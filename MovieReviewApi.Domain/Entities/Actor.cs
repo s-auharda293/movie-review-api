@@ -10,6 +10,8 @@ public class Actor: BaseEntity
     public DateTime? DateOfBirth { get; set; }
     public string? Bio { get; set; }
 
+    public string? MovieTitlesCache { get; set; }
+
     //one actor multiple movies
     public ICollection<Movie>? Movies { get; set; } = new List<Movie>();
 

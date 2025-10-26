@@ -27,6 +27,7 @@ namespace MovieReviewApi.Infrastructure.Migrations
             MigrationHelper.RunSqlScript(migrationBuilder, "MovieReviewApi.Infrastructure.Scripts.DeleteReviewForUserStoredProcedure.sql");
             MigrationHelper.RunSqlScript(migrationBuilder, "MovieReviewApi.Infrastructure.Scripts.SearchReviewsStoredProcedure.sql");
             MigrationHelper.RunSqlScript(migrationBuilder, "MovieReviewApi.Infrastructure.Scripts.GetActorsRatingStoredProcedure.sql");
+            MigrationHelper.RunSqlScript(migrationBuilder, "MovieReviewApi.Infrastructure.Scripts.SearchActorsStoredProcedure.sql");
 
         }
 
@@ -49,6 +50,7 @@ namespace MovieReviewApi.Infrastructure.Migrations
             migrationBuilder.Sql("DROP PROCEDURE IF EXISTS DeleteReviewForUser");
             migrationBuilder.Sql("DROP PROCEDURE IF EXISTS SearchReviews");
             migrationBuilder.Sql("DROP PROCEDURE IF EXISTS GetActorsRating");
+            migrationBuilder.Sql("DROP PROCEDURE IF EXISTS SearchActors");
         }
     }
 }

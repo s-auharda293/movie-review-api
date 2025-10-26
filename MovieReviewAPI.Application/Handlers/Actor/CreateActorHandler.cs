@@ -12,7 +12,7 @@ using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class CreateActorHandler : IRequestHandler<CreateActorCommand, Result<ActorDto>>
+    public class CreateActorHandler : IRequestHandler<CreateActorCommand, Result<ActorWithMoviesDto>>
     {
         private readonly IApplicationDbContext _context;
         private readonly IDbConnectionFactory _connection; 
@@ -23,11 +23,12 @@ namespace MovieReviewApi.Application.Handlers.Actor
             _connection = connection;
         }
 
-        public async Task<Result<ActorDto>> Handle(CreateActorCommand request, CancellationToken cancellationToken)
+        public async Task<Result<ActorWithMoviesDto>> Handle(CreateActorCommand request, CancellationToken cancellationToken)
         {
 
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
-            List<ActorMovieDto> movieEntities = new List<ActorMovieDto>();
+            List<string> movieTitles = new();
+
             string? movieIdsCsv = null;
 
             if (request.dto.MovieIds != null && request.dto.MovieIds.Any())
@@ -36,7 +37,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 if (movies.Count != request.dto.MovieIds.Count)
                 {
                     var invalidIds = request.dto.MovieIds.Except(movies.Select(m => m.Id)).ToList();
-                    return Result<ActorDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
+                    return Result<ActorWithMoviesDto>.Failure(ActorErrors.MoviesNotFound(invalidIds));
                 }
                 movieIdsCsv = string.Join(",", request.dto.MovieIds);
             }
@@ -57,26 +58,23 @@ namespace MovieReviewApi.Application.Handlers.Actor
 
             if (request.dto.MovieIds != null && request.dto.MovieIds.Any())
             {
-                movieEntities = await _context.Movies
+                movieTitles = await _context.Movies
                     .Where(m => request.dto.MovieIds.Contains(m.Id))
-                    .Select(m => new ActorMovieDto { 
-                        Id = m.Id,
-                        Title = m.Title,
-                    })
+                    .Select(m => m.Title)
                     .ToListAsync(cancellationToken);
             }
 
             // Map to ActorDto
-            var actorDto = new ActorDto
+            var actorDto = new ActorWithMoviesDto
             {
                 Id = actor.Id,
                 Name = actor.Name,
                 Bio = actor.Bio,
                 DateOfBirth = actor.DateOfBirth,
-                Movies = movieEntities
+                MovieTitles = movieTitles
             };
 
-            return Result<ActorDto>.Success(actorDto);
+            return Result<ActorWithMoviesDto>.Success(actorDto);
         }
     }
 }

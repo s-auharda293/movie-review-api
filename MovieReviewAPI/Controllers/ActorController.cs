@@ -75,14 +75,11 @@ namespace MovieReviewApi.Api.Controllers
             return deleted.IsSuccess ? NoContent() : NotFound(deleted);
         }
 
-        [HttpGet("report/{fileFormat}")]
+        [HttpPost("report")]
         //[Authorize(Roles = UserRoles.Admin)]
-        public async Task<IActionResult> GetActorsRating(string fileFormat)
+        public async Task<IActionResult> GetActorsRating(ExportActorsWithRatingsCommand exportActorsCommand)
         {
-            var reportFormat = fileFormat.ToLower();
-
-
-            var result = await _mediator.Send(new GetActorReportQuery(reportFormat));
+            var result = await _mediator.Send(exportActorsCommand);
 
             if (result.IsSuccess && result.Value != null)
             {

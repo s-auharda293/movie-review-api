@@ -27,13 +27,14 @@ namespace MovieReviewApi.Infrastructure.Services
             _connection = connection;
         }
 
-        public async Task<Result<ActorReportResultDto>> GenerateReportAsync(String format)
+        public async Task<Result<ActorReportResultDto>> GenerateReportAsync(List<Guid> actorIds, String format)
         {
             string fileName = String.Empty;
             string contentType = String.Empty;
             using var stream = new MemoryStream();
 
-            var actorRatings = await GetActorRatingsAsync();
+            string actorIdsString = string.Join(",", actorIds);
+            var actorRatings = await GetActorRatingsAsync(actorIdsString);
 
             if (String.Equals(format.ToString(), "excel", StringComparison.OrdinalIgnoreCase))
             {
@@ -166,12 +167,15 @@ namespace MovieReviewApi.Infrastructure.Services
             return Result<ActorReportResultDto>.Success(resultDto);
         }
 
-        private async Task<List<ActorRatingDto>> GetActorRatingsAsync()
+        private async Task<List<ActorRatingDto>> GetActorRatingsAsync(String actorIds)
         {
             var connection = await _connection.CreateConnectionAsync(CancellationToken.None);
+            var parameters = new DynamicParameters();
+            parameters.Add("@ActorIds",actorIds);
 
             var data = (await connection.QueryAsync<ActorRatingDto>(
                 "GetActorsRating",
+                parameters,
                 commandType: CommandType.StoredProcedure
             )).ToList();
 

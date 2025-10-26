@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
+using static Dapper.SqlMapper;
 
 
 namespace MovieReviewApi.Application.Validators.ActorValidator;
@@ -38,6 +39,8 @@ public class CreateActorValidator : AbstractValidator<CreateActorCommand>
             .Must(HaveValidGuids)
             .WithMessage("All movie IDs must be valid GUIDs")
             .When(x => x.dto.MovieIds != null && x.dto.MovieIds.Any());
+
+
     }
 
     private static bool BeInThePast(DateTime? dateOfBirth)

@@ -20,11 +20,11 @@ namespace MovieReviewApi.Api.Controllers
             _mediator = mediator;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetActors() {
-            var actors = await _mediator.Send(new GetActorsQuery());
-            return Ok(actors);
-        }
+        //[HttpGet]
+        //public async Task<IActionResult> GetActors() {
+        //    var actors = await _mediator.Send(new GetActorsQuery());
+        //    return Ok(actors);
+        //}
 
         [HttpGet]
         [Route("{id}")]

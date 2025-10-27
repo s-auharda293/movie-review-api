@@ -31,36 +31,33 @@ BEGIN
             SELECT @Id, CAST(value AS UNIQUEIDENTIFIER)
             FROM STRING_SPLIT(@MovieIds, ',');
         END
-
-        -- Update Actor.MovieTitlesCache
-        UPDATE a
-        SET a.MovieTitlesCache = agg.MovieTitles
-        FROM Actors a
-        JOIN (
-            SELECT am.ActorId,
-                   STRING_AGG(m.Title, ', ') AS MovieTitles
-            FROM ActorMovie am
-            JOIN Movies m ON m.Id = am.MovieId
-            WHERE am.ActorId = @Id
-            GROUP BY am.ActorId
-        ) agg ON a.Id = agg.ActorId;
-
-        -- Update Movies.ActorNamesCache for affected movies
-        UPDATE m
-        SET m.ActorNamesCache = agg.ActorNames
-        FROM Movies m
-        JOIN (
-            SELECT am.MovieId,
-                   STRING_AGG(a2.Name, ', ') AS ActorNames
-            FROM ActorMovie am
-            JOIN Actors a2 ON a2.Id = am.ActorId
-            WHERE am.MovieId IN (
-                SELECT CAST(value AS UNIQUEIDENTIFIER) 
-                FROM STRING_SPLIT(@MovieIds, ',')
-            )
-            GROUP BY am.MovieId
-        ) agg ON m.Id = agg.MovieId;
     END
+
+     -- Refresh Actor.MovieTitlesCache
+     UPDATE a
+    SET a.MovieTitlesCache = agg.MovieTitles
+    FROM Actors a
+    JOIN (
+        SELECT am.ActorId,
+               STRING_AGG(m.Title, ', ') AS MovieTitles
+        FROM ActorMovie am
+        JOIN Movies m ON m.Id = am.MovieId
+        WHERE am.ActorId = @Id
+        GROUP BY am.ActorId
+    ) agg ON a.Id = agg.ActorId;
+
+    -- Refresh Movies.ActorNamesCache for all movies linked to this actor
+    UPDATE m
+    SET m.ActorNamesCache = agg.ActorNames
+    FROM Movies m
+    JOIN (
+        SELECT am.MovieId,
+               STRING_AGG(a2.Name, ', ') AS ActorNames
+        FROM ActorMovie am
+        JOIN Actors a2 ON a2.Id = am.ActorId
+        WHERE am.ActorId = @Id
+        GROUP BY am.MovieId
+    ) agg ON m.Id = agg.MovieId;
 
     SELECT Id, Name, Bio, DateOfBirth, CreatedAt, UpdatedAt, MovieTitlesCache
     FROM Actors

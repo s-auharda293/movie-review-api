@@ -7,7 +7,7 @@ using MovieReviewApi.Application.Queries.Movie;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class GetMoviesHandler : IRequestHandler<GetMoviesQuery, Result<IEnumerable<MovieDto>>>
+    public class GetMoviesHandler : IRequestHandler<GetMoviesQuery, Result<IEnumerable<MovieWithActorsDto>>>
     {
         private readonly IApplicationDbContext _context;
         public GetMoviesHandler(IApplicationDbContext context)
@@ -15,13 +15,13 @@ namespace MovieReviewApi.Application.Handlers.Actor
             _context = context;
         }
 
-        public async Task<Result<IEnumerable<MovieDto>>> Handle(GetMoviesQuery request, CancellationToken cancellationToken)
+        public async Task<Result<IEnumerable<MovieWithActorsDto>>> Handle(GetMoviesQuery request, CancellationToken cancellationToken)
         {
             var movies = await _context.GetMoviesResult
                 .FromSqlRaw("EXEC GetMovies")
                 .ToListAsync(cancellationToken);
 
-            var movieDtos = new List<MovieDto>();
+            var movieDtos = new List<MovieWithActorsDto>();
 
             foreach (var movie in movies)
             {
@@ -32,14 +32,10 @@ namespace MovieReviewApi.Application.Handlers.Actor
 
                 var actors = await _context.Actors
                     .Where(a => actorIds.Contains(a.Id))
-                    .Select(a => new MovieActorDto
-                    {
-                        Id = a.Id,
-                        Name = a.Name
-                    })
+                    .Select(a =>  a.Name)
                     .ToListAsync(cancellationToken);
 
-                movieDtos.Add(new MovieDto
+                movieDtos.Add(new MovieWithActorsDto
                 {
                     Id = movie.Id,
                     Title = movie.Title,
@@ -47,12 +43,12 @@ namespace MovieReviewApi.Application.Handlers.Actor
                     ReleaseDate = movie.ReleaseDate,
                     DurationMinutes = movie.DurationMinutes,
                     Rating = movie.Rating,
-                    Actors = actors,
+                    ActorNames = actors,
                     FileUrl = movie.Url
                 });
             }
 
-            return Result<IEnumerable<MovieDto>>.Success(movieDtos);
+            return Result<IEnumerable<MovieWithActorsDto>>.Success(movieDtos);
         }
     }
 }

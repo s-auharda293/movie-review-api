@@ -25,7 +25,20 @@ public class MovieDto
     public DateTime ReleaseDate { get; set; }
     public int DurationMinutes { get; set; }
     public decimal Rating { get; set; }
-    public List<MovieActorDto> Actors { get; set; } = new();
+    public string ActorNamesCache { get; set; } = null!;
+
+    public string? FileUrl { get; set; }
+}
+
+public class MovieWithActorsDto
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = null!;
+    public string Description { get; set; } = null!;
+    public DateTime ReleaseDate { get; set; }
+    public int DurationMinutes { get; set; }
+    public decimal Rating { get; set; }
+    public List<string> ActorNames { get; set; } = null!;
 
     public string? FileUrl { get; set; }
 }
@@ -69,13 +82,14 @@ public class MovieRequestDto
 {
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 5;
-    public string? Sort { get; set; } // JSON string or a list of objects
+    public string? SortColumn { get; set; }
+    public string? SortDirection { get; set; }
     public string? SearchColumn { get; set; }
     public string? SearchTerm { get; set; }
 }
 
 public class MovieResponseDto {
-    public IEnumerable<MovieDto> Movies { get; set; } = new List< MovieDto > ();
+    public IEnumerable<MovieWithActorsDto> Movies { get; set; } = new List< MovieWithActorsDto > ();
     public int TotalCount { get; set; }
 }
 

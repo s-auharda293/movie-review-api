@@ -40,10 +40,21 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 movieIdsCsv = string.Join(",", request.dto.MovieIds);
 
                 movieTitles = await _context.Movies
-                    .Where(m => request.dto.MovieIds.Contains(m.Id))
+                    .Where(m => request.dto.MovieIds!.Contains(m.Id))
                     .Select(m => m.Title)
                     .ToListAsync(cancellationToken);
+
             }
+
+            if (request.dto.MovieIds == null || request.dto.MovieIds.Count == 0)
+            {
+                movieTitles = actor.MovieTitlesCache!
+                    .Split(',',StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .ToList() ?? new List<string>(); 
+            }
+
+
             using var connection = await _connection.CreateConnectionAsync(cancellationToken);
 
             var parameters = new DynamicParameters();

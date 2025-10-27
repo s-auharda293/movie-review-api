@@ -19,7 +19,7 @@ namespace MovieReviewApi.Application.Validators.MovieValidator
 
             RuleFor(x => x.Id)
                .NotEmpty().WithMessage("Actor id is required")
-               .MustAsync(async (command, id, ct) => await _context.Movies.AnyAsync(m => m.Id == id, ct)).WithMessage(ActorErrors.NotFound.Description);
+               .MustAsync(async (command, id, ct) => await _context.Actors.AnyAsync(a => a.Id == id, ct)).WithMessage(ActorErrors.NotFound.Description);
 
 
         }

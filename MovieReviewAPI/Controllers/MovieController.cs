@@ -19,12 +19,12 @@ namespace MovieReviewApi.Api.Controllers
             _fileStorageService = fileStorageService;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetMovies()
-        {
-            var movies = await _mediator.Send(new GetMoviesQuery());
-            return Ok(movies);
-        }
+        //[HttpGet]
+        //public async Task<IActionResult> GetMovies()
+        //{
+        //    var movies = await _mediator.Send(new GetMoviesQuery());
+        //    return Ok(movies);
+        //}
 
         [HttpPost]
         [Route("query")]

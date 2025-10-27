@@ -15,6 +15,15 @@ BEGIN
     INSERT INTO Reviews (Id, MovieId, UserId, Comment, Rating, CreatedAt, UpdatedAt)
     VALUES (@ReviewId, @MovieId, @UserId, @Comment, @Rating, @CreatedAt, @UpdatedAt);
 
+    UPDATE Movies
+    SET Rating = (
+        SELECT AVG(Rating)
+        FROM Reviews
+        WHERE MovieId = @MovieId
+          AND Rating IS NOT NULL
+    )
+    WHERE Id = @MovieId;
+
     -- Return inserted review
     SELECT 
         @ReviewId AS Id,

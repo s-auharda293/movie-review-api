@@ -14,4 +14,6 @@ public class GetMoviesResult
     public string ActorIds { get; set; } = string.Empty;
 
     public string? Url { get; set; } = string.Empty;
+
+    public string? ActorNamesCache { get; set; } = string.Empty;
 }

@@ -9,7 +9,7 @@ using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {
-    public class CreateMovieHandler : IRequestHandler<CreateMovieCommand, Result<MovieDto>>
+    public class CreateMovieHandler : IRequestHandler<CreateMovieCommand, Result<MovieWithActorsDto>>
     {
         private readonly IApplicationDbContext _context;
         private readonly IDbConnectionFactory _connection;
@@ -22,10 +22,10 @@ namespace MovieReviewApi.Application.Handlers.Movie
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<Result<MovieDto>> Handle(CreateMovieCommand request, CancellationToken cancellationToken)
+        public async Task<Result<MovieWithActorsDto>> Handle(CreateMovieCommand request, CancellationToken cancellationToken)
         {
             string? actorIdsCsv = null;
-            List<MovieActorDto> actorEntities = new();
+            List<string> actorNames = new();
             string? url = null;
 
             if (request.dto.ActorIds != null && request.dto.ActorIds.Any())
@@ -37,17 +37,13 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 if (actors.Count != request.dto.ActorIds.Count)
                 {
                     var invalidIds = request.dto.ActorIds.Except(actors.Select(a => a.Id)).ToList();
-                    return Result<MovieDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
+                    return Result<MovieWithActorsDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
                 }
 
                 actorIdsCsv = string.Join(",", request.dto.ActorIds);
-                actorEntities = await _context.Actors
+               actorNames = await _context.Actors
                     .Where(a => request.dto.ActorIds.Contains(a.Id))
-                    .Select(a => new MovieActorDto
-                    {
-                        Id = a.Id,
-                        Name = a.Name
-                    })
+                    .Select(a => a.Name)    
                     .ToListAsync(cancellationToken);
             }
 
@@ -76,7 +72,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
             );
 
             // 3️⃣ Map result to DTO
-            var movieDto = new MovieDto
+            var movieDto = new MovieWithActorsDto
             {
                 Id = movie.Id,
                 Title = movie.Title,
@@ -84,11 +80,11 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 ReleaseDate = movie.ReleaseDate,
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
-                Actors = actorEntities ?? new List<MovieActorDto>(),
+                ActorNames = actorNames ?? new List<string>(),
                 FileUrl = url
             };
 
-            return Result<MovieDto>.Success(movieDto);
+            return Result<MovieWithActorsDto>.Success(movieDto);
         }
     }
 }

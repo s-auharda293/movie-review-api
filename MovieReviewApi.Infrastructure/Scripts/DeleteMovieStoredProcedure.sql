@@ -1,10 +1,26 @@
-﻿ CREATE PROCEDURE DeleteMovie
-                @Id UNIQUEIDENTIFIER
-            AS
-            BEGIN
-                SET NOCOUNT ON;
+﻿CREATE PROCEDURE DeleteMovie
+    @Id UNIQUEIDENTIFIER
+AS
+BEGIN
+    SET NOCOUNT ON;
 
-                DELETE FROM ActorMovie WHERE MovieId = @Id;
+    -- Delete movie-actor links first
+    DELETE FROM ActorMovie 
+    WHERE MovieId = @Id;
 
-                DELETE FROM Movies WHERE Id = @Id;
-            END
+    -- Update MovieTitlesCache for all actors
+    UPDATE a
+    SET a.MovieTitlesCache = agg.MovieTitles
+    FROM Actors a
+    JOIN (
+        SELECT am.ActorId,
+               STRING_AGG(m.Title, ', ') AS MovieTitles
+        FROM ActorMovie am
+        JOIN Movies m ON m.Id = am.MovieId
+        GROUP BY am.ActorId
+    ) agg ON a.Id = agg.ActorId;
+
+    -- Delete the movie itself
+    DELETE FROM Movies 
+    WHERE Id = @Id;
+END

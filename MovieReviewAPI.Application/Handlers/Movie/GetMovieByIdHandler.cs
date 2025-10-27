@@ -7,7 +7,7 @@ using MovieReviewApi.Domain.Common.Movies;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {
-    public class GetMovieByIdHandler:IRequestHandler<GetMovieByIdQuery,Result<MovieDto>>
+    public class GetMovieByIdHandler:IRequestHandler<GetMovieByIdQuery,Result<MovieWithActorsDto>>
     {
         private readonly IApplicationDbContext _context;
 
@@ -16,17 +16,13 @@ namespace MovieReviewApi.Application.Handlers.Movie
             _context = context;   
         }
 
-        public async Task<Result<MovieDto>> Handle(GetMovieByIdQuery request, CancellationToken cancellationToken)
+        public async Task<Result<MovieWithActorsDto>> Handle(GetMovieByIdQuery request, CancellationToken cancellationToken)
         {
             var movie = await _context.Movies.Include(m => m.Actors).FirstOrDefaultAsync(m => m.Id == request.Id,cancellationToken);
-            if (movie == null) return Result<MovieDto>.Failure(MovieErrors.NotFound);
-            var actors = movie.Actors.Select(a => new MovieActorDto
-            {
-                Id = a.Id,
-                Name = a.Name
-            }).ToList();
+            if (movie == null) return Result<MovieWithActorsDto>.Failure(MovieErrors.NotFound);
+            var actors = movie.Actors.Select(a =>  a.Name).ToList();
 
-            var dto = new MovieDto
+            var dto = new MovieWithActorsDto
             {
                 Id = movie.Id,
                 Title = movie.Title,
@@ -34,11 +30,11 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 ReleaseDate = movie.ReleaseDate,
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
-                Actors = actors,
+                ActorNames = actors,
                 FileUrl = movie.Url
             };
 
-            return Result<MovieDto>.Success(dto);
+            return Result<MovieWithActorsDto>.Success(dto);
         }
     }
 }

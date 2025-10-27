@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MovieReviewApi.Application.Commands.Actor;
+using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Actor;
@@ -61,7 +62,7 @@ namespace MovieReviewApi.IntegrationTests
                     "Known for drama films."
                 }
             };
-
+ 
         public static IEnumerable<object[]> CreateInvalidActors =>
             new List<object[]>
             {
@@ -141,6 +142,49 @@ namespace MovieReviewApi.IntegrationTests
             _context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
         }
 
+        private async Task<(MovieWithActorsDto movie, List<ActorWithMoviesDto> actors)> SeedMovieWithActorsAsync()
+        {
+            var actor1Command = new CreateActorCommand(new CreateActorDto
+            {
+                Name = "Actor One",
+                DateOfBirth = DateTime.Parse("1980-01-01"),
+                Bio = "An experienced actor."
+            });
+            var actor1Result = await _mediator.Send(actor1Command);
+            Assert.True(actor1Result.IsSuccess);
+            var actor1 = actor1Result.Value!;
+
+            var actor2Command = new CreateActorCommand(new CreateActorDto
+            {
+                Name = "Actor Two",
+                DateOfBirth = DateTime.Parse("1990-05-05"),
+                Bio = "A versatile actor."
+            });
+            var actor2Result = await _mediator.Send(actor2Command);
+            Assert.True(actor2Result.IsSuccess);
+            var actor2 = actor2Result.Value!;
+
+            var movieCommand = new CreateMovieCommand(new CreateMovieDto
+            {
+                Title = "Test Movie",
+                Description = "A movie for testing",
+                ReleaseDate = DateTime.UtcNow,
+                DurationMinutes = 120,
+                Rating = 8.5m,
+                ActorIds = new List<Guid> { actor1.Id, actor2.Id }
+            });
+            var movieResult = await _mediator.Send(movieCommand);
+            Assert.True(movieResult.IsSuccess);
+            var movie = movieResult.Value!;
+
+            var updatedActor1 = await _mediator.Send(new GetActorByIdQuery(actor1.Id));
+            var updatedActor2 = await _mediator.Send(new GetActorByIdQuery(actor2.Id));
+
+            // Return both for cache verification
+            return (movie, new List<ActorWithMoviesDto> { updatedActor1.Value!, updatedActor2.Value!});
+        }
+
+
         //happy path tests
         [Theory]
         [MemberData(nameof(ActorTestData.CreateActors), MemberType = typeof(ActorTestData))]
@@ -170,6 +214,50 @@ namespace MovieReviewApi.IntegrationTests
 
             _output.WriteLine($"Response: {JsonSerializer.Serialize(result)}");
         }
+
+        [Fact]
+        public async Task MovieAndActorCaches_WithValidData_ReturnResponseCorrectly()
+        {
+            
+            var (movie, actors) = await SeedMovieWithActorsAsync();
+
+            // Act
+            foreach (var actor in actors)
+            {
+                var actorFromDb = await _context.Actors
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(a => a.Id == actor.Id);
+
+                Assert.NotNull(actorFromDb);
+
+                var actorMovieTitles = actorFromDb.MovieTitlesCache?
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .ToList();
+
+                Assert.NotNull(actorMovieTitles);
+                Assert.Contains(movie.Title, actorMovieTitles);
+            }
+
+            var movieFromDb = await _context.Movies
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == movie.Id);
+
+            Assert.NotNull(movieFromDb);
+
+            var movieActorNames = movieFromDb.ActorNamesCache?
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .ToList();
+
+            Assert.NotNull(movieActorNames);
+
+            foreach (var actor in actors)
+            {
+                Assert.Contains(actor.Name, movieActorNames);
+            }
+        }
+
 
         [Fact]
         public async Task UpdateActor_WithValidIdAndData_UpdatesActorSuccessfully()
@@ -385,68 +473,75 @@ namespace MovieReviewApi.IntegrationTests
             _output.WriteLine($"Invalid Creation: {JsonSerializer.Serialize(result)}");
         }
 
-        //[Theory]
-        //[InlineData("excel")]
-        //[InlineData("pdf")]
-        //public async Task GetActorsRating_ReturnsFile(string fileFormat)
-        //{
-        //var faker = new Bogus.Faker();
-        //var cancellationToken = new CancellationToken();
+        [Theory]
+        [InlineData("pdf")]
+        [InlineData("excel")]
+        public async Task ExportActorsWithRatings_ReturnsFile(string fileFormat)
+        {
+            var faker = new Bogus.Faker();
+            var cancellationToken = new CancellationToken();
 
-        //    var actors = new List<Actor>();
-        //    for (int i = 0; i < 5; i++)
-        //    {
-        //        var actor = new Actor
-        //        {
-        //            Name = faker.Person.FullName,
-        //            DateOfBirth = faker.Date.Past(30, DateTime.Now.AddYears(-20)),
-        //            Bio = faker.Lorem.Paragraph()
-        //        };
-        //        actors.Add(actor);
-        //    }
 
-        //    var movies = new List<Movie>();
-        //    for (int i = 0; i < 10; i++)
-        //    {
-        //        var movie = new Movie
-        //        {
-        //            Title = faker.Lorem.Sentence(3),
-        //            Description = faker.Lorem.Paragraph(),
-        //            ReleaseDate = faker.Date.Past(20),
-        //            DurationMinutes = faker.Random.Int(80, 180),
-        //            Rating = Math.Round((decimal)faker.Random.Double(0, 10), 1),
-        //            Actors = actors.OrderBy(_ => Guid.NewGuid()).Take(faker.Random.Int(1, 3)).ToList()
-        //        };
-        //        movies.Add(movie);
-        //    }
+            var actors = new List<Actor>();
+            for (int i = 0; i < 5; i++)
+            {
+                actors.Add(new Actor
+                {
+                    Id = Guid.NewGuid(),
+                    Name = faker.Person.FullName,
+                    DateOfBirth = faker.Date.Past(30, DateTime.Now.AddYears(-20)),
+                    Bio = faker.Lorem.Paragraph()
+                });
+            }
 
-        //    // Save seeded data to your in-memory test DB
-        //    _context.Actors.AddRange(actors);
-        //    _context.Movies.AddRange(movies);
-        //    await _context.SaveChangesAsync(cancellationToken);
 
+            var movies = new List<Movie>();
+            for (int i = 0; i < 10; i++)
+            {
+                movies.Add(new Movie
+                {
+                    Id = Guid.NewGuid(),
+                    Title = faker.Lorem.Sentence(3),
+                    Description = faker.Lorem.Paragraph(),
+                    ReleaseDate = faker.Date.Past(20),
+                    DurationMinutes = faker.Random.Int(80, 180),
+                    Rating = Math.Round((decimal)faker.Random.Double(0, 10), 1),
+                    Actors = actors.OrderBy(_ => Guid.NewGuid())
+                                   .Take(faker.Random.Int(1, 3))
+                                   .ToList()
+                });
+            }
+
+            _context.Actors.AddRange(actors);
+            _context.Movies.AddRange(movies);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            // actor IDs for the report
+            var actorIds = actors.Take(3).Select(a => a.Id).ToList(); 
+
+            var requestDto = new ActorReportRequestDto
+            {
+                ActorIds = actorIds,
+                Format = fileFormat
+            };
 
             // Act
-            //var result = await _mediator.Send(new GetActorReportQuery(fileFormat));
+            var result = await _mediator.Send(new ExportActorsWithRatingsCommand(requestDto));
 
             // Assert
-            //    Assert.True(result.IsSuccess);
+            Assert.True(result.IsSuccess, "Report generation should succeed");
+            Assert.NotNull(result.Value);
+            Assert.NotEmpty(result.Value.Content!);
+            Assert.NotNull(result.Value.FileName);
+            Assert.NotNull(result.Value.ContentType);
 
-            //    Assert.NotNull(result.Value);
-            //    Assert.NotEmpty(result.Value.Content!);
-            //    Assert.NotNull(result.Value.FileName);
-            //    Assert.NotNull(result.Value.ContentType);
+            if (fileFormat.Equals("excel", StringComparison.OrdinalIgnoreCase))
+                Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", result.Value.ContentType);
+            else
+                Assert.Equal("application/pdf", result.Value.ContentType);
+        }
 
-            //    if (fileFormat.Equals("excel", StringComparison.OrdinalIgnoreCase))
-            //    {
-            //        Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", result.Value.ContentType);
-            //    }
-            //    else
-            //    {
-            //        Assert.Equal("application/pdf", result.Value.ContentType);
-            //    }
-        //}
 
 
     }
-    }
+}

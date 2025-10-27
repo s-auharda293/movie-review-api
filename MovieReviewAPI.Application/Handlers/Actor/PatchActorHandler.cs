@@ -48,7 +48,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
 
             if (request.dto.MovieIds == null || request.dto.MovieIds.Count == 0)
             {
-                movieTitles = actor.MovieTitlesCache!
+                movieTitles = (actor.MovieTitlesCache ?? string.Empty)
                     .Split(',',StringSplitOptions.RemoveEmptyEntries)
                     .Select(s => s.Trim())
                     .ToList() ?? new List<string>(); 

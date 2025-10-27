@@ -16,7 +16,7 @@ namespace MovieReviewApi.Application.Handlers.Actor
         }
 
         public async Task<Result<ActorWithMoviesDto>> Handle(GetActorByIdQuery request,CancellationToken cancellationToken) {
-            var actor = await _context.Actors.Include(m => m.Movies).FirstOrDefaultAsync(a => a.Id == request.Id);
+            var actor = await _context.Actors.AsNoTracking().Include(m => m.Movies).FirstOrDefaultAsync(a => a.Id == request.Id);
 
             if (actor == null) return Result<ActorWithMoviesDto>.Failure(ActorErrors.NotFound);
 

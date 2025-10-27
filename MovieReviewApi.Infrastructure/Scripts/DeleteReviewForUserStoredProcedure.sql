@@ -16,12 +16,12 @@ BEGIN
     WHERE Id = @Id AND UserId = @UserId;
 
     UPDATE Movies
-    SET Rating = (
+    SET Rating = ISNULL((
         SELECT AVG(Rating)
         FROM Reviews
         WHERE MovieId = @MovieId
           AND Rating IS NOT NULL
-    )
+    ), 0)
     WHERE Id = @MovieId;
 
     -- Return the number of affected rows

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -72,12 +73,16 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             }
 
             //assign default role to user
+            if (!request.SkipDefaultRole)
+            {
             var roleResult = await _userManager.AddToRoleAsync(newUser, UserRoles.User);
+
             if (!roleResult.Succeeded)
             {
                 var errorDetails = string.Join(", ", roleResult.Errors.Select(e => e.Description));
                 _logger.LogError("Failed to assign default role: {errors}", errorDetails);
                 return Result<UserResponse>.Failure(IdentityErrors.RoleAssignmentFailed);
+            }
             }
 
             _logger.LogInformation("User created successfully");

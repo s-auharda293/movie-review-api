@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Actor;
+using MovieReviewApi.Domain.Entities;
 using System.Data;
 using System.Text.Json;
 
@@ -49,7 +50,10 @@ namespace MovieReviewApi.Application.Handlers.Movie
                     MovieTitles = a.MovieTitlesCache?
                       .Split(',', StringSplitOptions.RemoveEmptyEntries)
                       .Select(title => title.Trim())
-                      .ToList() ?? new List<string>()
+                      .ToList() ?? new List<string>(),
+                    ProposedAt = a.ProposedAt,
+                    Status = a.Status,
+                    StatusChangedAt = a.StatusChangedAt
                 }).ToList();
 
 

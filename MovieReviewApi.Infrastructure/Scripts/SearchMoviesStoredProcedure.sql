@@ -10,7 +10,7 @@ BEGIN
     SET NOCOUNT ON;
 
     -- Total count
-    SELECT COUNT(*) AS TotalCount
+    SELECT COUNT(1) AS TotalCount
     FROM Movies
     WHERE
         (@SearchTerm IS NULL OR @SearchTerm = '')

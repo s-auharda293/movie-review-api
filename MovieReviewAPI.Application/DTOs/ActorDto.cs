@@ -1,4 +1,6 @@
-﻿namespace MovieReviewApi.Application.DTOs
+﻿using MovieReviewApi.Domain.Entities;
+
+namespace MovieReviewApi.Application.DTOs
 {
     public abstract class ActorBaseDto
     {
@@ -21,6 +23,10 @@
         public string? Bio { get; set; }
 
         public string MovieTitlesCache { get; set; } = null!;
+        public String? Status { get; set; }
+        public DateTime ProposedAt { get; set; }
+        public DateTime? StatusChangedAt { get; set; }
+
     }
 
     public class CreateActorDto : ActorBaseDto
@@ -58,6 +64,10 @@
         public DateTime? DateOfBirth { get; set; }
 
         public List<string> MovieTitles { get; set; } = new();
+
+        public String? Status { get; set; }
+        public DateTime ProposedAt { get; set; }
+        public DateTime? StatusChangedAt { get; set; }
     }
 
 
@@ -83,5 +93,23 @@
         public string? ContentType { get; set; }
 
     }
+
+    public class ActorApprovalRequest
+    {
+        public Guid ActorId { get; set; }
+    }
+
+    public class ActorStatusResponseDto
+    {
+        public Guid Id { get; set; }
+        public string Status { get; set; } = null!;
+
+        public Guid? ProposedBy { get; set; }
+        public DateTime? ProposedAt { get; set; }
+        public Guid? StatusChangedBy { get; set; }
+        public DateTime? StatusChangedAt { get; set; }
+    }
+
+
 
 }

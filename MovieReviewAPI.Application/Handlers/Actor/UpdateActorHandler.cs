@@ -5,6 +5,7 @@ using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Common.Actors;
+using MovieReviewApi.Domain.Entities;
 using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Actor
@@ -66,7 +67,10 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 Name = updatedActor.Name,
                 Bio = updatedActor.Bio,
                 DateOfBirth = updatedActor.DateOfBirth,
-                MovieTitles = movieTitles?? new List<String>()
+                MovieTitles = movieTitles?? new List<String>(),
+                Status = updatedActor.Status,
+                ProposedAt = updatedActor.ProposedAt,
+                StatusChangedAt = updatedActor.StatusChangedAt,    
             };
 
             return Result<ActorWithMoviesDto>.Success(actorDto);

@@ -2,7 +2,12 @@
     @Name NVARCHAR(100),
     @Bio NVARCHAR(4000) = NULL,
     @DateOfBirth DATETIME2 = NULL,
-    @MovieIds NVARCHAR(MAX) = NULL -- comma-separated movie GUIDs
+    @MovieIds NVARCHAR(MAX) = NULL, -- comma-separated movie GUIDs
+    @Status NVARCHAR(200),
+    @ProposedBy UNIQUEIDENTIFIER,
+    @ProposedAt DATETIME2,
+    @StatusChangedBy UNIQUEIDENTIFIER = NULL,
+    @StatusChangedAt DATETIME2 = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -12,8 +17,11 @@ BEGIN
     DECLARE @CreatedAt DATETIME2 = SYSUTCDATETIME();
     DECLARE @UpdatedAt DATETIME2 = SYSUTCDATETIME();
 
-    INSERT INTO Actors (Id, Name, Bio, DateOfBirth, CreatedAt, UpdatedAt)
-    VALUES (@ActorId, @Name, @Bio, @DateOfBirth, @CreatedAt, @UpdatedAt);
+    INSERT INTO Actors
+    (Id, Name, Bio, DateOfBirth, CreatedAt, UpdatedAt, Status, ProposedBy, ProposedAt,StatusChangedBy, StatusChangedAt)
+    VALUES
+    (@ActorId, @Name, @Bio, @DateOfBirth, @CreatedAt, @UpdatedAt, @Status, @ProposedBy, @ProposedAt,@StatusChangedBy, @StatusChangedAt);
+
 
     -- Insert actor-movie links if MovieIds provided
     IF @MovieIds IS NOT NULL AND LEN(@MovieIds) > 0
@@ -49,7 +57,12 @@ BEGIN
         ) agg ON m.Id = agg.MovieId;
     END
 
+
+
     -- Return actor info
     SELECT @ActorId AS Id, @Name AS Name, @Bio AS Bio, @DateOfBirth AS DateOfBirth,
-           @CreatedAt AS CreatedAt, @UpdatedAt AS UpdatedAt;
+           @CreatedAt AS CreatedAt, @UpdatedAt AS UpdatedAt,
+           @Status AS Status,
+           @ProposedBy AS ProposedBy, @ProposedAt AS ProposedAt,
+           @StatusChangedBy AS  StatusChangedBy , @StatusChangedAt AS StatusChangedAt;
 END

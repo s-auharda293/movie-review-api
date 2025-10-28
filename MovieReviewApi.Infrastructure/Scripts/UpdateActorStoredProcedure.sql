@@ -56,7 +56,8 @@ BEGIN
     END
 
     -- Return updated actor info
-    SELECT Id, Name, Bio, DateOfBirth, UpdatedAt
+    SELECT Id, Name, Bio, DateOfBirth, UpdatedAt,  
+    Status, ProposedBy, ProposedAt, StatusChangedBy, StatusChangedAt
     FROM Actors
     WHERE Id = @Id;
 END

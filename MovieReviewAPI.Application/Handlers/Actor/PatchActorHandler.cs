@@ -5,6 +5,7 @@ using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Domain.Common.Actors;
+using MovieReviewApi.Domain.Entities;
 using System.Data;
 
 namespace MovieReviewApi.Application.Handlers.Actor
@@ -75,6 +76,10 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 return Result<ActorWithMoviesDto>.Failure(ActorErrors.NotFound);
 
             updatedActor.MovieTitles = movieTitles;
+            updatedActor.Status = updatedActor.Status;
+            updatedActor.ProposedAt = updatedActor.ProposedAt;
+            updatedActor.StatusChangedAt = updatedActor.StatusChangedAt;
+
 
             return Result<ActorWithMoviesDto>.Success(updatedActor);
         }

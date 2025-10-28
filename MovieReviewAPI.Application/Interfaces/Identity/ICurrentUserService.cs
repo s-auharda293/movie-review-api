@@ -9,5 +9,6 @@ namespace MovieReviewApi.Application.Interfaces.Identity
     public interface ICurrentUserService
     {
         public string? GetUserId();
+        public string? GetUserRole();
     }
 }

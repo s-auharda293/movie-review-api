@@ -4,6 +4,7 @@ using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Actor;
 using MovieReviewApi.Domain.Common.Actors;
+using MovieReviewApi.Domain.Entities;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
@@ -31,7 +32,9 @@ namespace MovieReviewApi.Application.Handlers.Actor
                 ? new List<string>()
                 : actor.MovieTitlesCache.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                         .Select(t => t.Trim())
-                                        .ToList()
+                                        .ToList(),
+                Status = actor.Status,
+                StatusChangedAt = actor.StatusChangedAt,
             };
 
             return Result<ActorWithMoviesDto>.Success(dto);

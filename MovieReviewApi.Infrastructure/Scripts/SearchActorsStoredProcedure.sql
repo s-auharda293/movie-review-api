@@ -10,14 +10,14 @@ BEGIN
     SET NOCOUNT ON;
 
     -- Filter actors directly from the Actor table
-    SELECT COUNT(*) AS TotalCount
+    SELECT COUNT(1) AS TotalCount
     FROM Actors
     WHERE
         (@SearchTerm IS NULL OR @SearchTerm = '')
         OR (@SearchColumn = 'Name' AND Name LIKE '%' + @SearchTerm + '%')
         OR (@SearchColumn = 'Bio' AND Bio LIKE '%' + @SearchTerm + '%')
-        OR (@SearchColumn = 'DateOfBirth' AND DateOfBirth = TRY_CAST(@SearchTerm AS DATE));
-
+        OR (@SearchColumn = 'DateOfBirth' AND DateOfBirth = TRY_CAST(@SearchTerm AS DATE))
+        OR (@SearchColumn = 'Status' AND Status LIKE '%' + @SearchTerm + '%');
     SELECT *
     FROM Actors
     WHERE
@@ -25,6 +25,7 @@ BEGIN
         OR (@SearchColumn = 'Name' AND Name LIKE '%' + @SearchTerm + '%')
         OR (@SearchColumn = 'Bio' AND Bio LIKE '%' + @SearchTerm + '%')
         OR (@SearchColumn = 'DateOfBirth' AND DateOfBirth = TRY_CAST(@SearchTerm AS DATE))
+        OR (@SearchColumn = 'Status' AND Status LIKE '%' + @SearchTerm + '%')
     ORDER BY
         CASE 
             WHEN @SortColumn = 'Name' AND @SortDirection = 'ASC' THEN Name

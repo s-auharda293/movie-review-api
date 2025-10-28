@@ -217,7 +217,7 @@ app.MapHangfireDashboard();
 
         if (String.Equals(env,"Development",StringComparison.OrdinalIgnoreCase))
         {
-            await MovieActorSeeder.SeedAsync(dbContext, CancellationToken.None);
+            await MovieActorSeeder.SeedAsync(dbContext, userManager, mediator, CancellationToken.None);
         }
 
     }

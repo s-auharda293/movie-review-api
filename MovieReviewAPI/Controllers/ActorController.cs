@@ -53,7 +53,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPut]
-        [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = $"{UserRoles.Admin},{UserRoles.Moderator}")]
         public async Task<ActionResult<Actor>> PutActor(UpdateActorCommand updateActorCommand) {
 
             var updated = await _mediator.Send(updateActorCommand);
@@ -77,7 +77,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPost("report")]
-        [Authorize(Roles = UserRoles.Admin)]
+        //[Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> GetActorsRating(ExportActorsWithRatingsCommand exportActorsCommand)
         {
             var result = await _mediator.Send(exportActorsCommand);
@@ -91,7 +91,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPatch("actors/status")]
-        [Authorize(Roles = UserRoles.Admin + "," + UserRoles.Moderator)]
+        [Authorize(Roles = $"{UserRoles.Admin},{UserRoles.Moderator}")]
         public async Task<IActionResult> ChangeActorStatus(ChangeActorStatusCommand changeActorStatusCommand )
         {
             var result = await _mediator.Send(changeActorStatusCommand);

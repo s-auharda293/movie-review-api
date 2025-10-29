@@ -21,7 +21,7 @@ BEGIN
         CAST(r.UserId AS UNIQUEIDENTIFIER) AS UserId,
         u.UserName, r.Comment, r.Rating
         FROM Reviews r
-        LEFT JOIN AspNetUsers u ON r.UserId = u.Id
+        INNER JOIN AspNetUsers u ON r.UserId = u.Id
         WHERE 1 = 1
     ';
 

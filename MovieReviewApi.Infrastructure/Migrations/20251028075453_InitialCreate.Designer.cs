@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MovieReviewApi.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using MovieReviewApi.Infrastructure.Data;
 namespace MovieReviewApi.Infrastructure.Migrations
 {
     [DbContext(typeof(MovieReviewDbContext))]
-    partial class MovieReviewDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251028075453_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -418,18 +421,6 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DurationMinutes")
-                        .HasDatabaseName("IX_Movies_DurationMinutes");
-
-                    b.HasIndex("Rating")
-                        .HasDatabaseName("IX_Movies_Rating");
-
-                    b.HasIndex("ReleaseDate")
-                        .HasDatabaseName("IX_Movies_ReleaseDate");
-
-                    b.HasIndex("Status")
-                        .HasDatabaseName("IX_Movies_Status");
 
                     b.ToTable("Movies", (string)null);
                 });

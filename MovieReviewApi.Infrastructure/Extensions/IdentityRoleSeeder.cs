@@ -10,7 +10,7 @@ namespace MovieReviewApi.Infrastructure.Extensions
     public static class IdentityRoleSeeder
     {
         /// <summary>
-        /// Seed default roles if they don't exist.t
+        /// Seed default roles if they don't exist.
         /// </summary>
         public static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
         {
@@ -24,40 +24,55 @@ namespace MovieReviewApi.Infrastructure.Extensions
                 await roleManager.CreateAsync(new IdentityRole(UserRoles.User));
         }
 
-        /// <summary>
-        /// Seed a default admin user using the registration command and assign Admin role.
-        /// </summary>
-        public static async Task SeedAdminUserAsync(
-            UserManager<ApplicationUser> userManager,
-            IMediator mediator)
+        public static async Task<string> SeedAdminUserAsync(UserManager<ApplicationUser> userManager, IMediator mediator)
         {
-            string adminEmail = "admin@movies.com";
+            return await SeedUserAsync(userManager, mediator, "admin@movies.com", "Admin", "User", UserRoles.Admin, "Admin@123", true);
+        }
 
-            // Check if admin already exists
-            var existingUser = await userManager.FindByEmailAsync(adminEmail);
-            if (existingUser != null) return;
+        public static async Task<string> SeedModeratorUserAsync(UserManager<ApplicationUser> userManager, IMediator mediator)
+        {
+            return await SeedUserAsync(userManager, mediator, "moderator@movies.com", "Moderator", "User", UserRoles.Moderator, "Moderator@123", true);
+        }
 
-            var registerAdminRequest = new UserRegisterRequest
+        //public static async Task<string> SeedRegularUserAsync(UserManager<ApplicationUser> userManager, IMediator mediator)
+        //{
+        //    return await SeedUserAsync(userManager, mediator, "user@movies.com", "Regular", "User", UserRoles.User, "User@123");
+        //}
+
+        public static async Task<string> SeedUserAsync(
+          UserManager<ApplicationUser> userManager,
+          IMediator mediator,
+          string email,
+          string firstName,
+          string lastName,
+          string role,
+          string password,
+          bool SkipDefaultRole=false
+          )
+        {
+            var existingUser = await userManager.FindByEmailAsync(email);
+            if (existingUser != null) return existingUser.Id;
+
+            var registerRequest = new UserRegisterRequest
             {
-                FirstName = "Admin",
-                LastName = "User",
-                Email = adminEmail,
-                Password = "Admin@123"
+                FirstName = firstName,
+                LastName = lastName,
+                Email = email,
+                Password = password,
+                SkipDefaultRole = SkipDefaultRole
             };
 
-            // Use your registration command
-            var registerCommand = new RegisterUserCommand(registerAdminRequest);
-
+            var registerCommand = new RegisterUserCommand(registerRequest);
             var result = await mediator.Send(registerCommand);
 
             if (result.IsSuccess)
             {
-                // Fetch the created user
-                var adminUser = await userManager.FindByEmailAsync(adminEmail);
-
-                // Assign Admin role
-                await userManager.AddToRoleAsync(adminUser!, UserRoles.Admin);
+                var user = await userManager.FindByEmailAsync(email);
+                await userManager.AddToRoleAsync(user!, role);
+                return user!.Id;
             }
+
+            throw new Exception($"Failed to seed user '{email}'");
         }
     }
 }

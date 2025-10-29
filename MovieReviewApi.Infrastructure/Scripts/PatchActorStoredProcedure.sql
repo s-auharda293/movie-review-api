@@ -59,7 +59,8 @@ BEGIN
         GROUP BY am.MovieId
     ) agg ON m.Id = agg.MovieId;
 
-    SELECT Id, Name, Bio, DateOfBirth, CreatedAt, UpdatedAt, MovieTitlesCache
+    SELECT Id, Name, Bio, DateOfBirth, CreatedAt, UpdatedAt, MovieTitlesCache,
+    Status, ProposedBy, ProposedAt, StatusChangedBy, StatusChangedAt
     FROM Actors
     WHERE Id = @Id;
 END

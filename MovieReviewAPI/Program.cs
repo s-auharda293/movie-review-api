@@ -22,8 +22,10 @@ using MovieReviewApi.Infrastructure.Services.Identity;
 using MovieReviewApi.Infrastructure.Storage;
 using Serilog;
 using System.Threading;
+using Microsoft.AspNetCore.ResponseCompression;
+using System.IO.Compression;
 
-    var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
 Log.Logger = new LoggerConfiguration()
       //.ReadFrom.Configuration(builder.Configuration)
@@ -90,11 +92,23 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingPipeli
     builder.Services.AddScoped<ILogFileCleaner, LogFileCleaner>();
     builder.Services.AddScoped<DeleteLogsJob>();
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<GzipCompressionProvider>();
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+
 
 
 //builder.Services.AddFluentValidationAutoValidation();
 
-    builder.Services.AddControllers();
+builder.Services.AddControllers();
 
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -184,7 +198,9 @@ var app = builder.Build();
 
     app.UseCors("CorsPolicy");
 
-    app.UseAuthorization();
+    app.UseResponseCompression();
+
+app.UseAuthorization();
 
     app.MapControllers();
 
@@ -217,7 +233,7 @@ app.MapHangfireDashboard();
 
         if (String.Equals(env,"Development",StringComparison.OrdinalIgnoreCase))
         {
-            await MovieActorSeeder.SeedAsync(dbContext, CancellationToken.None);
+            await MovieActorSeeder.SeedAsync(dbContext, userManager, mediator, CancellationToken.None);
         }
 
     }

@@ -1,4 +1,5 @@
 ﻿using MovieReviewApi.Domain.Common;
+using MovieReviewApi.Domain.Enums;
 
 namespace MovieReviewApi.Domain.Entities;
 
@@ -21,8 +22,17 @@ public class Movie:BaseEntity
     //one movie multiple genres
     //public ICollection<Genre> Genres { get; set; } = new List<Genre>();
 
-    //one movie multiple actors
     public ICollection<Actor> Actors { get; set; } = new List<Actor>();
 
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
+
+    //maker-checker
+    public ProposalStatus Status { get; set; } = ProposalStatus.Pending;
+    public Guid? ProposedBy { get; set; }
+    public Guid? ApprovedBy { get; set; }
+    public Guid? RejectedBy { get; set; }
+    public DateTime? ProposedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? ApprovedAt { get; set; }
+    public DateTime? RejectedAt { get; set; }
+
 }

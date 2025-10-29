@@ -17,5 +17,10 @@ namespace MovieReviewApi.Infrastructure.Services.Identity
             var userId = _httpContextAccessor?.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
             return userId?.Value;
         }
+
+        public string? GetUserRole() {
+            var role = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role);
+            return role?.Value;
+        }
     }
 }

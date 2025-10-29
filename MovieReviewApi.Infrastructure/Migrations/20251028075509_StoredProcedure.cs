@@ -29,7 +29,7 @@ namespace MovieReviewApi.Infrastructure.Migrations
             MigrationHelper.RunSqlScript(migrationBuilder, "MovieReviewApi.Infrastructure.Scripts.GetActorsRatingStoredProcedure.sql");
             MigrationHelper.RunSqlScript(migrationBuilder, "MovieReviewApi.Infrastructure.Scripts.SearchActorsStoredProcedure.sql");
             MigrationHelper.RunSqlScript(migrationBuilder, "MovieReviewApi.Infrastructure.Scripts.SearchMoviesStoredProcedure.sql");
-            
+
         }
 
         /// <inheritdoc />
@@ -53,7 +53,7 @@ namespace MovieReviewApi.Infrastructure.Migrations
             migrationBuilder.Sql("DROP PROCEDURE IF EXISTS GetActorsRating");
             migrationBuilder.Sql("DROP PROCEDURE IF EXISTS SearchActors");
             migrationBuilder.Sql("DROP PROCEDURE IF EXISTS SearchMovies");
-    
+
         }
     }
 }

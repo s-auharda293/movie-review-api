@@ -2,6 +2,8 @@
 using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 using FluentAssertions;
 using MediatR;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MovieReviewApi.Application.Commands.Actor;
@@ -10,6 +12,7 @@ using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Actor;
 using MovieReviewApi.Domain.Entities;
+using System.Security.Claims;
 using System.Text.Json;
 using Xunit;
 using Xunit.Abstractions;
@@ -132,6 +135,7 @@ namespace MovieReviewApi.IntegrationTests
         private readonly ITestOutputHelper _output;
 
         private readonly IApplicationDbContext _context;
+        private readonly WebApplicationFactory<Program> _factory;
 
         public ActorTests(MovieReviewWebApplicationFactory factory, ITestOutputHelper output)
         {
@@ -140,10 +144,40 @@ namespace MovieReviewApi.IntegrationTests
             _mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             _output = output;
             _context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
+            _factory = factory;
         }
+
+        public static class TestAuthHelper
+        {
+            public static string SetupFakeUser(IServiceProvider serviceProvider, string? userId = null, string role = UserRoles.Admin)
+            {
+                var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+
+                var testUserId = userId ?? Guid.NewGuid().ToString();
+
+                var claims = new[]
+                {
+            new Claim(ClaimTypes.NameIdentifier, testUserId),
+            new Claim(ClaimTypes.Role, role)
+        };
+
+                var identity = new ClaimsIdentity(claims, "TestAuthType");
+                httpContextAccessor.HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(identity)
+                };
+
+                return testUserId;
+            }
+        }
+
 
         private async Task<(MovieWithActorsDto movie, List<ActorWithMoviesDto> actors)> SeedMovieWithActorsAsync()
         {
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             var actor1Command = new CreateActorCommand(new CreateActorDto
             {
                 Name = "Actor One",
@@ -190,6 +224,10 @@ namespace MovieReviewApi.IntegrationTests
         [MemberData(nameof(ActorTestData.CreateActors), MemberType = typeof(ActorTestData))]
         public async Task CreateActor_WithValidData_ReturnsCreatedActor(CreateActorDto actorDto, string expectedName, DateTime expectedDob, string expectedBio)
         {
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             // arrange
             var command = new CreateActorCommand(actorDto);
 
@@ -220,6 +258,10 @@ namespace MovieReviewApi.IntegrationTests
         {
             
             var (movie, actors) = await SeedMovieWithActorsAsync();
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
 
             // Act
             foreach (var actor in actors)
@@ -271,6 +313,11 @@ namespace MovieReviewApi.IntegrationTests
                 MovieIds = null
             });
 
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
+
             var createdResult = await _mediator.Send(createCommand);
             var actorId = createdResult.Value!.Id!;
 
@@ -308,6 +355,10 @@ namespace MovieReviewApi.IntegrationTests
                 MovieIds = null
             });
 
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             var createdResult = await _mediator.Send(createCommand);
             var actorId = createdResult.Value!.Id!; // Guid, not nullable
 
@@ -344,6 +395,11 @@ namespace MovieReviewApi.IntegrationTests
                 Bio = "This actor will be deleted",
                 MovieIds = null
             });
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
 
             var createdResult = await _mediator.Send(createCommand);
             var actorId = createdResult.Value!.Id!; // Guid, non-nullable
@@ -388,6 +444,11 @@ namespace MovieReviewApi.IntegrationTests
                 MovieIds = null
             };
 
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
+
             // Insert actors into database
             await _mediator.Send(new CreateActorCommand(actor1));
             await _mediator.Send(new CreateActorCommand(actor2));
@@ -425,6 +486,11 @@ namespace MovieReviewApi.IntegrationTests
                 MovieIds = null
             });
 
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
+
             var createdResult = await _mediator.Send(createCommand);
             createdResult.Should().NotBeNull();
             createdResult.Value.Should().NotBeNull();
@@ -454,6 +520,11 @@ namespace MovieReviewApi.IntegrationTests
         {
             // arrange
             var command = new CreateActorCommand(actorDto);
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
 
             //act
             var result = await _mediator.Send(command);

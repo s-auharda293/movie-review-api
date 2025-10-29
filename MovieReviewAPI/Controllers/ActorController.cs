@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,7 +35,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPost]
-        //[Authorize(Roles=UserRoles.Admin)]
+        [Authorize]
         public async Task<ActionResult<ActorDto>> PostActor(CreateActorCommand createActorCommand)
         {
             var actor = await _mediator.Send(createActorCommand);
@@ -52,7 +53,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPut]
-        //[Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = $"{UserRoles.Admin},{UserRoles.Moderator}")]
         public async Task<ActionResult<Actor>> PutActor(UpdateActorCommand updateActorCommand) {
 
             var updated = await _mediator.Send(updateActorCommand);
@@ -61,7 +62,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpPatch]
-        //[Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<ActionResult<Actor>> PatchActor( PatchActorCommand patchActorCommand) {
             
             var patched = await _mediator.Send(patchActorCommand);
@@ -69,7 +70,7 @@ namespace MovieReviewApi.Api.Controllers
         }
 
         [HttpDelete]
-        //[Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = UserRoles.Admin)]
         public async Task<IActionResult> DeleteActor(DeleteActorCommand deleteActorCommand) {    
             var deleted = await _mediator.Send(deleteActorCommand);
             return deleted.IsSuccess ? NoContent() : NotFound(deleted);
@@ -87,8 +88,17 @@ namespace MovieReviewApi.Api.Controllers
             }
 
             return NotFound(result);
-
         }
+
+        [HttpPatch("actors/status")]
+        [Authorize(Roles = $"{UserRoles.Admin},{UserRoles.Moderator}")]
+        public async Task<IActionResult> ChangeActorStatus(ChangeActorStatusCommand changeActorStatusCommand )
+        {
+            var result = await _mediator.Send(changeActorStatusCommand);
+
+            return  result.IsSuccess?Ok(result): BadRequest(result);
+        }
+
 
     }
 }

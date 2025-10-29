@@ -1,4 +1,6 @@
 ﻿
+using MovieReviewApi.Domain.Enums;
+
 namespace MovieReviewApi.Domain.Common.Actors
 {
     public static class ActorErrors
@@ -17,6 +19,18 @@ namespace MovieReviewApi.Domain.Common.Actors
         }
 
         public static Error InvalidFileFormat =  new ("Actor.InvalidFileFormat", $"The file format you requested is not supported.");
-        
+
+        public static Error InvalidStatus()
+        {
+            var validStatuses = string.Join(", ", Enum.GetNames(typeof(ProposalStatus)));
+            return new Error("Actor.InvalidStatus", $"The status provided is invalid. Valid statuses are: {validStatuses}");
+        }
+
+        public static Error StatusAlreadySet()
+        {
+            var validStatuses = string.Join(", ", Enum.GetNames(typeof(ProposalStatus)));
+            return new Error("Actor.StatusAlreadySet", $"The status provided is already set. Valid statuses are: {validStatuses}");
+        }
+
     }
 }

@@ -79,7 +79,13 @@ public class MovieReviewDbContext: IdentityDbContext<ApplicationUser>, IApplicat
                }
                );
 
-
+            modelBuilder.Entity<Movie>(entity =>
+            {
+                entity.HasIndex(m => m.ReleaseDate).HasDatabaseName("IX_Movies_ReleaseDate");
+                entity.HasIndex(m => m.DurationMinutes).HasDatabaseName("IX_Movies_DurationMinutes");
+                entity.HasIndex(m => m.Rating).HasDatabaseName("IX_Movies_Rating");
+                entity.HasIndex(m => m.Status).HasDatabaseName("IX_Movies_Status");
+           });
 
             modelBuilder.Entity<Review>()
            .HasOne(r => r.Movie)

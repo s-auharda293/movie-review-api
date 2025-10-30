@@ -3,7 +3,7 @@
     @UserId UNIQUEIDENTIFIER,
     @UserName NVARCHAR(4000),
     @Comment NVARCHAR(4000) = NULL,
-    @Rating DECIMAL(3,2) = NULL
+    @Rating DECIMAL(4,1) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;

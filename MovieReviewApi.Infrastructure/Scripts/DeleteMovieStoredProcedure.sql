@@ -4,11 +4,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Delete movie-actor links first
     DELETE FROM ActorMovie 
     WHERE MovieId = @Id;
 
-    -- Update MovieTitlesCache for all actors
     UPDATE a
     SET a.MovieTitlesCache = agg.MovieTitles
     FROM Actors a
@@ -20,7 +18,6 @@ BEGIN
         GROUP BY am.ActorId
     ) agg ON a.Id = agg.ActorId;
 
-    -- Delete the movie itself
     DELETE FROM Movies 
     WHERE Id = @Id;
 END

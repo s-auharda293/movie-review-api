@@ -28,7 +28,6 @@ BEGIN
     )
     WHERE Id = @MovieId;
 
-    -- Return the updated row
     SELECT Id, MovieId, Comment, Rating, UpdatedAt
     FROM Reviews
     WHERE Id = @Id;

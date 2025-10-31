@@ -1,11 +1,13 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Queries.Movie;
 using MovieReviewApi.Domain.Entities;
+using System.Security.Claims;
 using System.Text.Json;
 using Xunit.Abstractions;
 
@@ -15,13 +17,40 @@ namespace MovieReviewApi.IntegrationTests
     {
         private readonly IMediator _mediator;
         private readonly ITestOutputHelper _output;
+        private readonly WebApplicationFactory<Program> _factory;
 
         public MovieTests(MovieReviewWebApplicationFactory factory, ITestOutputHelper output)
         {
             var scope = factory.Services.CreateScope();
             _mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             _output = output;
+            _factory = factory;
         }
+
+        public static class TestAuthHelper
+        {
+            public static string SetupFakeUser(IServiceProvider serviceProvider, string? userId = null, string role = UserRoles.Admin)
+            {
+                var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+
+                var testUserId = userId ?? Guid.NewGuid().ToString();
+
+                var claims = new[]
+                {
+            new Claim(ClaimTypes.NameIdentifier, testUserId),
+            new Claim(ClaimTypes.Role, role)
+        };
+
+                var identity = new ClaimsIdentity(claims, "TestAuthType");
+                httpContextAccessor.HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(identity)
+                };
+
+                return testUserId;
+            }
+        }
+
 
         //happy path tests
         [Fact]
@@ -44,10 +73,14 @@ namespace MovieReviewApi.IntegrationTests
                 MovieIds = null
             };
 
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             var actor1 = await _mediator.Send(new CreateActorCommand(actor1Dto));
             var actor2 = await _mediator.Send(new CreateActorCommand(actor2Dto));
 
-            // Step 2: Create a movie using the seeded actor IDs
+            // create a movie using the seeded actor IDs
             var movieDto = new CreateMovieDto
             {
                 Title = "The Great Adventure",
@@ -129,7 +162,7 @@ namespace MovieReviewApi.IntegrationTests
         [Fact]
         public async Task UpdateMovie_WithValidData_UpdatesMovie()
         {
-            // Arrange - first create a movie
+            // Arrange 
             var actor1 = await _mediator.Send(new CreateActorCommand(new CreateActorDto
             {
                 Name = "Actor One",
@@ -278,6 +311,10 @@ namespace MovieReviewApi.IntegrationTests
         public async Task PatchMovie_WithActorIds_UpdatesOnlySpecifiedFields()
         {
             // Arrange - create actors
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             var actor1 = await _mediator.Send(new CreateActorCommand(new CreateActorDto
             {
                 Name = "Patch Actor One",
@@ -342,6 +379,10 @@ namespace MovieReviewApi.IntegrationTests
         [Fact]
         public async Task DeleteMovie_WithValidId_DeletesMovieSuccessfully()
         {
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             // Arrange 
             var actor1 = await _mediator.Send(new CreateActorCommand(new CreateActorDto
             {
@@ -384,7 +425,6 @@ namespace MovieReviewApi.IntegrationTests
             // Assert
             Assert.True(deleteResult.IsSuccess, "Movie deletion should succeed");
 
-            // Optional: verify movie no longer exists
             var getResult = await _mediator.Send(new GetMovieByIdQuery(movieId));
             Assert.False(getResult.IsSuccess, "Movie should no longer exist after deletion");
 
@@ -395,6 +435,10 @@ namespace MovieReviewApi.IntegrationTests
         public async Task GetMovieById_WithValidId_ReturnsMovie()
         {
             // Arrange 
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             var actor = await _mediator.Send(new CreateActorCommand(new CreateActorDto
             {
                 Name = "Actor One",
@@ -451,6 +495,11 @@ namespace MovieReviewApi.IntegrationTests
         public async Task GetAllMovies_ReturnsListOfMovies()
         {
             // Arrange 
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             var actor = await _mediator.Send(new CreateActorCommand(new CreateActorDto
             {
                 Name = "Actor One",

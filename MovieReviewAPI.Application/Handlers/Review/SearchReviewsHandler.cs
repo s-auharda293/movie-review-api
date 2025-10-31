@@ -24,8 +24,8 @@ namespace MovieReviewApi.Application.Handlers.Review
             var parameters = new DynamicParameters();
             parameters.Add("@Page", request.request.Page, DbType.Int32);
             parameters.Add("@PageSize", request.request.PageSize, DbType.Int32);
-            parameters.Add("@SortColumn", request.request.Sort?.Field, DbType.String);
-            parameters.Add("@SortDir", request.request.Sort?.Dir ?? "asc", DbType.String);
+            parameters.Add("@SortColumn", request.request.SortColumn, DbType.String);
+            parameters.Add("@SortDirection", request.request.SortDirection ?? "asc", DbType.String);
             parameters.Add("@SearchColumn", request.request.SearchColumn, DbType.String);
             parameters.Add("@SearchTerm", request.request.SearchTerm, DbType.String);
             parameters.Add("@TotalCount", dbType: DbType.Int32, direction: ParameterDirection.Output);
@@ -41,8 +41,8 @@ namespace MovieReviewApi.Application.Handlers.Review
             var reviewDtos = reviews.Select(r => new ReviewDto
             {
                 Id = r.Id is Guid g ? g : Guid.Parse(r.Id.ToString()),
-                MovieId = r.MovieId,
-                UserId = r.UserId,
+                MovieId = r.MovieId is Guid m? m: Guid.Parse(r.MovieId.ToString()),
+                UserId = r.UserId is Guid ? r.UserId: Guid.Parse(r.UserId.ToString()),
                 UserName = r.UserName,
                 Comment = r.Comment,
                 Rating = r.Rating

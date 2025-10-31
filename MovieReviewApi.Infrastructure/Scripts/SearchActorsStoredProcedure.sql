@@ -18,7 +18,7 @@ BEGIN
         OR (@SearchColumn = 'Bio' AND Bio LIKE '%' + @SearchTerm + '%')
         OR (@SearchColumn = 'DateOfBirth' AND DateOfBirth = TRY_CAST(@SearchTerm AS DATE))
         OR (@SearchColumn = 'Status' AND Status LIKE '%' + @SearchTerm + '%');
-    SELECT *
+    SELECT Id,Name,Bio,DateOfBirth,MovieTitlesCache,Status,ProposedAt,StatusChangedAt
     FROM Actors
     WHERE
         (@SearchTerm IS NULL OR @SearchTerm = '')

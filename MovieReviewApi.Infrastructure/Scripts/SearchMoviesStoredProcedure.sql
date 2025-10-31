@@ -29,7 +29,7 @@ BEGIN
         )
 
     ;WITH FilteredMovies AS (
-        SELECT *
+        SELECT Id,Title,Description,ReleaseDate,DurationMinutes,Rating,Url,ActorNamesCache,CreatedAt
         FROM Movies
         WHERE
         (
@@ -42,7 +42,7 @@ BEGIN
             )
         )
     )
-    SELECT *
+    SELECT Id,Title,Description,ReleaseDate,DurationMinutes,Rating,Url,ActorNamesCache
     FROM FilteredMovies
     ORDER BY
         CASE WHEN @SortColumn = 'Title' AND @SortDirection = 'ASC' THEN Title END ASC,

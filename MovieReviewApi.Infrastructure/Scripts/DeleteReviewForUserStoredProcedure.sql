@@ -11,7 +11,6 @@ BEGIN
     FROM Reviews
     WHERE Id = @Id;
 
-    -- Delete review only if it belongs to the user
     DELETE FROM Reviews
     WHERE Id = @Id AND UserId = @UserId;
 

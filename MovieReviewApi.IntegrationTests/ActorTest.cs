@@ -12,6 +12,7 @@ using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Actor;
 using MovieReviewApi.Domain.Entities;
+using MovieReviewApi.Domain.Enums;
 using System.Security.Claims;
 using System.Text.Json;
 using Xunit;
@@ -205,7 +206,7 @@ namespace MovieReviewApi.IntegrationTests
                 ReleaseDate = DateTime.UtcNow,
                 DurationMinutes = 120,
                 Rating = 8.5m,
-                ActorIds = new List<Guid> { actor1.Id, actor2.Id }
+                ActorIds = new List<Guid> { actor1.Id, actor2.Id },
             });
             var movieResult = await _mediator.Send(movieCommand);
             Assert.True(movieResult.IsSuccess);
@@ -253,54 +254,7 @@ namespace MovieReviewApi.IntegrationTests
             _output.WriteLine($"Response: {JsonSerializer.Serialize(result)}");
         }
 
-        [Fact]
-        public async Task MovieAndActorCaches_WithValidData_ReturnResponseCorrectly()
-        {
-            
-            var (movie, actors) = await SeedMovieWithActorsAsync();
-
-            var scope = _factory.Services.CreateScope();
-            var services = scope.ServiceProvider;
-            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
-
-            // Act
-            foreach (var actor in actors)
-            {
-                var actorFromDb = await _context.Actors
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(a => a.Id == actor.Id);
-
-                Assert.NotNull(actorFromDb);
-
-                var actorMovieTitles = actorFromDb.MovieTitlesCache?
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(x => x.Trim())
-                    .ToList();
-
-                Assert.NotNull(actorMovieTitles);
-                Assert.Contains(movie.Title, actorMovieTitles);
-            }
-
-            var movieFromDb = await _context.Movies
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == movie.Id);
-
-            Assert.NotNull(movieFromDb);
-
-            var movieActorNames = movieFromDb.ActorNamesCache?
-                .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Trim())
-                .ToList();
-
-            Assert.NotNull(movieActorNames);
-
-            foreach (var actor in actors)
-            {
-                Assert.Contains(actor.Name, movieActorNames);
-            }
-        }
-
-
+       
         [Fact]
         public async Task UpdateActor_WithValidIdAndData_UpdatesActorSuccessfully()
         {
@@ -612,7 +566,122 @@ namespace MovieReviewApi.IntegrationTests
                 Assert.Equal("application/pdf", result.Value.ContentType);
         }
 
+        [Fact]
+        public async Task MovieAndActorCaches_WithValidData_ReturnResponseCorrectly()
+        {
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
+            var (movie, actors) = await SeedMovieWithActorsAsync();
+
+            // Act
+            foreach (var actor in actors)
+            {
+                var actorFromDb = await _context.Actors
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(a => a.Id == actor.Id);
+
+                Assert.NotNull(actorFromDb);
+
+                var actorMovieTitles = actorFromDb.MovieTitlesCache?
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .ToList();
+
+                Assert.NotNull(actorMovieTitles);
+                Assert.Contains(movie.Title, actorMovieTitles);
+            }
+
+            var movieFromDb = await _context.Movies
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == movie.Id);
+
+            Assert.NotNull(movieFromDb);
+
+            var movieActorNames = movieFromDb.ActorNamesCache?
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .ToList();
+
+            Assert.NotNull(movieActorNames);
+
+            foreach (var actor in actors)
+            {
+                Assert.Contains(actor.Name, movieActorNames);
+            }
+        }
 
 
+        [Fact]
+        public async Task CreateActor_WithUser_ReturnsCreatedActorWithPendingStatus() {
+            // arrange
+            CreateActorDto actorDto = (new CreateActorDto
+            {
+                Name = "Actor To Get",
+                DateOfBirth = DateTime.Parse("1980-01-01"),
+                Bio = "This actor will be requested",
+                MovieIds = null
+            });
+            var command = new CreateActorCommand(actorDto);
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.User);
+
+            var response = await _mediator.Send(command);
+            _output.WriteLine("Response" + JsonSerializer.Serialize(response));
+
+            Assert.True(response.IsSuccess);
+            Assert.False(response.IsFailure);
+
+            Assert.Equal("Pending", response.Value!.Status);
+            var dbActor = await _context.Actors.FindAsync(response.Value.Id);
+            Assert.Equal("Pending", dbActor!.Status);
+        }
+
+        [Fact]
+        public async Task CreateActorAndUpdateStatusToApproved_WithAdmin_ReturnsCreatedActorWithApprovedStatus()
+        {
+            //Arrange
+            CreateActorDto actorDto = (new CreateActorDto
+            {
+                Name = "Actor To Get",
+                DateOfBirth = DateTime.Parse("1980-01-01"),
+                Bio = "This actor will be requested",
+                MovieIds = null
+            });
+            var command = new CreateActorCommand(actorDto);
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.User);
+
+            var response = await _mediator.Send(command);
+            _output.WriteLine("Response" + JsonSerializer.Serialize(response));
+
+            Assert.True(response.IsSuccess);
+            Assert.False(response.IsFailure);
+
+            Assert.Equal("Pending", response.Value!.Status);
+            var dbActor = await _context.Actors.FindAsync(response.Value.Id);
+            Assert.Equal("Pending", dbActor!.Status);
+
+            //Act
+            var actor = await _mediator.Send(new ChangeActorStatusCommand(response.Value.Id, ProposalStatus.Approved.ToString()));
+            _output.WriteLine("Response" + JsonSerializer.Serialize(actor));
+
+            Assert.True(actor.IsSuccess);
+            Assert.False(actor.IsFailure);
+            Assert.NotNull(actor.Value);
+            Assert.NotEqual(Guid.Empty, actor.Value!.Id);
+            Assert.Equal("Approved", actor.Value.Status);
+            Assert.Equal(Guid.Parse(userId), actor.Value.ProposedBy);
+            Assert.Equal(Guid.Parse(userId), actor.Value.StatusChangedBy);
+            Assert.NotNull(actor.Value.ProposedAt);
+            Assert.NotNull(actor.Value.StatusChangedAt);
+            Assert.True(actor.Value.StatusChangedAt > actor.Value.ProposedAt);
+        }
     }
 }

@@ -2,7 +2,7 @@
     @Page INT = 1,
     @PageSize INT = 5,
     @SortColumn NVARCHAR(100) = NULL,
-    @SortDir NVARCHAR(4) = 'ASC', -- "ASC" or "DESC"
+    @SortDirection NVARCHAR(4) = 'ASC', -- "ASC" or "DESC"
     @SearchColumn NVARCHAR(100) = NULL,
     @SearchTerm NVARCHAR(255) = NULL,
     @TotalCount INT OUTPUT
@@ -31,21 +31,21 @@ BEGIN
                 (@SearchColumn = 'Rating' AND CAST(r.Rating AS NVARCHAR(50)) LIKE '%' + @SearchTerm + '%')
             )
     )
-    SELECT *
+    SELECT Id,MovieId,UserId,UserName,Comment,Rating,CreatedAt
     INTO #TempReviews
     FROM FilteredReviews;
 
     SELECT @TotalCount = COUNT(1) FROM #TempReviews;
 
-    SELECT *
+    SELECT Id,MovieId,UserId,UserName,Comment,Rating
     FROM #TempReviews
     ORDER BY
-        CASE WHEN @SortColumn = 'Comment' AND @SortDir = 'ASC' THEN Comment END ASC,
-        CASE WHEN @SortColumn = 'Comment' AND @SortDir = 'DESC' THEN Comment END DESC,
-        CASE WHEN @SortColumn = 'UserName' AND @SortDir = 'ASC' THEN UserName END ASC,
-        CASE WHEN @SortColumn = 'UserName' AND @SortDir = 'DESC' THEN UserName END DESC,
-        CASE WHEN @SortColumn = 'Rating' AND @SortDir = 'ASC' THEN Rating END ASC,
-        CASE WHEN @SortColumn = 'Rating' AND @SortDir = 'DESC' THEN Rating END DESC,
+        CASE WHEN @SortColumn = 'Comment' AND @SortDirection = 'ASC' THEN Comment END ASC,
+        CASE WHEN @SortColumn = 'Comment' AND @SortDirection = 'DESC' THEN Comment END DESC,
+        CASE WHEN @SortColumn = 'UserName' AND @SortDirection = 'ASC' THEN UserName END ASC,
+        CASE WHEN @SortColumn = 'UserName' AND @SortDirection = 'DESC' THEN UserName END DESC,
+        CASE WHEN @SortColumn = 'Rating' AND @SortDirection = 'ASC' THEN Rating END ASC,
+        CASE WHEN @SortColumn = 'Rating' AND @SortDirection = 'DESC' THEN Rating END DESC,
         CreatedAt
     OFFSET @Offset ROWS
     FETCH NEXT @PageSize ROWS ONLY;

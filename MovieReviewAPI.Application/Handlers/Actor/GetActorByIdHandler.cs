@@ -4,10 +4,11 @@ using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Application.Queries.Actor;
 using MovieReviewApi.Domain.Common.Actors;
+using MovieReviewApi.Domain.Entities;
 
 namespace MovieReviewApi.Application.Handlers.Actor
 {
-    public class GetActorByIdHandler : IRequestHandler<GetActorByIdQuery, Result<ActorDto>> {
+    public class GetActorByIdHandler : IRequestHandler<GetActorByIdQuery, Result<ActorWithMoviesDto>> {
         private readonly IApplicationDbContext _context;
 
         public GetActorByIdHandler(IApplicationDbContext context)
@@ -15,24 +16,28 @@ namespace MovieReviewApi.Application.Handlers.Actor
             _context = context;
         }
 
-        public async Task<Result<ActorDto>> Handle(GetActorByIdQuery request,CancellationToken cancellationToken) {
-            var actor = await _context.Actors.Include(m => m.Movies).FirstOrDefaultAsync(a => a.Id == request.Id);
+        public async Task<Result<ActorWithMoviesDto>> Handle(GetActorByIdQuery request,CancellationToken cancellationToken) {
+            var actor = await _context.Actors.AsNoTracking().Include(m => m.Movies).FirstOrDefaultAsync(a => a.Id == request.Id);
 
-            if (actor == null) return Result<ActorDto>.Failure(ActorErrors.NotFound);
+            if (actor == null) return Result<ActorWithMoviesDto>.Failure(ActorErrors.NotFound);
 
 
-            var dto =  new ActorDto
+            var dto = new ActorWithMoviesDto
             {
                 Id = actor.Id,
                 Name = actor.Name,
-                Bio = actor.Bio,
+                Bio = actor.Bio!,
                 DateOfBirth = actor.DateOfBirth,
-                Movies = actor.Movies?
-                .Select(m => new ActorMovieDto { Id = m.Id, Title = m.Title })
-                .ToList() ?? new List<ActorMovieDto>()
+                MovieTitles = string.IsNullOrWhiteSpace(actor.MovieTitlesCache)
+                ? new List<string>()
+                : actor.MovieTitlesCache.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                        .Select(t => t.Trim())
+                                        .ToList(),
+                Status = actor.Status,
+                StatusChangedAt = actor.StatusChangedAt,
             };
 
-            return Result<ActorDto>.Success(dto);
+            return Result<ActorWithMoviesDto>.Success(dto);
 
         }
 

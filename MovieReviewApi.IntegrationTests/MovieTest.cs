@@ -1,11 +1,13 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using MovieReviewApi.Application.Commands.Actor;
 using MovieReviewApi.Application.Commands.Movie;
 using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Queries.Movie;
 using MovieReviewApi.Domain.Entities;
+using System.Security.Claims;
 using System.Text.Json;
 using Xunit.Abstractions;
 
@@ -15,13 +17,40 @@ namespace MovieReviewApi.IntegrationTests
     {
         private readonly IMediator _mediator;
         private readonly ITestOutputHelper _output;
+        private readonly WebApplicationFactory<Program> _factory;
 
         public MovieTests(MovieReviewWebApplicationFactory factory, ITestOutputHelper output)
         {
             var scope = factory.Services.CreateScope();
             _mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             _output = output;
+            _factory = factory;
         }
+
+        public static class TestAuthHelper
+        {
+            public static string SetupFakeUser(IServiceProvider serviceProvider, string? userId = null, string role = UserRoles.Admin)
+            {
+                var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+
+                var testUserId = userId ?? Guid.NewGuid().ToString();
+
+                var claims = new[]
+                {
+            new Claim(ClaimTypes.NameIdentifier, testUserId),
+            new Claim(ClaimTypes.Role, role)
+        };
+
+                var identity = new ClaimsIdentity(claims, "TestAuthType");
+                httpContextAccessor.HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(identity)
+                };
+
+                return testUserId;
+            }
+        }
+
 
         //happy path tests
         [Fact]
@@ -44,10 +73,14 @@ namespace MovieReviewApi.IntegrationTests
                 MovieIds = null
             };
 
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             var actor1 = await _mediator.Send(new CreateActorCommand(actor1Dto));
             var actor2 = await _mediator.Send(new CreateActorCommand(actor2Dto));
 
-            // Step 2: Create a movie using the seeded actor IDs
+            // create a movie using the seeded actor IDs
             var movieDto = new CreateMovieDto
             {
                 Title = "The Great Adventure",
@@ -77,7 +110,7 @@ namespace MovieReviewApi.IntegrationTests
             Assert.Equal(movieDto.ReleaseDate, movie.ReleaseDate);
             Assert.Equal(movieDto.DurationMinutes, movie.DurationMinutes);
             Assert.Equal(movieDto.Rating, movie.Rating);
-            Assert.Equal(movieDto.ActorIds.Count, movie.Actors.Count);
+            Assert.Equal(movieDto.ActorIds.Count, movie.ActorNames.Count);
 
             _output.WriteLine($"Response: {JsonSerializer.Serialize(result)}");
         }
@@ -129,7 +162,7 @@ namespace MovieReviewApi.IntegrationTests
         [Fact]
         public async Task UpdateMovie_WithValidData_UpdatesMovie()
         {
-            // Arrange - first create a movie
+            // Arrange 
             var actor1 = await _mediator.Send(new CreateActorCommand(new CreateActorDto
             {
                 Name = "Actor One",
@@ -269,7 +302,7 @@ namespace MovieReviewApi.IntegrationTests
             Assert.Equal("Patch Original Description", patchedMovie.Description); 
             Assert.Equal(110, patchedMovie.DurationMinutes); 
             Assert.Equal(6, patchedMovie.Rating);
-            Assert.Single(patchedMovie.Actors); 
+            Assert.Single(patchedMovie.ActorNames);
 
             _output.WriteLine($"Patched Movie Result: {JsonSerializer.Serialize(result)}");
         }
@@ -278,6 +311,10 @@ namespace MovieReviewApi.IntegrationTests
         public async Task PatchMovie_WithActorIds_UpdatesOnlySpecifiedFields()
         {
             // Arrange - create actors
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             var actor1 = await _mediator.Send(new CreateActorCommand(new CreateActorDto
             {
                 Name = "Patch Actor One",
@@ -334,7 +371,7 @@ namespace MovieReviewApi.IntegrationTests
             Assert.Equal("Patch Original Description", patchedMovie.Description);
             Assert.Equal(110, patchedMovie.DurationMinutes);
             Assert.Equal(6, patchedMovie.Rating);
-            Assert.Single(patchedMovie.Actors);
+            Assert.Single(patchedMovie.ActorNames);
 
             _output.WriteLine($"Patched Movie Result: {JsonSerializer.Serialize(result)}");
         }
@@ -342,6 +379,10 @@ namespace MovieReviewApi.IntegrationTests
         [Fact]
         public async Task DeleteMovie_WithValidId_DeletesMovieSuccessfully()
         {
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             // Arrange 
             var actor1 = await _mediator.Send(new CreateActorCommand(new CreateActorDto
             {
@@ -384,7 +425,6 @@ namespace MovieReviewApi.IntegrationTests
             // Assert
             Assert.True(deleteResult.IsSuccess, "Movie deletion should succeed");
 
-            // Optional: verify movie no longer exists
             var getResult = await _mediator.Send(new GetMovieByIdQuery(movieId));
             Assert.False(getResult.IsSuccess, "Movie should no longer exist after deletion");
 
@@ -395,6 +435,10 @@ namespace MovieReviewApi.IntegrationTests
         public async Task GetMovieById_WithValidId_ReturnsMovie()
         {
             // Arrange 
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             var actor = await _mediator.Send(new CreateActorCommand(new CreateActorDto
             {
                 Name = "Actor One",
@@ -442,8 +486,7 @@ namespace MovieReviewApi.IntegrationTests
             var movie = getResult.Value!;
             Assert.Equal(createMovieDto.Title, movie.Title);
             Assert.Equal(createMovieDto.Description, movie.Description);
-            Assert.Single(movie.Actors);
-            Assert.Equal(actor.Value!.Id, movie.Actors.First().Id);
+            Assert.Single(movie.ActorNames);
 
             _output.WriteLine($"Retrieved Movie: {JsonSerializer.Serialize(movie)}");
         }
@@ -452,6 +495,11 @@ namespace MovieReviewApi.IntegrationTests
         public async Task GetAllMovies_ReturnsListOfMovies()
         {
             // Arrange 
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, role: UserRoles.Admin);
+
             var actor = await _mediator.Send(new CreateActorCommand(new CreateActorDto
             {
                 Name = "Actor One",
@@ -500,8 +548,16 @@ namespace MovieReviewApi.IntegrationTests
             await _mediator.Send(new CreateMovieCommand(movie1Dto));
             await _mediator.Send(new CreateMovieCommand(movie2Dto));
 
+            var requestDto = new MovieRequestDto
+            {
+                Page = 1,
+                PageSize = 2,
+            };
+
+            var query = new SearchMoviesQuery(requestDto);
+
             // Act
-            var allMoviesResult = await _mediator.Send(new GetMoviesQuery());
+            var allMoviesResult = await _mediator.Send(query);
 
             // Assert query succeeded
             Assert.True(allMoviesResult.IsSuccess, "GetMoviesQuery should succeed");
@@ -509,9 +565,9 @@ namespace MovieReviewApi.IntegrationTests
             // Get the actual list
             var allMovies = allMoviesResult.Value!;
             Assert.NotNull(allMovies);
-            Assert.True(allMovies.Any(), "Movies list should not be empty");
-            Assert.Contains(allMovies, m => m.Title == "Movie One");
-            Assert.Contains(allMovies, m => m.Title == "Movie Two");
+            Assert.True(allMovies.Movies.Any(), "Movies list should not be empty");
+            Assert.Contains(allMovies.Movies, m => m.Title == "Movie One");
+            Assert.Contains(allMovies.Movies, m => m.Title == "Movie Two");
 
             _output.WriteLine($"All Movies: {JsonSerializer.Serialize(allMovies)}");
 
@@ -564,7 +620,8 @@ namespace MovieReviewApi.IntegrationTests
                 PageSize = 2,
                 SearchColumn = "Title",
                 SearchTerm = "e",
-                Sort = "[{\"field\":\"Title\",\"dir\":\"asc\"}]" // sort ascending by Title
+                SortColumn="Title",
+                SortDirection="asc"
             };
 
             var query = new SearchMoviesQuery(requestDto);
@@ -576,14 +633,14 @@ namespace MovieReviewApi.IntegrationTests
             Assert.True(result.IsSuccess);
             var movies = result.Value!;
             Assert.NotNull(movies);
-            //Assert.True(movies.Count <= requestDto.PageSize, "Movies count should respect PageSize");
+            Assert.True(movies.TotalCount >= requestDto.PageSize, "Movies count should respect PageSize");
 
             //// All returned movies should contain "e" in the title
-            //Assert.All(movies, m => Assert.Contains("e", m.Title, StringComparison.OrdinalIgnoreCase));
+            Assert.All(movies.Movies, m => Assert.Contains("e", m.Title, StringComparison.OrdinalIgnoreCase));
 
             //// Verify sorting: titles are ascending
-            //var sortedTitles = movies.Select(m => m.Title).OrderBy(t => t).ToList();
-            //Assert.Equal(sortedTitles, movies.Select(m => m.Title).ToList());
+            var sortedTitles = movies.Movies.Select(m => m.Title).OrderBy(t => t).ToList();
+            Assert.Equal(sortedTitles, movies.Movies.Select(m => m.Title).ToList());
 
             _output.WriteLine($"SearchMovies Result (Page {requestDto.Page}): {JsonSerializer.Serialize(movies)}");
         }

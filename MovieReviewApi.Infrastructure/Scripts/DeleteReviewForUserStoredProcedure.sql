@@ -5,9 +5,23 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Delete review only if it belongs to the user
+    DECLARE @MovieId UNIQUEIDENTIFIER;
+
+    SELECT @MovieId = MovieId
+    FROM Reviews
+    WHERE Id = @Id;
+
     DELETE FROM Reviews
     WHERE Id = @Id AND UserId = @UserId;
+
+    UPDATE Movies
+    SET Rating = ISNULL((
+        SELECT AVG(Rating)
+        FROM Reviews
+        WHERE MovieId = @MovieId
+          AND Rating IS NOT NULL
+    ), 0)
+    WHERE Id = @MovieId;
 
     -- Return the number of affected rows
     SELECT @@ROWCOUNT AS AffectedRows;

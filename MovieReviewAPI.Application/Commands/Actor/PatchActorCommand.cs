@@ -5,5 +5,5 @@ using System.Threading;
 
 namespace MovieReviewApi.Application.Commands.Actor
 {
-    public record PatchActorCommand(Guid Id, PatchActorDto dto) : IRequest<Result<ActorDto>>;
+    public record PatchActorCommand(Guid Id, PatchActorDto dto) : IRequest<Result<ActorWithMoviesDto>>;
 }

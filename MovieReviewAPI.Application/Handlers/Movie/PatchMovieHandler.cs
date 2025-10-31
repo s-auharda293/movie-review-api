@@ -11,7 +11,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace MovieReviewApi.Application.Handlers.Movie
 {
-    public class PatchMovieHandler:IRequestHandler<PatchMovieCommand,Result<MovieDto>>
+    public class PatchMovieHandler:IRequestHandler<PatchMovieCommand,Result<MovieWithActorsDto>>
     {
         private readonly IApplicationDbContext _context;
         private readonly IDbConnectionFactory _connection;
@@ -24,13 +24,13 @@ namespace MovieReviewApi.Application.Handlers.Movie
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<Result<MovieDto>> Handle(PatchMovieCommand request, CancellationToken cancellationToken) {
+        public async Task<Result<MovieWithActorsDto>> Handle(PatchMovieCommand request, CancellationToken cancellationToken) {
             string? actorIdsCsv = null;
-            List<MovieActorDto> actorEntities = new();
+            List<string> actorNames = new();
             string? newUrl = null;
 
            var movie = await _context.Movies.Include(m=>m.Actors).FirstOrDefaultAsync(m=>m.Id==request.Id);
-            if (movie == null) return Result<MovieDto>.Failure(MovieErrors.NotFound);
+            if (movie == null) return Result<MovieWithActorsDto>.Failure(MovieErrors.NotFound);
 
             if (request.dto.ActorIds != null && request.dto.ActorIds.Any())
             {
@@ -38,21 +38,17 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 if (actors.ToList().Count != request.dto.ActorIds.Count)
                 {
                     var invalidIds = request.dto.ActorIds.Except(actors.Select(a => a.Id).ToList());
-                    return Result<MovieDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
+                    return Result<MovieWithActorsDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
                 }
                 actorIdsCsv = string.Join(",", request.dto.ActorIds);
-                actorEntities = actors.Select(a => new MovieActorDto
-                {
-                    Id = a.Id,
-                    Name = a.Name
-                }).ToList();
+                actorNames = actors.Select(a =>a.Name).ToList();
 
             }
 
 
-            if (actorEntities.Count == 0)
+            if (actorNames.Count == 0)
             {
-                actorEntities = movie.Actors.Select(a => new MovieActorDto { Id = a.Id, Name = a.Name }).ToList();
+                actorNames = movie.Actors.Select(a => a.Name ).ToList();
             }
 
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
@@ -73,7 +69,7 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 //newUrl = await _fileStorageService.UpdateFileAsync(stream, request.Id, request.dto.File.FileName, "minio");
             }
 
-            parameters.Add("@Url", newUrl, DbType.String);
+                parameters.Add("@Url", newUrl, DbType.String);
 
             var patchMovie = await connection.QueryFirstAsync<dynamic>(
                 "PatchMovie",
@@ -81,13 +77,18 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 commandType: CommandType.StoredProcedure
             );
 
+            if (request.dto.File == null || request.dto.File.Length != 0)
+            {
+                newUrl = movie.Url;
+            }
+
 
             if (patchMovie == null)
             {
-                return Result<MovieDto>.Failure(MovieErrors.NotFound);
+                return Result<MovieWithActorsDto>.Failure(MovieErrors.NotFound);
             }
 
-            var dto = new MovieDto
+            var dto = new MovieWithActorsDto
             {
                 Id = patchMovie.Id,
                 Title = patchMovie.Title,
@@ -95,11 +96,11 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 ReleaseDate = patchMovie.ReleaseDate,
                 DurationMinutes = patchMovie.DurationMinutes,
                 Rating = patchMovie.Rating,
-                Actors = actorEntities,
+                ActorNames = actorNames,
                 FileUrl = newUrl,
             };
 
-            return Result<MovieDto>.Success(dto);
+            return Result<MovieWithActorsDto>.Success(dto);
 
         }
     }

@@ -2,7 +2,7 @@
     @Page INT = 1,
     @PageSize INT = 5,
     @SortColumn NVARCHAR(100) = NULL,
-    @SortDir NVARCHAR(4) = 'asc', -- "asc" or "desc"
+    @SortDirection NVARCHAR(4) = 'ASC', -- "ASC" or "DESC"
     @SearchColumn NVARCHAR(100) = NULL,
     @SearchTerm NVARCHAR(255) = NULL,
     @TotalCount INT OUTPUT
@@ -10,49 +10,47 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @SQL NVARCHAR(MAX);
     DECLARE @Offset INT = (@Page - 1) * @PageSize;
 
-    -- Base query
-     SET @SQL = '
+    ;WITH FilteredReviews AS (
         SELECT 
-        CAST(r.Id AS UNIQUEIDENTIFIER) AS Id, 
-        CAST(r.MovieId AS UNIQUEIDENTIFIER) AS MovieId, 
-        CAST(r.UserId AS UNIQUEIDENTIFIER) AS UserId,
-        u.UserName, r.Comment, r.Rating
+            r.Id,
+            r.MovieId,
+            r.UserId,
+            u.UserName,
+            r.Comment,
+            r.Rating,
+            r.CreatedAt
         FROM Reviews r
-        LEFT JOIN AspNetUsers u ON r.UserId = u.Id
-        WHERE 1 = 1
-    ';
+        INNER JOIN AspNetUsers u ON r.UserId = u.Id
+        WHERE
+            @SearchTerm IS NULL OR @SearchTerm = '' OR
+            (
+                (@SearchColumn = 'Comment' AND r.Comment LIKE '%' + @SearchTerm + '%') OR
+                (@SearchColumn = 'UserName' AND u.UserName LIKE '%' + @SearchTerm + '%') OR
+                (@SearchColumn = 'Rating' AND CAST(r.Rating AS NVARCHAR(50)) LIKE '%' + @SearchTerm + '%')
+            )
+    )
+    SELECT Id,MovieId,UserId,UserName,Comment,Rating,CreatedAt
+    INTO #TempReviews
+    FROM FilteredReviews;
 
-      -- Count total
-    DECLARE @CountSQL NVARCHAR(MAX) = '
-        SELECT @TotalCountOut = COUNT(*) 
-        FROM Reviews
-        WHERE 1 = 1
-    ';
+    SELECT @TotalCount = COUNT(1) FROM #TempReviews;
 
-    -- Append search filter if present
-    IF (@SearchColumn IS NOT NULL AND @SearchTerm IS NOT NULL)
-        SET @CountSQL += ' AND ' + QUOTENAME(@SearchColumn) + ' LIKE ''%' + @SearchTerm + '%''';
-        SET @SQL += ' AND ' + QUOTENAME(@SearchColumn) + ' LIKE ''%' + @SearchTerm + '%''';
+    SELECT Id,MovieId,UserId,UserName,Comment,Rating
+    FROM #TempReviews
+    ORDER BY
+        CASE WHEN @SortColumn = 'Comment' AND @SortDirection = 'ASC' THEN Comment END ASC,
+        CASE WHEN @SortColumn = 'Comment' AND @SortDirection = 'DESC' THEN Comment END DESC,
+        CASE WHEN @SortColumn = 'UserName' AND @SortDirection = 'ASC' THEN UserName END ASC,
+        CASE WHEN @SortColumn = 'UserName' AND @SortDirection = 'DESC' THEN UserName END DESC,
+        CASE WHEN @SortColumn = 'Rating' AND @SortDirection = 'ASC' THEN Rating END ASC,
+        CASE WHEN @SortColumn = 'Rating' AND @SortDirection = 'DESC' THEN Rating END DESC,
+        CreatedAt
+    OFFSET @Offset ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
 
-    -- Optional sorting
-    IF (@SortColumn IS NOT NULL)
-        SET @SQL += ' ORDER BY ' + QUOTENAME(@SortColumn) + ' ' + CASE WHEN @SortDir = 'desc' THEN 'DESC' ELSE 'ASC' END;
-    ELSE
-        SET @SQL += ' ORDER BY r.Id'; -- required for OFFSET
-
-    -- Pagination
-    SET @SQL += '
-        OFFSET ' + CAST(@Offset AS NVARCHAR) + ' ROWS 
-        FETCH NEXT ' + CAST(@PageSize AS NVARCHAR) + ' ROWS ONLY;
-    ';
-
-    -- Execute total count
-    EXEC sp_executesql @CountSQL, N'@TotalCountOut INT OUTPUT', @TotalCountOut = @TotalCount OUTPUT;
-
-    -- Execute main query
-    EXEC sp_executesql @SQL;
+    -- Clean up temp table
+    DROP TABLE #TempReviews;
 END
 GO

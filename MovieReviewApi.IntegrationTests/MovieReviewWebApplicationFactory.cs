@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MovieReviewApi.Application.DTOs;
 using MovieReviewApi.Application.Interfaces;
 using MovieReviewApi.Infrastructure.Data;
 using System.Data;
@@ -18,12 +19,15 @@ namespace MovieReviewApi.IntegrationTests
         {
             IConfiguration? configuration = null;
 
+            builder.UseEnvironment("Testing"); //to avoid seeding actor and movies 
+
             // Load test configuration
             builder.ConfigureAppConfiguration((context, config) =>
             {
                 config.AddJsonFile("appsettings.Test.json", optional: false);
                 configuration = config.Build();
             });
+
 
             builder.ConfigureTestServices(services =>
             {

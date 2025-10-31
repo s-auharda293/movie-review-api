@@ -7,7 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Scripts\CreateFullTextIndex_Movies_TitleDescription.sql" />
     <None Remove="Scripts\DeleteReviewForUserStoredProcedure.sql" />
+    <None Remove="Scripts\SearchActorsStoredProcedure.sql" />
+    <None Remove="Scripts\SearchMoviesStoredProcedure.sql" />
     <None Remove="Scripts\SearchReviewsStoredProcedure.sql" />
   </ItemGroup>
 	
@@ -15,16 +18,20 @@
 	<!-- SQL scripts as embedded resources -->
 	<ItemGroup>
 		<EmbeddedResource Include="Scripts\CreateActorStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\CreateFullTextIndex_Movies_TitleDescription.sql" />
 		<EmbeddedResource Include="Scripts\CreateMovieStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\CreateReviewStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\DeleteActorStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\DeleteMovieStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\DeleteReviewForUserStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\DeleteReviewStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\GetActorsRatingStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\GetMoviesStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\PatchActorStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\PatchMovieStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\PatchReviewStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\SearchActorsStoredProcedure.sql" />
+		<EmbeddedResource Include="Scripts\SearchMoviesStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\SearchReviewsStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\UpdateActorStoredProcedure.sql" />
 		<EmbeddedResource Include="Scripts\UpdateMovieStoredProcedure.sql" />
@@ -33,18 +40,21 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="15.0.1" />
+    <PackageReference Include="Bogus" Version="35.6.4" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.9" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Minio" Version="6.0.5" />
+    <PackageReference Include="PuppeteerSharp" Version="20.2.4" />
   </ItemGroup>
 
   <ItemGroup>

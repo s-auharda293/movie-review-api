@@ -16,12 +16,18 @@ using MovieReviewApi.Infrastructure.Data;
 using MovieReviewApi.Infrastructure.Extensions;
 using MovieReviewApi.Infrastructure.Jobs;
 using MovieReviewApi.Infrastructure.Mapping;
+using MovieReviewApi.Infrastructure.Seeders;
 using MovieReviewApi.Infrastructure.Services;
 using MovieReviewApi.Infrastructure.Services.Identity;
 using MovieReviewApi.Infrastructure.Storage;
 using Serilog;
+using System.Threading;
+using Microsoft.AspNetCore.ResponseCompression;
+using System.IO.Compression;
 
-    Log.Logger = new LoggerConfiguration()
+var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+Log.Logger = new LoggerConfiguration()
       //.ReadFrom.Configuration(builder.Configuration)
       .MinimumLevel.Information()
       .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
@@ -63,9 +69,9 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 builder.Services.AddSingleton<IMinioClient>(x =>
 {
     return new MinioClient()
-        .WithEndpoint("localhost:9000")   // your MinIO endpoint
+        .WithEndpoint("localhost:9000")   
         .WithCredentials("admin", "admin123")
-        .WithSSL(false) // important! since you're running HTTP locally
+        .WithSSL(false) 
         .Build();
 });
 
@@ -86,11 +92,23 @@ builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingPipeli
     builder.Services.AddScoped<ILogFileCleaner, LogFileCleaner>();
     builder.Services.AddScoped<DeleteLogsJob>();
 
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<GzipCompressionProvider>();
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = CompressionLevel.Fastest;
+});
+
+
 
 
 //builder.Services.AddFluentValidationAutoValidation();
 
-    builder.Services.AddControllers();
+builder.Services.AddControllers();
 
 
     // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -158,9 +176,12 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddAutoMapper(cfg =>
 {
-    // configure your profiles here
+    // configure profiles here
     cfg.AddProfile<MappingProfile>();
 });
+
+builder.Services.AddScoped<IActorReportService, ActorReportService>();
+
 
 var app = builder.Build();
 
@@ -177,7 +198,9 @@ var app = builder.Build();
 
     app.UseCors("CorsPolicy");
 
-    app.UseAuthorization();
+    app.UseResponseCompression();
+
+app.UseAuthorization();
 
     app.MapControllers();
 
@@ -199,13 +222,20 @@ app.MapHangfireDashboard();
     HangfireJobScheduler.ScheduleJobs();
 
     using (var scope = app.Services.CreateScope())
-{
+    {
         var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
 
         await IdentityRoleSeeder.SeedRolesAsync(roleManager);
-        await IdentityRoleSeeder.SeedAdminUserAsync(userManager,mediator);
+        await IdentityRoleSeeder.SeedAdminUserAsync(userManager, mediator);
+
+        if (String.Equals(env,"Development",StringComparison.OrdinalIgnoreCase))
+        {
+            await MovieActorSeeder.SeedAsync(dbContext, userManager, mediator, CancellationToken.None);
+        }
+
     }
 
 

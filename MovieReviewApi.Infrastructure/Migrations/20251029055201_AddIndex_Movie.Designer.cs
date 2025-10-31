@@ -12,15 +12,15 @@ using MovieReviewApi.Infrastructure.Data;
 namespace MovieReviewApi.Infrastructure.Migrations
 {
     [DbContext(typeof(MovieReviewDbContext))]
-    [Migration("20251012153432_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251029055201_AddIndex_Movie")]
+    partial class AddIndex_Movie
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.9")
+                .HasAnnotation("ProductVersion", "9.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -35,7 +35,11 @@ namespace MovieReviewApi.Infrastructure.Migrations
 
                     b.HasKey("ActorId", "MovieId");
 
-                    b.HasIndex("MovieId");
+                    b.HasIndex("ActorId")
+                        .HasDatabaseName("IX_ActorMovie_ActorId");
+
+                    b.HasIndex("MovieId")
+                        .HasDatabaseName("IX_ActorMovie_MovieId");
 
                     b.ToTable("ActorMovie");
                 });
@@ -179,6 +183,9 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ActorNamesCache")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -197,6 +204,9 @@ namespace MovieReviewApi.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Url")
                         .HasColumnType("nvarchar(max)");
 
                     b.ToTable((string)null);
@@ -221,9 +231,29 @@ namespace MovieReviewApi.Infrastructure.Migrations
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("MovieTitlesCache")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ProposedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ProposedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("StatusChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("StatusChangedBy")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -231,6 +261,15 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasDefaultValueSql("GETUTCDATE()");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_Actors_CreatedAt");
+
+                    b.HasIndex("DateOfBirth")
+                        .HasDatabaseName("IX_Actors_DateOfBirth");
+
+                    b.HasIndex("Name")
+                        .HasDatabaseName("IX_Actors_Name");
 
                     b.ToTable("Actors", (string)null);
                 });
@@ -326,6 +365,15 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ActorNamesCache")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -338,12 +386,27 @@ namespace MovieReviewApi.Infrastructure.Migrations
                     b.Property<int>("DurationMinutes")
                         .HasColumnType("int");
 
+                    b.Property<DateTime?>("ProposedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ProposedBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<decimal>("Rating")
                         .HasPrecision(3, 1)
                         .HasColumnType("decimal(3,1)");
 
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("RejectedBy")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -358,6 +421,18 @@ namespace MovieReviewApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DurationMinutes")
+                        .HasDatabaseName("IX_Movies_DurationMinutes");
+
+                    b.HasIndex("Rating")
+                        .HasDatabaseName("IX_Movies_Rating");
+
+                    b.HasIndex("ReleaseDate")
+                        .HasDatabaseName("IX_Movies_ReleaseDate");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_Movies_Status");
 
                     b.ToTable("Movies", (string)null);
                 });

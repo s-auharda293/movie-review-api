@@ -10,7 +10,7 @@ using System.Data;
 namespace MovieReviewApi.Application.Handlers.Movie
 {
 
-    public class UpdateMovieHandler:IRequestHandler<UpdateMovieCommand,Result<MovieDto>>
+    public class UpdateMovieHandler:IRequestHandler<UpdateMovieCommand,Result<MovieWithActorsDto>>
     {
         private readonly IApplicationDbContext _context;
         private readonly IDbConnectionFactory _connection;
@@ -22,9 +22,9 @@ namespace MovieReviewApi.Application.Handlers.Movie
             _fileStorageService = fileStorageService;
         }
 
-        public async Task<Result<MovieDto>> Handle(UpdateMovieCommand request, CancellationToken cancellationToken) {
+        public async Task<Result<MovieWithActorsDto>> Handle(UpdateMovieCommand request, CancellationToken cancellationToken) {
             string? actorIdsCsv = null;
-            List<MovieActorDto> actorEntities = new();
+            List<string> actorNames = new();
             string? newUrl = null;
 
             if (request.dto.ActorIds != null && request.dto.ActorIds.Any())
@@ -36,15 +36,11 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 if (actors.Count != request.dto.ActorIds.Count)
                 {
                     var invalidIds = request.dto.ActorIds.Except(actors.Select(a => a.Id)).ToList();
-                    return Result<MovieDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
+                    return Result<MovieWithActorsDto>.Failure(MovieErrors.ActorsNotFound(invalidIds));
                 }
 
                 actorIdsCsv = string.Join(",", request.dto.ActorIds);
-                actorEntities = actors.Select(a => new MovieActorDto
-                {
-                    Id = a.Id,
-                    Name = a.Name
-                }).ToList();
+                actorNames = actors.Select(a =>  a.Name).ToList();
             }
 
             var connection = await _connection.CreateConnectionAsync(cancellationToken);
@@ -75,10 +71,10 @@ namespace MovieReviewApi.Application.Handlers.Movie
 
             if (movie == null)
             {
-                return Result<MovieDto>.Failure(MovieErrors.NotFound);
+                return Result<MovieWithActorsDto>.Failure(MovieErrors.NotFound);
             }
 
-            var movieDto = new MovieDto
+            var movieDto = new MovieWithActorsDto
             {
                 Id = movie.Id,
                 Title = movie.Title,
@@ -86,11 +82,11 @@ namespace MovieReviewApi.Application.Handlers.Movie
                 ReleaseDate = movie.ReleaseDate,
                 DurationMinutes = movie.DurationMinutes,
                 Rating = movie.Rating,
-                Actors = actorEntities,
+                ActorNames = actorNames,
                 FileUrl = newUrl
             };
 
-            return Result<MovieDto>.Success(movieDto);
+            return Result<MovieWithActorsDto>.Success(movieDto);
         }
     }
 }

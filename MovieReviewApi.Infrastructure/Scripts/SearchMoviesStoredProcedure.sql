@@ -9,61 +9,55 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Validate sort column and direction
-    IF @SortColumn NOT IN ('Title','Description','ReleaseDate','DurationMinutes','Rating','CreatedAt')
-        SET @SortColumn = 'CreatedAt';
-    IF @SortDirection NOT IN ('ASC','DESC')
-        SET @SortDirection = 'ASC';
-
-    -- Precast search term
     DECLARE @SearchDate DATE = TRY_CAST(@SearchTerm AS DATE);
     DECLARE @SearchInt INT = TRY_CAST(@SearchTerm AS INT);
     DECLARE @SearchFloat FLOAT = TRY_CAST(@SearchTerm AS FLOAT);
 
-    -- Build WHERE clause
-    DECLARE @WhereClause NVARCHAR(MAX) = N'1=1';
-    IF @SearchTerm IS NOT NULL AND @SearchTerm <> ''
-    BEGIN
-        SET @WhereClause = N'(' +
-            CASE WHEN @SearchColumn = 'Title' THEN 'Title LIKE ''%'' + @SearchTerm + ''%''' ELSE '1=0' END +
-            CASE WHEN @SearchColumn = 'Description' THEN ' OR Description LIKE ''%'' + @SearchTerm + ''%''' ELSE '' END +
-            CASE WHEN @SearchColumn = 'ReleaseDate' THEN ' OR ReleaseDate = @SearchDate' ELSE '' END +
-            CASE WHEN @SearchColumn = 'DurationMinutes' THEN ' OR DurationMinutes = @SearchInt' ELSE '' END +
-            CASE WHEN @SearchColumn = 'Rating' THEN ' OR Rating = @SearchFloat' ELSE '' END +
-            N')';
-    END
-
     DECLARE @Offset INT = (@Page - 1) * @PageSize;
 
-    -- Return TotalCount as first result set
-    DECLARE @sqlCount NVARCHAR(MAX) = N'
-    SELECT COUNT(*) AS TotalCount
-    FROM Movies
-    WHERE ' + @WhereClause + N';';
+     SELECT COUNT(1) as TotalCount
+        FROM Movies
+        WHERE
+        (
+            @SearchTerm IS NULL OR @SearchTerm = '' OR (
+                (@SearchColumn = 'Title' AND Title LIKE '%' + @SearchTerm + '%') OR
+                (@SearchColumn = 'Description' AND Description LIKE '%' + @SearchTerm + '%') OR
+                (@SearchColumn = 'ReleaseDate' AND ReleaseDate = @SearchDate) OR
+                (@SearchColumn = 'DurationMinutes' AND DurationMinutes = @SearchInt) OR
+                (@SearchColumn = 'Rating' AND Rating = @SearchFloat)
+            )
+        )
 
-    EXEC sp_executesql 
-        @sqlCount,
-        N'@SearchTerm NVARCHAR(400), @SearchDate DATE, @SearchInt INT, @SearchFloat FLOAT',
-        @SearchTerm=@SearchTerm,
-        @SearchDate=@SearchDate,
-        @SearchInt=@SearchInt,
-        @SearchFloat=@SearchFloat;
+    ;WITH FilteredMovies AS (
+        SELECT Id,Title,Description,ReleaseDate,DurationMinutes,Rating,Url,ActorNamesCache,CreatedAt
+        FROM Movies
+        WHERE
+        (
+            @SearchTerm IS NULL OR @SearchTerm = '' OR (
+                (@SearchColumn = 'Title' AND Title LIKE '%' + @SearchTerm + '%') OR
+                (@SearchColumn = 'Description' AND Description LIKE '%' + @SearchTerm + '%') OR
+                (@SearchColumn = 'ReleaseDate' AND ReleaseDate = @SearchDate) OR
+                (@SearchColumn = 'DurationMinutes' AND DurationMinutes = @SearchInt) OR
+                (@SearchColumn = 'Rating' AND Rating = @SearchFloat)
+            )
+        )
+    )
+    SELECT Id,Title,Description,ReleaseDate,DurationMinutes,Rating,Url,ActorNamesCache
+    FROM FilteredMovies
+    ORDER BY
+        CASE WHEN @SortColumn = 'Title' AND @SortDirection = 'ASC' THEN Title END ASC,
+        CASE WHEN @SortColumn = 'Title' AND @SortDirection = 'DESC' THEN Title END DESC,
+        CASE WHEN @SortColumn = 'Description' AND @SortDirection = 'ASC' THEN Description END ASC,
+        CASE WHEN @SortColumn = 'Description' AND @SortDirection = 'DESC' THEN Description END DESC,
+        CASE WHEN @SortColumn = 'ReleaseDate' AND @SortDirection = 'ASC' THEN ReleaseDate END ASC,
+        CASE WHEN @SortColumn = 'ReleaseDate' AND @SortDirection = 'DESC' THEN ReleaseDate END DESC,
+        CASE WHEN @SortColumn = 'DurationMinutes' AND @SortDirection = 'ASC' THEN DurationMinutes END ASC,
+        CASE WHEN @SortColumn = 'DurationMinutes' AND @SortDirection = 'DESC' THEN DurationMinutes END DESC,
+        CASE WHEN @SortColumn = 'Rating' AND @SortDirection = 'ASC' THEN Rating END ASC,
+        CASE WHEN @SortColumn = 'Rating' AND @SortDirection = 'DESC' THEN Rating END DESC,
+        CASE WHEN @SortColumn = 'CreatedAt' AND @SortDirection = 'ASC' THEN CreatedAt END ASC,
+        CASE WHEN @SortColumn = 'CreatedAt' AND @SortDirection = 'DESC' THEN CreatedAt END DESC
+    OFFSET @Offset ROWS
+    FETCH NEXT @PageSize ROWS ONLY;
 
-    -- Return paged data as second result set
-    DECLARE @sqlData NVARCHAR(MAX) = N'
-    SELECT *
-    FROM Movies
-    WHERE ' + @WhereClause + N'
-    ORDER BY ' + QUOTENAME(@SortColumn) + ' ' + @SortDirection + N'
-    OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;';
-
-    EXEC sp_executesql 
-        @sqlData,
-        N'@SearchTerm NVARCHAR(400), @SearchDate DATE, @SearchInt INT, @SearchFloat FLOAT, @Offset INT, @PageSize INT',
-        @SearchTerm=@SearchTerm,
-        @SearchDate=@SearchDate,
-        @SearchInt=@SearchInt,
-        @SearchFloat=@SearchFloat,
-        @Offset=@Offset,
-        @PageSize=@PageSize;
-END
+END;

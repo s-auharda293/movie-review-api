@@ -84,7 +84,7 @@ public class MovieReviewDbContext: IdentityDbContext<ApplicationUser>, IApplicat
                 entity.HasIndex(m => m.ReleaseDate).HasDatabaseName("IX_Movies_ReleaseDate");
                 entity.HasIndex(m => m.DurationMinutes).HasDatabaseName("IX_Movies_DurationMinutes");
                 entity.HasIndex(m => m.Rating).HasDatabaseName("IX_Movies_Rating");
-                entity.HasIndex(m => m.Status).HasDatabaseName("IX_Movies_Status");
+                //entity.HasIndex(m => m.Status).HasDatabaseName("IX_Movies_Status");
            });
 
             modelBuilder.Entity<Review>()
@@ -96,15 +96,15 @@ public class MovieReviewDbContext: IdentityDbContext<ApplicationUser>, IApplicat
 
             modelBuilder.Entity<Movie>()
                 .Property(m => m.Rating)
-                .HasPrecision(3, 1);
+                .HasPrecision(4, 1);
 
             modelBuilder.Entity<Review>()
                 .Property(r => r.Rating)
-                .HasPrecision(3, 1);
+                .HasPrecision(4, 1);
 
             modelBuilder.Entity<GetMoviesResult>()
             .Property(g => g.Rating)
-            .HasPrecision(3, 1); // 3 digits total, 1 digit after decimal
+            .HasPrecision(4, 1); 
 
 
             modelBuilder.Entity<Actor>()

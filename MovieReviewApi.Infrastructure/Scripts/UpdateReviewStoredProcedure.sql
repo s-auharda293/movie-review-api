@@ -1,7 +1,7 @@
 ﻿CREATE PROCEDURE UpdateReview
     @Id UNIQUEIDENTIFIER,
     @Comment NVARCHAR(4000),
-    @Rating DECIMAL(3,2)
+    @Rating DECIMAL(4,1)
 AS
 BEGIN
     SET NOCOUNT ON;

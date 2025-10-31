@@ -1,11 +1,24 @@
 ﻿using Azure.Core;
+using DocumentFormat.OpenXml.Office2010.Excel;
+using DocumentFormat.OpenXml.Office2021.PowerPoint.Comment;
+using DocumentFormat.OpenXml.Spreadsheet;
+using MediatR;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using MovieReviewApi.Application.Commands.Actor;
+using MovieReviewApi.Application.Commands.Auth;
 using MovieReviewApi.Application.Commands.Movie;
+using MovieReviewApi.Application.Commands.Review;
 using MovieReviewApi.Application.DTOs;
+using MovieReviewApi.Application.Queries.Review;
+using MovieReviewApi.Domain.Entities;
 using System.Data;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Xunit;
@@ -15,488 +28,469 @@ namespace MovieReviewApi.IntegrationTests
 {
     public class ReviewsTest : IClassFixture<MovieReviewWebApplicationFactory>
     {
-        private readonly HttpClient _client;
         private readonly ITestOutputHelper _output;
+        private readonly IMediator _mediator;
+        private readonly WebApplicationFactory<Program> _factory;
 
         public ReviewsTest(MovieReviewWebApplicationFactory factory, ITestOutputHelper output)
         {
-            _client = factory.CreateClient();
+            var scope = factory.Services.CreateScope();
+            _mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             _output = output;
+            _factory = factory;
         }
 
-        private async Task<MovieDto> SeedMovieWithActorsAsync()
+        public static class TestAuthHelper
         {
-            var actor1Dto = new { dto = new { Name = "Actor One", DateOfBirth = DateTime.Parse("1980-01-01"), Bio = "An experienced actor." } };
+            public static string SetupFakeUser(IServiceProvider serviceProvider, Guid userId, string role = UserRoles.Admin)
+            {
+                var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
 
-            var actor2Dto = new { dto = new { Name = "Actor Two", DateOfBirth = DateTime.Parse("1990-05-05"), Bio = "A versatile actor." } };
+                var testUserId = userId.ToString();
 
-            var actor1Response = await _client.PostAsJsonAsync("/api/actors", actor1Dto);
-            actor1Response.EnsureSuccessStatusCode();
-            using var doc1 = JsonDocument.Parse(await actor1Response.Content.ReadAsStringAsync());
-            var actor1Json = doc1.RootElement.GetProperty("value").GetRawText();
-            var actor1 = JsonSerializer.Deserialize<ActorDto>(actor1Json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var claims = new[]
+                {
+            new Claim(ClaimTypes.NameIdentifier, testUserId),
+            new Claim(ClaimTypes.Role, role),
+            new Claim(ClaimTypes.Name,"AdminUser")
+        };
+
+                var identity = new ClaimsIdentity(claims, "TestAuthType");
+                httpContextAccessor.HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(identity)
+                };
+
+                return testUserId;
+            }
+        }
+
+        private async Task<MovieWithActorsDto> SeedMovieWithActorsAsync()
+        {
+            var actor1Dto = new CreateActorDto
+            {
+                Name = "Actor One",
+                DateOfBirth = DateTime.Parse("1980-01-01"),
+                Bio = "An experienced actor.",
+                MovieIds = null
+            };
+
+            var actor2Dto = new CreateActorDto
+            {
+                Name = "Actor Two",
+                DateOfBirth = DateTime.Parse("1990-05-05"),
+                Bio = "A versatile actor.",
+                MovieIds = null
+            };
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, Guid.NewGuid());
+
+            var actor1 = await _mediator.Send(new CreateActorCommand(actor1Dto));
+            var actor2 = await _mediator.Send(new CreateActorCommand(actor2Dto));
             Assert.NotNull(actor1);
-
-            var actor2Response = await _client.PostAsJsonAsync("/api/actors", actor2Dto);
-            actor2Response.EnsureSuccessStatusCode();
-            using var doc2 = JsonDocument.Parse(await actor2Response.Content.ReadAsStringAsync());
-            var actor2Json = doc2.RootElement.GetProperty("value").GetRawText();
-            var actor2 = JsonSerializer.Deserialize<ActorDto>(actor2Json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
             Assert.NotNull(actor2);
 
-            var form = new MultipartFormDataContent();
-            form.Add(new StringContent("The Great Adventure"), "dto.Title");
-            form.Add(new StringContent("An epic journey of heroes."), "dto.Description");
-            form.Add(new StringContent("2025-08-01"), "dto.ReleaseDate"); // Date as string
-            form.Add(new StringContent("120"), "dto.DurationMinutes");
-            form.Add(new StringContent("8"), "dto.Rating");
-            form.Add(new StringContent(actor1!.Id.ToString()), "dto.ActorIds[0]");
-            form.Add(new StringContent(actor2!.Id.ToString()), "dto.ActorIds[1]");
+            var movieDto = new CreateMovieDto
+            {
+                Title = "The Great Adventure",
+                Description = "An epic journey of heroes.",
+                ReleaseDate = DateTime.Parse("2025-08-01"),
+                DurationMinutes = 120,
+                Rating = 8,
+                ActorIds = new List<Guid> { actor1.Value!.Id, actor2.Value!.Id }
+            };
 
-            // Step 2: send POST request
-            var movieResponse = await _client.PostAsync("/api/movies", form);
-            movieResponse.EnsureSuccessStatusCode();
+            var command = new CreateMovieCommand(movieDto);
 
-            // Step 3: read and parse the response
-            var movieResponseJson = await movieResponse.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(movieResponseJson);
-            var movieJson = doc.RootElement.GetProperty("value").GetRawText();
-            var movie = JsonSerializer.Deserialize<MovieDto>(movieJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            // Act
+            var result = await _mediator.Send(command);
 
-            Assert.NotNull(movie);
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotNull(result.Value);
+            Assert.True(result.IsSuccess);
+            Assert.False(result.IsFailure);
+            Assert.Empty(result.Errors);
+
+            var movie = result.Value;
+
+            Assert.Equal(movieDto.Title, movie.Title);
+            Assert.Equal(movieDto.Description, movie.Description);
+            Assert.Equal(movieDto.ReleaseDate, movie.ReleaseDate);
+            Assert.Equal(movieDto.DurationMinutes, movie.DurationMinutes);
+            Assert.Equal(movieDto.Rating, movie.Rating);
+            Assert.Equal(movieDto.ActorIds.Count, movie.ActorNames.Count);
+
             return movie!;
         }
 
 
-
-
-        private async Task<(string AccessToken, string UserId)> AuthenticateAndGetTokenAsync()
-        {
-            // Register user
-            var email = $"review_user_{Guid.NewGuid()}@test.com";
-            var password = "StrongPass123!";
-
-            var registerRequest = new
-            {
-                request = new
-                {
-                    FirstName = "Review",
-                    LastName = "Tester",
-                    Email = email,
-                    Password = password
-                }
-            };
-
-            await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
-
-            // Login user
-            var loginRequest = new
-            {
-                request = new
-                {
-                    Email = email,
-                    Password = password
-                }
-            };
-
-            var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
-            loginResponse.EnsureSuccessStatusCode();
-
-            var loginJson = await loginResponse.Content.ReadAsStringAsync();
-            var accessToken = JsonDocument.Parse(loginJson).RootElement
-                .GetProperty("value").GetProperty("accessToken").GetString();
-            var userId = JsonDocument.Parse(loginJson).RootElement
-                .GetProperty("value").GetProperty("id").GetString();
-
-            return (accessToken!, userId!);
-        }
-
-
-        private void AuthorizeClient(string token)
-        {
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        }
-
         [Fact]
         public async Task GetAllReviews_WhenCalled_ReturnsOk()
         {
-            var (accessToken, userId) = await AuthenticateAndGetTokenAsync();
-            AuthorizeClient(accessToken);
 
             var movie = await SeedMovieWithActorsAsync();
 
-            var createReview = new
-            { 
-                dto = new
+            var loginRequest = new UserLoginRequest { Email = "admin@movies.com", Password = "Admin@123" };
+
+            var loginUserCommand = new LoginUserCommand(loginRequest);
+
+            var user = await _mediator.Send(loginUserCommand);
+
+            var createReview = new CreateReviewDto
             {
-                MovieId = movie.Id,
-                UserId = userId,
-                Rating = 5,
-                Comment = "Great movie!"
-            }
+                Comment = "Great movie!",
+                Rating = 5.5m,
+                MovieId = movie.Id
             };
 
-            var createdResponse = await _client.PostAsJsonAsync("/api/reviews", createReview);
-            var res = await createdResponse.Content.ReadAsStringAsync();
-            _output.WriteLine(await createdResponse.Content.ReadAsStringAsync());
-            Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
 
-            var response = await _client.GetAsync("/api/reviews");
-            response.EnsureSuccessStatusCode();
-            var jsonString = await response.Content.ReadAsStringAsync();
-            _output.WriteLine(jsonString);
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, user.Value!.Id);
 
-            using var doc = JsonDocument.Parse(jsonString);
-            var reviewsJson = doc.RootElement.GetProperty("value").GetRawText();
+            var result = await _mediator.Send(new CreateReviewCommand(createReview));
+            _output.WriteLine($"Response: {JsonSerializer.Serialize(result)}");
 
-            var reviews = JsonSerializer.Deserialize<List<ReviewDto>>(reviewsJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            Assert.NotNull(result.Value);
 
-            Assert.NotNull(reviews);
-            Assert.IsType<List<ReviewDto>>(reviews);
+            Assert.IsType<ReviewDto>(result.Value);
         }
 
         [Fact]
         public async Task GetReviewsByMovieId_WithRandomGuid_ReturnsOkOrNotFound()
         {
             var movieId = Guid.NewGuid();
-            var response = await _client.GetAsync($"/api/reviews/by-movie-id?id={movieId}");
+            var response = await _mediator.Send(new GetReviewsByMovieIdQuery(Guid.NewGuid()));
+            // Assert
+            Assert.True(response.IsFailure);
+            Assert.False(response.IsSuccess);
+            Assert.Null(response.Value);
+            Assert.NotEmpty(response.Errors);
 
-            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-            _output.WriteLine($"Response: {response.StatusCode}");
+            var error = response.Errors.First();
+            Assert.Equal("Review.MovieDoesNotExist", error.Code);
+            Assert.Equal("Cannot get reviews because the movie does not exist.", error.Description);
         }
 
         [Fact]
         public async Task GetReviewsByMovieId_WithInsertedReview_ReturnsFound()
         {
-            var (accessToken, userId) = await AuthenticateAndGetTokenAsync();
-            AuthorizeClient(accessToken);
-
+            // Arrange
             var movie = await SeedMovieWithActorsAsync();
 
-            var createReview = new
+            // Act: Create a review using MediatR
+            var createReviewDto = new CreateReviewDto
             {
-                dto = new
-                {
-                    MovieId = movie.Id,
-                    UserId = userId,
-                    Rating = 5,
-                    Comment = "Great movie!"
-                }
+                MovieId = movie.Id,
+                Comment = "Great movie!",
+                Rating = 5.0m
             };
 
-            var createdResponse = await _client.PostAsJsonAsync("/api/reviews", createReview);
-            var res = await createdResponse.Content.ReadAsStringAsync();
-            _output.WriteLine(await createdResponse.Content.ReadAsStringAsync());
-            Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
+            var loginRequest = new UserLoginRequest { Email = "admin@movies.com", Password = "Admin@123" };
 
-            var movieId = JsonDocument.Parse(res).RootElement
-            .GetProperty("value").GetProperty("movieId").GetString();
+            var user = await _mediator.Send(new LoginUserCommand(loginRequest));
 
-            var response = await _client.GetAsync($"/api/reviews/by-movie-id?id={movieId}");
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, user.Value!.Id);
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            _output.WriteLine($"Response: {response.StatusCode}");
+            var createReviewResult = await _mediator.Send(new CreateReviewCommand(createReviewDto));
+
+            _output.WriteLine($"Create review response: {JsonSerializer.Serialize(createReviewResult)}");
+
+            Assert.NotNull(createReviewResult.Value);
+            Assert.True(createReviewResult.IsSuccess);
+
+            // Act: Get reviews for the movie
+            var getReviewsResult = await _mediator.Send(new GetReviewsByMovieIdQuery(movie.Id));
+
+            _output.WriteLine($"Get reviews response: {JsonSerializer.Serialize(getReviewsResult)}");
+
+            // Assert
+            Assert.NotNull(getReviewsResult.Value);
+            Assert.True(getReviewsResult.IsSuccess);
+            Assert.NotEmpty(getReviewsResult.Value);
+            Assert.Contains(getReviewsResult.Value, r => r.Comment == "Great movie!" && r.MovieId == movie.Id);
         }
+
 
         [Fact]
         public async Task CreateReview_WithValidData_ReturnsCreated()
         {
-            var (accessToken, userId) = await AuthenticateAndGetTokenAsync();
-            AuthorizeClient(accessToken);
 
-            var actor1Dto = new { dto = new { Name = "Actor One", DateOfBirth = DateTime.Parse("1980-01-01"), Bio = "An experienced actor." } };
-
-            var actor2Dto = new { dto = new { Name = "Actor Two", DateOfBirth = DateTime.Parse("1990-05-05"), Bio = "A versatile actor." } };
-
-            var actor1Response = await _client.PostAsJsonAsync("/api/actors", actor1Dto);
-            actor1Response.EnsureSuccessStatusCode();
-            using var doc1 = JsonDocument.Parse(await actor1Response.Content.ReadAsStringAsync());
-            var actor1Json = doc1.RootElement.GetProperty("value").GetRawText();
-            var actor1 = JsonSerializer.Deserialize<ActorDto>(actor1Json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            Assert.NotNull(actor1);
-
-            var actor2Response = await _client.PostAsJsonAsync("/api/actors", actor2Dto);
-            actor2Response.EnsureSuccessStatusCode();
-            using var doc2 = JsonDocument.Parse(await actor2Response.Content.ReadAsStringAsync());
-            var actor2Json = doc2.RootElement.GetProperty("value").GetRawText();
-            var actor2 = JsonSerializer.Deserialize<ActorDto>(actor2Json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            Assert.NotNull(actor2);
-
-            var form = new MultipartFormDataContent();
-            form.Add(new StringContent("The Great Adventure"), "dto.Title");
-            form.Add(new StringContent("An epic journey of heroes."), "dto.Description");
-            form.Add(new StringContent("2025-08-01"), "dto.ReleaseDate"); // Date as string
-            form.Add(new StringContent("120"), "dto.DurationMinutes");
-            form.Add(new StringContent("8"), "dto.Rating");
-            form.Add(new StringContent(actor1!.Id.ToString()), "dto.ActorIds[0]");
-            form.Add(new StringContent(actor2!.Id.ToString()), "dto.ActorIds[1]");
-
-            // Step 2: send POST request
-            var movieResponse = await _client.PostAsync("/api/movies", form);
-            movieResponse.EnsureSuccessStatusCode();
-
-            // Step 3: read and parse the response
-            var movieResponseJson = await movieResponse.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(movieResponseJson);
-            var movieJson = doc.RootElement.GetProperty("value").GetRawText();
-            var movie = JsonSerializer.Deserialize<MovieDto>(movieJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
+            var movie = await SeedMovieWithActorsAsync();
             Assert.NotNull(movie);
 
-            var createReview = new
+            var createReviewCommand = new CreateReviewCommand(new CreateReviewDto
             {
-                dto = new
-                {
-                    MovieId = movie.Id,
-                    UserId = userId,
-                    Rating = 5,
-                    Comment = "Great movie!"
-                }
-            };
+                MovieId = movie.Id,
+                Rating = 5,
+                Comment = "Great movie!"
+            });
 
-            var createdResponse = await _client.PostAsJsonAsync("/api/reviews", createReview);
-            var res = await createdResponse.Content.ReadAsStringAsync();
-            _output.WriteLine(await createdResponse.Content.ReadAsStringAsync());
-            Assert.Equal(HttpStatusCode.Created, createdResponse.StatusCode);
+            var user = await _mediator.Send(new LoginUserCommand(new UserLoginRequest { Email = "admin@movies.com", Password = "Admin@123" }));
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, user.Value!.Id);
+
+            var result = await _mediator.Send(createReviewCommand);
+
+            _output.WriteLine($"Get reviews response: {JsonSerializer.Serialize(result)}");
+
+            Assert.Equal("Great movie!", result.Value!.Comment);
+            Assert.Equal(5.0m, result.Value.Rating);
+
         }
 
         [Fact]
-        public async Task GetReviewById_WithRandomGuid_ReturnsOkOrNotFound()
+        public async Task GetReviewById_WithRandomGuid_ReturnsNotFound()
         {
             var id = Guid.NewGuid();
-            var response = await _client.GetAsync($"/api/reviews/{id}");
-            _output.WriteLine($"Response: {response.StatusCode}");
+            var response = await _mediator.Send(new GetReviewByIdQuery(id));
+            _output.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
+            Assert.False(response.IsSuccess);
+            Assert.True(response.IsFailure);
+            Assert.Null(response.Value);
+            Assert.Single(response.Errors);
+            Assert.Equal("Review.NotFound", response.Errors[0].Code);
+            Assert.Equal("The requested review was not found.", response.Errors[0].Description);
+
         }
 
         [Fact]
-        public async Task GetReviewsByUser_WithRandomUserId_ReturnsOkOrNotFound()
+        public async Task GetReviewsByUser_WithRandomUserId_ReturnsNotFound()
         {
-            var userId = Guid.NewGuid().ToString();
-            var response = await _client.GetAsync($"/api/reviews/user/{userId}");
-            _output.WriteLine($"Response: {response.StatusCode}");
+            var userId = Guid.NewGuid();
+            var response = await _mediator.Send(new GetReviewByIdQuery(userId));
+            _output.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
+            Assert.False(response.IsSuccess);
+            Assert.True(response.IsFailure);
+            Assert.Null(response.Value);
+            Assert.Single(response.Errors);
+            Assert.Equal("Review.NotFound", response.Errors[0].Code);
+            Assert.Equal("The requested review was not found.", response.Errors[0].Description);
         }
 
         [Fact]
         public async Task GetReviewById_WhenReviewExists_ReturnsOk()
         {
-            var (accessToken, userId) = await AuthenticateAndGetTokenAsync();
-            AuthorizeClient(accessToken);
-
+            //Arrange
             var movie = await SeedMovieWithActorsAsync();
+            Assert.NotNull(movie);
 
-            // Create review first
-            var createReview = new
+            var createReviewCommand = new CreateReviewCommand(new CreateReviewDto
             {
-                dto = new
-                {
-                    MovieId = movie.Id,
-                    UserId = userId,
-                    Rating = 5,
-                    Comment = "Great movie!"
-                }
-            };
-            var createdResponse = await _client.PostAsJsonAsync("/api/reviews", createReview);
-            createdResponse.EnsureSuccessStatusCode();
-            using var createdDoc = JsonDocument.Parse(await createdResponse.Content.ReadAsStringAsync());
-            var reviewJson = createdDoc.RootElement.GetProperty("value").GetRawText();
-            var review = JsonSerializer.Deserialize<ReviewDto>(reviewJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                MovieId = movie.Id,
+                Rating = 5,
+                Comment = "Great movie!"
+            });
 
-            // Act
-            var response = await _client.GetAsync($"/api/reviews/{review!.Id}");
-            response.EnsureSuccessStatusCode();
+            var user = await _mediator.Send(new LoginUserCommand(new UserLoginRequest { Email = "admin@movies.com", Password = "Admin@123" }));
 
-            var jsonString = await response.Content.ReadAsStringAsync();
-            _output.WriteLine(jsonString);
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, user.Value!.Id);
+
+            var result = await _mediator.Send(createReviewCommand);
+            var id = result.Value!.Id;
+
+            //Act
+            var response = await _mediator.Send(new GetReviewByIdQuery(id));
+            _output.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
+
+
+            //Assert
+            Assert.True(result.IsSuccess);
+            Assert.False(result.IsFailure);
+            Assert.Empty(result.Errors);
+            Assert.NotNull(result.Value);
+            Assert.NotEqual(Guid.Empty, result.Value.Id);
+            Assert.Equal(movie.Id, result.Value.MovieId);
+            Assert.Equal("AdminUser", result.Value.UserName);
+            Assert.Equal("Great movie!", result.Value.Comment);
+            Assert.Equal(5.0m, result.Value.Rating); 
         }
 
         [Fact]
         public async Task SearchReviews_WithKeyword_ReturnsOk()
         {
-            var (accessToken, userId) = await AuthenticateAndGetTokenAsync();
-            AuthorizeClient(accessToken);
-
             var movie = await SeedMovieWithActorsAsync();
+            Assert.NotNull(movie);
 
-            var createReview = new
+            var createReviewCommand = new CreateReviewCommand(new CreateReviewDto
             {
-                dto = new
-                {
-                    MovieId = movie.Id,
-                    UserId = userId,
-                    Rating = 5,
-                    Comment = "Amazing adventure!"
-                }
-            };
-            await _client.PostAsJsonAsync("/api/reviews", createReview);
+                MovieId = movie.Id,
+                Rating = 5,
+                Comment = "Great movie!"
+            });
+
+            var user = await _mediator.Send(new LoginUserCommand(new UserLoginRequest { Email = "admin@movies.com", Password = "Admin@123" }));
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, user.Value!.Id);
+
+            var result = await _mediator.Send(createReviewCommand);
 
             // Act - search by keyword
-            var searchRequest = new
-            {
-                request = new
-                {
-                    page = 1,
-                    pageSize = 5,
-                    searchColumn = "Comment",
-                    searchTerm = "adventure",
-                    sort = new
-                    {
-                        field = "Rating",
-                        dir = "Desc"
-                    }
-                }
-            };
+            var searchResponse = await _mediator.Send(new SearchReviewsQuery(new ReviewRequestDto { 
+                Page=1,
+                PageSize=5,
+                SearchColumn = "Comment",
+                SearchTerm = "movie",
+                SortColumn = "Rating",
+                SortDirection = "Desc"
+            }));
 
+            _output.WriteLine(JsonSerializer.Serialize(searchResponse));
 
-
-            var response = await _client.PostAsJsonAsync("/api/reviews/query", searchRequest);
-            response.EnsureSuccessStatusCode();
-
-            var jsonString = await response.Content.ReadAsStringAsync();
-            _output.WriteLine(jsonString);
-
-            // Deserialize 'value' property
-            using var doc = JsonDocument.Parse(jsonString);
-            var reviewsJson = doc.RootElement.GetProperty("value").GetProperty("reviews").GetRawText();
-            var reviews = JsonSerializer.Deserialize<List<ReviewDto>>(reviewsJson,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            Assert.NotNull(reviews);
-            Assert.NotEmpty(reviews);
+            Assert.True(searchResponse.IsSuccess);
+            Assert.False(searchResponse.IsFailure);
+            Assert.Empty(searchResponse.Errors);
+            Assert.NotNull(searchResponse.Value);
+            ReviewDto review = searchResponse.Value.Reviews.ElementAt(0);
+            Assert.NotEqual(Guid.Empty, review.Id);
+            Assert.Equal(movie.Id, review.MovieId);
+            Assert.Equal(Guid.Parse(userId), review.UserId);
+            Assert.Equal("AdminUser", review.UserName);
+            Assert.Equal("Great movie!", review.Comment);
+            Assert.Equal(5.0m, review.Rating);
         }
 
         [Fact]
         public async Task UpdateReview_WhenReviewExists_ReturnsOk()
         {
-            var (accessToken, userId) = await AuthenticateAndGetTokenAsync();
-            AuthorizeClient(accessToken);
-
+            //Arrange
             var movie = await SeedMovieWithActorsAsync();
+            Assert.NotNull(movie);
 
-            // Create review first
-            var createReview = new
+            var createReviewCommand = new CreateReviewCommand(new CreateReviewDto
             {
-                dto = new
-                {
-                    MovieId = movie.Id,
-                    UserId = userId,
-                    Rating = 4,
-                    Comment = "Nice movie"
-                }
-            };
-            var createdResponse = await _client.PostAsJsonAsync("/api/reviews", createReview);
-            createdResponse.EnsureSuccessStatusCode();
-            using var createdDoc = JsonDocument.Parse(await createdResponse.Content.ReadAsStringAsync());
-            var reviewJson = createdDoc.RootElement.GetProperty("value").GetRawText();
-            var review = JsonSerializer.Deserialize<ReviewDto>(reviewJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                MovieId = movie.Id,
+                Rating = 5,
+                Comment = "Great movie!"
+            });
+
+            var user = await _mediator.Send(new LoginUserCommand(new UserLoginRequest { Email = "admin@movies.com", Password = "Admin@123" }));
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, user.Value!.Id);
+
+            var result = await _mediator.Send(createReviewCommand);
+            Guid reviewId = result.Value!.Id;
 
             // Act - update review
-            var updateReview = new
-            {
-                id = review!.Id,
-                dto = new
-                {
-                    Rating = 5,
-                    Comment = "Updated review"
-                }
-            };
-            AuthorizeClient(accessToken);
+            var updateReviewResponse = await _mediator.Send(new UpdateReviewCommand(reviewId, new UpdateReviewDto {
+                Comment = "Satisfactory",
+                Rating = 8.0m
+            }));
 
-            var updateResponse = await _client.PutAsJsonAsync("/api/reviews", updateReview);
-            var updatedJson = await updateResponse.Content.ReadAsStringAsync();
-            updateResponse.EnsureSuccessStatusCode();
+            var review = updateReviewResponse.Value;
 
-            _output.WriteLine(updatedJson);
+            Assert.True(result.IsSuccess);
+            Assert.False(result.IsFailure);
+            Assert.Empty(result.Errors);
+            Assert.NotNull(result.Value);
+            Assert.NotEqual(Guid.Empty, review!.Id);        
+            Assert.Equal(movie.Id, review.MovieId);
+            Assert.Equal(Guid.Parse(userId), review.UserId);
+            Assert.Equal("AdminUser", review.UserName);
+            Assert.Equal("Satisfactory", review.Comment);
+            Assert.Equal(8.0m, review.Rating);
+
+
+
+            _output.WriteLine("Updated Review: "+ JsonSerializer.Serialize(updateReviewResponse));
+
         }
 
         [Fact]
         public async Task PatchReview_WhenReviewExists_ReturnsOk()
         {
-            var (accessToken, userId) = await AuthenticateAndGetTokenAsync();
-            AuthorizeClient(accessToken);
-
+            //Arrange
             var movie = await SeedMovieWithActorsAsync();
+            Assert.NotNull(movie);
 
-            // Create review first
-            var createReview = new
+            var createReviewCommand = new CreateReviewCommand(new CreateReviewDto
             {
-                dto = new
-                {
-                    MovieId = movie.Id,
-                    UserId = userId,
-                    Rating = 4,
-                    Comment = "Nice movie"
-                }
-            };
-            var createdResponse = await _client.PostAsJsonAsync("/api/reviews", createReview);
-            createdResponse.EnsureSuccessStatusCode();
-            using var createdDoc = JsonDocument.Parse(await createdResponse.Content.ReadAsStringAsync());
-            var reviewJson = createdDoc.RootElement.GetProperty("value").GetRawText();
-            var review = JsonSerializer.Deserialize<ReviewDto>(reviewJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                MovieId = movie.Id,
+                Rating = 5,
+                Comment = "Great movie!"
+            });
+
+            var user = await _mediator.Send(new LoginUserCommand(new UserLoginRequest { Email = "admin@movies.com", Password = "Admin@123" }));
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, user.Value!.Id);
+
+            var result = await _mediator.Send(createReviewCommand);
+            Guid reviewId = result.Value!.Id;
 
             // Act - patch review
-            var patchReview = new
-            {
-                Id = review!.Id,
-                dto = new {
-                Rating = 5,
-                Comment = "Patched comment"
-                }
-            };
-            AuthorizeClient(accessToken);
-            var patchResponse = await _client.PatchAsJsonAsync("/api/reviews", patchReview);
-            var patchedJson = await patchResponse.Content.ReadAsStringAsync();
+            var patchResponse = await _mediator.Send(
+                new PatchReviewCommand(
+                    reviewId,
+                    new PatchReviewDto
+                    {
+                        Comment = "woweee"
+                    }
+                )
+            );
 
-            patchResponse.EnsureSuccessStatusCode();
+            _output.WriteLine("Patch review response: " + JsonSerializer.Serialize(patchResponse));
 
-            _output.WriteLine(patchedJson);
+            Assert.True(result.IsSuccess);
+            Assert.False(result.IsFailure);
+            Assert.Empty(result.Errors);
+            Assert.NotNull(result.Value);
+            var review = patchResponse.Value;
+            Assert.Equal("woweee", review!.Comment);
+            Assert.Equal(5.0m, review!.Rating);
+            Assert.Equal(movie.Id, review!.MovieId);
+            Assert.Equal(Guid.Parse(userId), review.UserId);
+            Assert.Equal("AdminUser", review.UserName);
         }
+
 
         [Fact]
         public async Task DeleteReview_WhenReviewExists_ReturnsNoContent()
         {
-            var (accessToken, userId) = await AuthenticateAndGetTokenAsync();
-            AuthorizeClient(accessToken);
-
+            //Arrange
             var movie = await SeedMovieWithActorsAsync();
+            Assert.NotNull(movie);
 
-            // Create review first
-            var createReview = new
+            var createReviewCommand = new CreateReviewCommand(new CreateReviewDto
             {
-                dto = new
-                {
-                    MovieId = movie.Id,
-                    UserId = userId,
-                    Rating = 3,
-                    Comment = "To be deleted"
-                }
-            };
-            var createdResponse = await _client.PostAsJsonAsync("/api/reviews", createReview);
-            createdResponse.EnsureSuccessStatusCode();
-            using var createdDoc = JsonDocument.Parse(await createdResponse.Content.ReadAsStringAsync());
-            var reviewJson = createdDoc.RootElement.GetProperty("value").GetRawText();
-            var review = JsonSerializer.Deserialize<ReviewDto>(reviewJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                MovieId = movie.Id,
+                Rating = 5,
+                Comment = "Great movie!"
+            });
+
+            var user = await _mediator.Send(new LoginUserCommand(new UserLoginRequest { Email = "admin@movies.com", Password = "Admin@123" }));
+
+            var scope = _factory.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            var userId = TestAuthHelper.SetupFakeUser(services, user.Value!.Id);
+
+            var result = await _mediator.Send(createReviewCommand);
+            Guid reviewId = result.Value!.Id;
 
             // Act - delete review
-            var deleteBody = new { Id = review!.Id };
-            var request = new HttpRequestMessage(HttpMethod.Delete, "/api/reviews")
-            {
-                Content = new StringContent(JsonSerializer.Serialize(deleteBody), Encoding.UTF8, "application/json")
-            };
-            var deleteResponse = await _client.SendAsync(request);
-            Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+            var deleteResponse = await _mediator.Send(new DeleteReviewCommand(reviewId));
+
+            _output.WriteLine("Patch review response: " + JsonSerializer.Serialize(deleteResponse));
+
+            Assert.True(deleteResponse.IsSuccess);
+            Assert.False(deleteResponse.IsFailure);
+
+            Assert.Empty(result.Errors);
         }
-
-
-
-
     }
 }
+

@@ -77,11 +77,11 @@ namespace MovieReviewApi.Infrastructure.Seeders
                         Actors = movieActors,
 
                         // Maker-checker fields
-                        Status = ProposalStatus.Approved,
-                        ProposedBy = makerId,
-                        ApprovedBy = Guid.Parse(moderatorId),
-                        ProposedAt = DateTime.UtcNow,
-                        ApprovedAt = DateTime.UtcNow
+                        //Status = ProposalStatus.Approved,
+                        //ProposedBy = makerId,
+                        //ApprovedBy = Guid.Parse(moderatorId),
+                        //ProposedAt = DateTime.UtcNow,
+                        //ApprovedAt = DateTime.UtcNow
                     };
 
                    

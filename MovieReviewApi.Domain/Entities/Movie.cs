@@ -27,12 +27,12 @@ public class Movie:BaseEntity
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
 
     //maker-checker
-    public ProposalStatus Status { get; set; } = ProposalStatus.Pending;
-    public Guid? ProposedBy { get; set; }
-    public Guid? ApprovedBy { get; set; }
-    public Guid? RejectedBy { get; set; }
-    public DateTime? ProposedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? ApprovedAt { get; set; }
-    public DateTime? RejectedAt { get; set; }
+    //public ProposalStatus Status { get; set; } = ProposalStatus.Pending;
+    //public Guid? ProposedBy { get; set; }
+    //public Guid? ApprovedBy { get; set; }
+    //public Guid? RejectedBy { get; set; }
+    //public DateTime? ProposedAt { get; set; } = DateTime.UtcNow;
+    //public DateTime? ApprovedAt { get; set; }
+    //public DateTime? RejectedAt { get; set; }
 
 }

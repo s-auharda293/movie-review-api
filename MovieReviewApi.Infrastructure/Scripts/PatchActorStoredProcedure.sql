@@ -21,7 +21,6 @@ BEGIN
     -- Handle movies only if provided
     IF @MovieIds IS NOT NULL
     BEGIN
-        -- Clear existing links first
         DELETE FROM ActorMovie WHERE ActorId = @Id;
 
         -- Insert new links if any
@@ -33,7 +32,6 @@ BEGIN
         END
     END
 
-     -- Refresh Actor.MovieTitlesCache
      UPDATE a
     SET a.MovieTitlesCache = agg.MovieTitles
     FROM Actors a
@@ -46,7 +44,6 @@ BEGIN
         GROUP BY am.ActorId
     ) agg ON a.Id = agg.ActorId;
 
-    -- Refresh Movies.ActorNamesCache for all movies linked to this actor
     UPDATE m
     SET m.ActorNamesCache = agg.ActorNames
     FROM Movies m

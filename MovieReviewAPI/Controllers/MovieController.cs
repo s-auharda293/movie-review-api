@@ -76,50 +76,6 @@ namespace MovieReviewApi.Api.Controllers
             var deleted = await _mediator.Send(deleteMovieCommand);
             return deleted.IsSuccess ? NoContent() : NotFound(deleted);
         }
-
-
-
-        //[HttpPost("upload-file")]
-        //public async Task<IActionResult> Upload(
-        // [FromForm] FileUploadRequest request)
-        //{
-        //    if (request.File == null || request.File.Length == 0)
-        //        return BadRequest("No file uploaded.");
-
-        //    using var stream = request.File.OpenReadStream();
-        //    var url = await _fileStorageService.UploadFileAsync(stream, request.File.FileName,"local");
-        //    return Ok(new { Url = url });
-        //}
-
-        //[HttpDelete("delete-file")]
-        //public async Task<IActionResult> Delete([FromQuery] string fileUrl)
-        //{
-        //    if (string.IsNullOrEmpty(fileUrl))
-        //        return BadRequest("File URL is required.");
-
-        //    await _fileStorageService.DeleteFileAsync(fileUrl);
-        //    return Ok(new { Message = "File deleted successfully." });
-        //}
-
-
-        //[HttpPut("update-file")]
-        //public async Task<IActionResult> Update([FromForm] FileUpdateRequest request)
-        //{
-        //    if (request.File == null || request.File.Length == 0)
-        //        return BadRequest("New file is required.");
-
-        //    if (string.IsNullOrEmpty(request.oldFileUrl))
-        //        return BadRequest("Old file URL is required.");
-
-        //    using var stream = request.File.OpenReadStream();
-        //    var newUrl = await _fileStorageService.UpdateFileAsync(stream, request.oldFileUrl, request.File.FileName);
-
-        //    return Ok(new { Url = newUrl });
-        //}
-
-
-
-
     }
 
 }

@@ -1,7 +1,7 @@
 ﻿CREATE PROCEDURE PatchReview
     @Id UNIQUEIDENTIFIER,
     @Comment NVARCHAR(4000) = NULL,
-    @Rating DECIMAL(3,2) = NULL
+    @Rating DECIMAL(4,1) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -28,7 +28,6 @@ BEGIN
     )
     WHERE Id = @MovieId;
 
-    -- Return the updated row
     SELECT Id, MovieId, Comment, Rating, UpdatedAt
     FROM Reviews
     WHERE Id = @Id;

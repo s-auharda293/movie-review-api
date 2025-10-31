@@ -24,13 +24,10 @@ BEGIN
         Url = COALESCE(@Url, Url)
     WHERE Id = @MovieId;
 
-    -- If ActorIds are passed, refresh links
     IF @ActorIds IS NOT NULL
     BEGIN
-        -- Clear existing links first
         DELETE FROM ActorMovie WHERE MovieId = @MovieId;
 
-        -- Insert new ones only if not empty string
         IF LEN(@ActorIds) > 0
         BEGIN
             INSERT INTO ActorMovie (MovieId, ActorId)
@@ -51,7 +48,6 @@ BEGIN
         GROUP BY am.MovieId
     ) agg ON m.Id = agg.MovieId;
 
-    -- Refresh Actor.MovieTitlesCache for actors linked to this movie
     UPDATE a
     SET a.MovieTitlesCache = agg.MovieTitles
     FROM Actors a
@@ -64,7 +60,6 @@ BEGIN
         GROUP BY am.ActorId
     ) agg ON a.Id = agg.ActorId;
 
-    -- Return the updated row
     SELECT Id, Title, Description, ReleaseDate, DurationMinutes, Rating, CreatedAt, UpdatedAt
     FROM Movies
     WHERE Id = @MovieId;

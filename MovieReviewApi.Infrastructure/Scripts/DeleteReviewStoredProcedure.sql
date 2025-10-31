@@ -4,7 +4,6 @@
                 BEGIN
                     SET NOCOUNT ON;
 
---Delete the actor
                     DELETE FROM Reviews
                     WHERE Id = @Id;
 END

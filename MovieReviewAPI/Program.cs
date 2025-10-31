@@ -69,9 +69,9 @@ builder.Services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 builder.Services.AddSingleton<IMinioClient>(x =>
 {
     return new MinioClient()
-        .WithEndpoint("localhost:9000")   // your MinIO endpoint
+        .WithEndpoint("localhost:9000")   
         .WithCredentials("admin", "admin123")
-        .WithSSL(false) // important! since you're running HTTP locally
+        .WithSSL(false) 
         .Build();
 });
 
@@ -176,7 +176,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddAutoMapper(cfg =>
 {
-    // configure your profiles here
+    // configure profiles here
     cfg.AddProfile<MappingProfile>();
 });
 
